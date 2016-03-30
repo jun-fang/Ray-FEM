@@ -7,7 +7,7 @@
 xs = -0.2;   ys = -0.3;             % point source location
 speed = @(x) ( 1+ 0.5*sin(2*pi*x(:,1)));
 
-
+       
 
 plt = 0;                           % plot solution or not
 fquadorder = 4;                    % numerical quadrature order
@@ -227,6 +227,46 @@ contour(X,Y,real(uh));
 title('Ray direction field');
 hold on
 quiver(cX,cY,cre,cim)
+
+
+
+
+%% Plotting
+
+[su] = Standard_FEM_PML_PointSource(node,elem,omega,wpml,sigmaMax,xs,ys,speed,fquadorder,plt);
+N = size(node,1);
+n = round(sqrt(N));
+su = reshape(su,n,n);
+
+
+load('test10_reference_solution_30.mat');
+rn = round(1/rh) + 1;
+ru = reshape(ru,rn,rn);
+
+figure(7);
+dy = 0.9;
+yn = round(dy/h) + 1;
+xx = X(yn,:);
+uu = uh(yn,:);
+ryn = round(dy/rh) + 1;
+rxx = -0.5:rh:0.5;
+ruu = ru(ryn,:);
+plot(xx,real(uu),'ro-');
+hold on;
+ss = su(yn,:);
+plot(xx,real(ss),'bs-');
+hold on;
+plot(rxx,real(ruu),'k');
+xlabel('x');
+ylabel('Wavefield');
+legend('Ray-FEM solution','standard FEM solution','Reference solution','LOCATION','Best');
+
+
+
+
+
+
+
 
 
 

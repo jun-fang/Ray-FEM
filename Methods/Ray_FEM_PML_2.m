@@ -184,7 +184,8 @@ toc;
 [bdnode,~,~] = findboundary(elem);
 isFreeNode = ones(Ndof,1);
 Nbd = length(bdnode);
-for nbd = 1:Nbd
+for nn = 1:Nbd
+    nbd = bdnode(nn);
     ind = ray_dof(nbd) - ray_num(nbd) + 1:1:ray_dof(nbd);
     isFreeNode(ind) = 0;
 end

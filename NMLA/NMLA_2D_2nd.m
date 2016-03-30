@@ -1,10 +1,10 @@
-function [angs,r] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,data,opt,plt)
+function [angs,Bs,r] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,data,opt,plt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NMLA 2nd order correction: finding ray directions at observation point (x0,y0) in 2D case
 %  See details in 'Numerical MicroLocal Analysis Revisited' by Jean-David
 % Benamou, Francis Collino, SimonMarmorat : https://hal.inria.fr/inria-00558881/document
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
+% 
 %  INPUT:
 % 
 %     (x0,y0):     Observation point; 
@@ -127,23 +127,25 @@ end
 %% Find dominant peaks and ray direction angles
 [mm,ii] = max(abs(beta));    %% find max and significant angle
 [~,locs] = findpeaks(abs(beta),'MinPeakDistance',M/32,'MinPeakHeight',pct*mm);
+if size(locs,2) ==0
+    locs = 1;
+end
 pks = beta(locs);
 
 if Nray == 1                 %% given one ray direction
     locs = ii;
     angs = ang(locs);
-    Bs = mm;
+    Bs = beta(locs);
 elseif Nray                  %% given multiple ray directions
     [~, high_idx] = sort(-pks);
     idx = high_idx(1:Nray);
     locs = locs(idx);
-    Bs = pks(idx);
-    [locs,idx] = sort(locs);
-    Bs = Bs(idx);
+    [locs] = sort(locs);
     angs = ang(locs);
+    Bs = beta(locs);
 else                         %% number of ray directions is not given
     angs = ang(locs);
-    Bs = pks;
+    Bs = beta(locs);
 end
 
 

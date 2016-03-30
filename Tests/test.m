@@ -1,3 +1,458 @@
+pde = Helmholtz_data3;
+    
+global omega;
+global a;
+a = 1/2;
+omega = 100*pi;
+NPW = 8;
+
+h = 1/round((NPW*omega)/(2*pi));
+wavelength = 2*pi/omega;
+wl = wavelength;
+T = h/8;
+
+r = -wl: T : wl;
+r = r';
+est_ang = oangs1(1);
+x = r*cos(est_ang);
+y = r*sin(est_ang);
+node = [x, y];
+u = pde.ex_u(node);
+
+% tol = 1e-3;
+% L = 10;
+[z] = matrixpencil(u, x)
+acos(asin(max(imag(z)))/(omega*T))
+% ang = [0;pi/2;pi;3*pi/2];
+% exp(1i*omega*h*cos(ang))
+
+% t = 0:24 ;
+% y = sin(3*t+pi/4)+randn(size(t))/10 ;
+% z = mpencil(y,2,8) ;
+% log(z)
+
+
+
+
+
+
+
+
+%% test for optimization
+if (0)
+global omega;
+
+for i = 1: 1
+    omega = 100*pi*i;
+    test1_optimization(omega);
+end
+
+end
+
+
+%% NMLA
+if (0)
+%% NMLA 
+xs = -0.2; ys = -0.3;
+Nray = 0;
+Rest = 1;
+pde = [];
+pct = 1/2;      
+data = 'num';
+opt = 0;
+
+minwavelength = (2*pi*cmin)/omega;
+r = 4*minwavelength;
+
+m = size(rnode,1);
+m = round(sqrt(m));
+n = m;
+
+[ux,uy] = num_derivative_2(ru,rh,m,n,2);
+a = 0.5;
+b = 0.5;
+mbd = 0;
+% mbd = high_r;
+% [mnode,melem] = squaremesh([-a-mbd,a+mbd,-b-mbd,b+mbd],h);
+ch = 1/60;
+[cnode,celem] = squaremesh([-a-mbd,a+mbd,-b-mbd,b+mbd],ch);
+
+NPW = 6;
+h = 1/(NPW*round(omega/(2*pi*cmin)));
+[node,elem] = squaremesh([-0.5,0.5,-0.5,0.5],h);
+N = size(node,1);
+numray = cell(N,1);
+
+cN = size(cnode,1);
+cnumray = zeros(cN,1);
+cray = ex_ray(cnode,xs,ys,1);
+ray = ex_ray(node,xs,ys,1);
+
+
+Nray = 1;
+opt = 1;
+fprintf('NMLA time: \n');
+tic;
+for i = 1:cN
+    x0 = cnode(i,1);  y0 = cnode(i,2);
+    d0 = sqrt((x0-xs)^2 + (y0-ys)^2);
+    Rest = d0;
+    c0 = speed(cnode(i,:));
+    if x0 >= 0 || y0 <= 0.2
+        [ang] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,rnode,relem,ru,ux,uy,pde,pct,Nray,data,opt,plt);
+    end
+    cnumray(i) = exp(1i*ang);
+end
+toc;
+numray1 = interpolation(cnode,celem,node,cnumray);
+numray1 = ray_convert(numray1,2);
+
+opt = 0;
+tic;
+for i = 1:N
+    x0 = node(i,1);  y0 = node(i,2);
+    d0 = sqrt((x0-xs)^2 + (y0-ys)^2);
+    numray{i} = numray1(i);
+    if d0 <= r
+        numray{i} = ray(i);
+    elseif x0 < 0 && y0 > 0.2
+        Rest = d0;
+        if d0 <= 2*r
+            Rest = 2*d0;
+        end
+        c0 = speed(node(i,:));
+        Nray = 0;
+        [ang] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,rnode,relem,ru,ux,uy,pde,pct,Nray,data,opt,plt);
+        if size(ang,2) > 2
+            i
+            ang
+        end
+        numray{i} = exp(1i*ang);
+    end
+end
+toc;
+
+figure(3)
+ray_field(numray,node,6);
+
+
+
+%% Ray_FEM
+wpml = 6*(2*pi*cmin)/omega;        % width of PML
+sigmaMax = 50/wpml; 
+[u2] = Ray_FEM_PML_22_PointSource(node,elem,omega,wpml,sigmaMax,xs,ys,speed,numray,fquadorder,plt);
+figure(4);
+FJ_showresult(node,elem,real(u2));
+
+
+[us] = Standard_FEM_PML_PointSource(node,elem,omega,wpml,sigmaMax,xs,ys,speed,fquadorder,plt);
+
+
+
+%% Reference
+fh = 1/2000;
+[fnode,felem] = squaremesh([-0.5,0.5,-0.5,0.5],fh);
+[uf] = Standard_FEM_PML_PointSource(fnode,felem,omega,wpml,sigmaMax,xs,ys,speed,fquadorder,plt);
+figure(5);
+FJ_showresult(fnode,felem,real(uf));
+
+%% plot
+a = 0.5;
+[X,Y] = meshgrid(-a:h:a,-b:h:b);
+[m,n] = size(X);
+
+u2 = reshape(u2,m,n);
+us = reshape(us,m,n);
+
+
+fn = round(1/fh) + 1;
+uf = reshape(uf,fn,fn);
+
+
+figure(7);
+hold off;
+dy = 0.9;
+yn = round(dy/h) + 1;
+xx = X(yn,:);
+uu = u2(yn,:);
+ryn = round(dy/fh) + 1;
+rxx = -0.5:fh:0.5;
+ruu = uf(ryn,:);
+plot(xx,real(uu),'ro-');
+hold on;
+ss = us(yn,:);
+plot(xx,real(ss),'bs-');
+hold on;
+plot(rxx,real(ruu),'k');
+xlabel('x');
+ylabel('Wavefield');
+legend('Ray-FEM solution','standard FEM solution','Reference solution','LOCATION','Best');
+
+figure(8);
+hold off;
+dy = 0.8;
+yn = round(dy/h) + 1;
+xx = X(yn,:);
+uu = u2(yn,:);
+ryn = round(dy/fh) + 1;
+rxx = -0.5:fh:0.5;
+ruu = uf(ryn,:);
+plot(xx,real(uu),'ro-');
+hold on;
+plot(rxx,real(ruu),'k');
+xlabel('x');
+ylabel('Wavefield');
+legend('Ray-FEM solution','Reference solution','LOCATION','Best');
+
+
+figure(9);
+hold off;
+dy = 0.8;
+yn = round(dy/h) + 1;
+xx = X(yn,:);
+uu = u2(yn,:);
+ryn = round(dy/fh) + 1;
+rxx = -0.5:fh:0.5;
+ruu = uf(ryn,:);
+ss = us(yn,:);
+plot(xx,real(ss),'bs-');
+hold on;
+plot(rxx,real(ruu),'k');
+xlabel('x');
+ylabel('Wavefield');
+legend('standard FEM solution','Reference solution','LOCATION','Best');
+
+
+figure(10);
+hold off;
+dy = 0.9;
+yn = round(dy/h) + 1;
+xx = X(yn,:);
+uu = u2(yn,:);
+ryn = round(dy/fh) + 1;
+rxx = -0.5:fh:0.5;
+ruu = uf(ryn,:);
+plot(xx,real(uu),'ro-');
+hold on;
+plot(rxx,real(ruu),'k');
+xlabel('x');
+ylabel('Wavefield');
+legend('Ray-FEM solution','Reference solution','LOCATION','Best');
+
+
+figure(11);
+hold off;
+dy = 0.9;
+yn = round(dy/h) + 1;
+xx = X(yn,:);
+uu = u2(yn,:);
+ryn = round(dy/fh) + 1;
+rxx = -0.5:fh:0.5;
+ruu = uf(ryn,:);
+ss = us(yn,:);
+plot(xx,real(ss),'bs-');
+hold on;
+plot(rxx,real(ruu),'k');
+xlabel('x');
+ylabel('Wavefield');
+legend('standard FEM solution','Reference solution','LOCATION','Best');
+
+
+
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%
+if (0);
+    xs = -0.2;   ys = -0.3;             % point source location
+speed = @(x) ( 1+ 0.5*sin(2*pi*x(:,1)));
+cmin = 1/2;
+
+Nray = 0;
+Rest = 1;
+pde = [];
+pct = 1/2;
+data = 'num';
+opt = 0;
+
+a= 1/2;
+plt = 0;                           % plot solution or not
+fquadorder = 3; 
+omega = 60*pi;
+high_omega = 60*pi;
+minwavelength = (2*pi*cmin)/high_omega;
+
+wpml = 6*minwavelength;                 % width of PML
+sigmaMax = 25/wpml;                % Maximun absorbtion
+r = 4*minwavelength;
+
+NPW = 40;
+rh = 1/(NPW*round(omega/(2*pi*cmin)));
+fprintf('omega/(2*pi) = %d,   1/h = %d,   NPW = %d \n',omega/(2*pi), 1/rh, NPW);
+[lnode,lelem] = squaremesh([-a,a,-a,a],rh);
+load('test10_reference_solution_40.mat');
+m = size(lnode,1);
+m = round(sqrt(m));
+n = m;
+
+[ux,uy] = num_derivative_2(ru,rh,m,n,2);
+a = 0.5;
+b = 0.5;
+mbd = 0;
+% mbd = high_r;
+% [mnode,melem] = squaremesh([-a-mbd,a+mbd,-b-mbd,b+mbd],h);
+ch = 1/60;
+[cnode,celem] = squaremesh([-a-mbd,a+mbd,-b-mbd,b+mbd],ch);
+cN = size(cnode,1);
+cnumray = cell(cN,1);
+cray = ex_ray(cnode,xs,ys);
+
+fprintf('NMLA time: \n');
+tic;
+for i = 1:cN
+    x0 = cnode(i,1);  y0 = cnode(i,2);
+    d0 = sqrt((x0-xs)^2 + (y0-ys)^2);
+    if d0 < eps 
+        cnumray{i} = 0;
+    elseif d0 <= r
+        cnumray{i} = exp(1i*cray(i,:));
+    else
+        Rest = d0;
+        if d0 <= 2*r
+            Rest = 2*d0;
+        end
+        c0 = speed(cnode(i,:));
+        [ang] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,lnode,lelem,ru,ux,uy,pde,pct,Nray,data,opt,plt);
+        cnumray{i} = exp(1i*ang);
+    end
+end
+toc;
+
+ray_field(cnumray,cnode,2);
+end
+
+if (0)
+%% Step 2: Use NMLA to find ray directions d_c with low frequency sqrt(\omega)
+fprintf(['\n' '-'*ones(1,80) '\n']);
+fprintf('\nStep2: NMLA, low frequency\n');
+
+[ux,uy] = num_derivative_2(u_std,h,m,n,2);
+
+mbd = high_r;
+[mnode,melem] = squaremesh([-a-mbd,a+mbd,-b-mbd,b+mbd],h);
+[cnode,celem] = squaremesh([-a-mbd,a+mbd,-b-mbd,b+mbd],ch);
+cN = size(cnode,1);
+cnumray = cell(cN,1);
+cray = ex_ray(cnode,xs,ys);
+
+fprintf('NMLA time: \n');
+tic;
+for i = 1:cN
+    x0 = cnode(i,1);  y0 = cnode(i,2);
+    d0 = sqrt((x0-xs)^2 + (y0-ys)^2);
+    if d0 <= r
+        cnumray{i} = exp(1i*cray(i,:));
+    else
+        Rest = d0;
+        if d0 <= 2*r
+            Rest = 2*d0;
+        end
+        c0 = speed(cnode(i,:));
+        [ang] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,pde,pct,Nray,data,opt,plt);
+        cnumray{i} = exp(1i*ang);
+    end
+end
+toc;
+
+% clear lnode lelem;
+
+% cdiffang = angle_error(cnumray,cray);
+% norm(cdiffang,2)/norm(cray)
+% norm(cdiffang,inf)
+
+% cnumray = exp(1i*cnumray);
+
+ray_field(cnumray,cnode,4);
+% numray1 = interpolation(cnode,celem,mnode,cnumray);
+% 
+% ray = ex_ray(mnode,xs,ys);
+% ray = exp(1i*ray);
+% md = sqrt((mnode(:,1)-xs).^2 + (mnode(:,2)-ys).^2);
+% ray = ray.*(1 - (md<eps));
+% 
+% numray1 = numray1.*(md>r) + ray.*(md<=r);
+% 
+% ray_field(numray1,node,10);
+
+
+% diffray1 = numray1 - ray;
+% figure(1);
+% FJ_showresult(mnode,melem,real(diffray1));
+
+
+end
+
+
+
+%% ray direction field
+if (0)
+
+%% test for ray_fem_pml_2_pointsource
+xs = 0;   ys = 0;  
+speed = @(x) ones(size(x,1),1);    % medium speed
+
+plt = 0;                           % plot solution or not
+fquadorder = 3; 
+omega = 20*pi;
+NPW = 10;
+h = 1/100;
+% h = 1/(40*round(omega*NPW/(2*pi*40)));
+wpml = 2*pi/omega;                 % width of PML
+sigmaMax = 25/wpml;    
+
+a = 1/2;
+[node,elem] = squaremesh([-a,a,-a,a],h);
+x = node(:,1);
+y = node(:,2);
+
+ray = ex_ray(node,xs,ys);
+ray = exp(1i*ray);
+d = sqrt((node(:,1)-xs).^2 + (node(:,2)-ys).^2);
+ray = ray.*(1 - (d < eps) );
+figure(1);
+ray_field(ray,node,4);
+
+% [u] = Ray_FEM_PML_1_PointSource(node,elem,omega,wpml,sigmaMax,xs,ys,speed,ray,fquadorder,plt);
+
+N = size(node,1);
+ray2 = cell(N,1);
+for i = 1:N
+    ray2{i} = ray(i);
+end
+% [u2,A2,v2,b2,f2] = Ray_FEM_PML_2_PointSource(node,elem,omega,wpml,sigmaMax,xs,ys,speed,ray2,fquadorder,plt);
+figure(2);
+ray_field(ray2,node,5);
+
+% [u3] = Ray_FEM_PML_22_PointSource(node,elem,omega,wpml,sigmaMax,xs,ys,speed,ray2,fquadorder,plt);
+
+end
+
+
+
+if (0)
 NPW = 40;
 rh = 1/(NPW*round(omega/(2*pi*cmin)));
 1/rh
@@ -25,7 +480,7 @@ ylabel('Wavefield');
 legend('Ray-FEM solution','Standard FEM solution','Reference solution','LOCATION','Best');
 % axis equal;
 
-
+end
 
 
 if (0)

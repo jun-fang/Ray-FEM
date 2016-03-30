@@ -25,7 +25,8 @@ function b = assemble_RHS_with_ray(node,elem,omega,source,speed,ray,fquadorder)
 %   b: Ndof x 1 Galerking projection of the source
 %   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf('Assembling the right-hand side \n');
+
+
 
 %% FEM set up
 N = size(node,1);        % number of grid points
@@ -35,6 +36,11 @@ Ndof = N*Nray;          % degree of freedom
 
 k = omega./speed(node);          % wavenumber
 kk = repmat(k,1,Nray);
+
+% xmax = max(node(:,1));
+% xmin = min(node(:,1));
+% ymax = max(node(:,2));
+% ymin = min(node(:,2));
 
 %% Numerical Quadrature
 [lambda,weight] = quadpts(fquadorder);
@@ -82,8 +88,7 @@ for ni = 1:Nray
     btii = bt(ii,:);
     b(jj) = accumarray(elem(:),btii(:),[N 1]);
 end
-clear area b bt btii elem fp fphasei gradtempi ii jj k kk kki;
+clear area bt btii elem fp fphasei gradtempi ii jj k kk kki;
 clear node phasei pcy pxy ray reparea reppxy;
 
-frpintf('\n');
 

@@ -143,7 +143,7 @@ for rec_i = 1: rec_N
     for i = 1:cN
         x0 = cnode(i,1);  y0 = cnode(i,2);
         c0 = pde.speed(cnode(i,:));
-        [cnumray(i)] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,pde,1/5,Nray,'num',plt);
+        [cnumray(i)] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,pde,1/5,Nray,'num',1,plt);
     end
     toc;
     
@@ -202,7 +202,7 @@ for rec_i = 1: rec_N
     for i = 1:cN
         x0 = cnode(i,1);  y0 = cnode(i,2);
         c0 = pde.speed(cnode(i,:));
-        [cnumray(i,:)] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,pde,1/5,Nray,'num',plt);
+        [cnumray(i,:)] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,pde,1/5,Nray,'num',1,plt);
     end
     toc;
     

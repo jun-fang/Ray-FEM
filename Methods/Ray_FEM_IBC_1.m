@@ -73,8 +73,8 @@ A = sparse(Ndof,Ndof);
 bt = zeros(NT*Nray,3);
 b = zeros(Ndof,1);
 
-fprintf('Assembling time:\n');
-tic;
+% fprintf('Assembling time:\n');
+% tic;
 for p = 1:nQuad
     pxy = lambda(p,1)*node(elem(:,1),:) ...
         + lambda(p,2)*node(elem(:,2),:) ...
@@ -149,7 +149,7 @@ end
 
 clear bt ii jj bt btii reparea;
 
-toc;
+% toc;
 
 
 %% Boundaries
@@ -228,10 +228,10 @@ end
 
 
 %% Solve the linear system Av = b
-fprintf('Direct solving time for Av = b: \n');
-tic;
+% fprintf('Direct solving time for Av = b: \n');
+% tic;
 v = A\b;
-toc;
+% toc;
 
 
 %% Compute solution values at grid nodes
