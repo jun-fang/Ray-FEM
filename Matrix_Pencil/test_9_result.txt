@@ -1,0 +1,79 @@
+--------------------------------------------------------------------------------
+Point source location:  xs = 10,  ys = 10  
+--------------------------------------------------------------------------------
+omega/pi      &  2.50e+01  &  5.00e+01  &  1.00e+02  &  2.00e+02  &  4.00e+02
+--------------------------------------------------------------------------------
+Error_1       &  6.18e-03  &  3.65e-03  &  2.23e-03  &  1.42e-03  &  9.26e-04
+
+Error_2       &  1.02e-02  &  5.96e-03  &  3.61e-03  &  2.25e-03  &  1.43e-03
+
+Error_3       &  2.05e-03  &  1.13e-03  &  5.98e-04  &  3.34e-04  &  1.80e-04
+
+Error_4       &  2.05e-03  &  1.13e-03  &  5.98e-04  &  3.34e-04  &  1.80e-04
+
+Error_5       &  8.74e-04  &  5.41e-04  &  2.86e-04  &  1.69e-04  &  9.61e-05
+
+Error_6       &  1.06e-04  &  6.59e-05  &  3.89e-05  &  2.18e-05  &  1.16e-05
+
+Error_7       &  2.57e-06  &  9.99e-07  &  3.84e-07  &  1.43e-07  &  5.46e-08
+
+Error_8       &  8.39e-07  &  2.54e-07  &  8.14e-08  &  2.71e-08  &  9.24e-09
+
+Error_9       &  2.57e-06  &  9.89e-07  &  3.76e-07  &  1.44e-07  &  5.42e-08
+
+Error_10      &  9.40e-07  &  2.79e-07  &  8.84e-08  &  2.89e-08  &  9.73e-09
+
+--------------------------------------------------------------------------------
+Error_1:  L^{infty} error of the solution for low frequency equation  
+Error_2:  relative L^{2} error of the solution for low frequency equation  
+Error_3:  ray angle estimation L^{infty} error with sampling direction angle 0 
+Error_4:  ray angle estimation L^{infty} error with sampling direction angle pi/2 
+Error_5:  ray angle estimation L^{infty} error with two orthogonal sampling direction angles 0 and pi/2 
+Error_6:  ray angle estimation relative L^{2} error with two orthogonal sampling direction angles 0 and pi/2 
+Error_7:  L^{infty} error of Ray-FEM solution for high frequency equation with numerical ray estimation by MPM 
+Error_8:  relative L^{2} error of Ray-FEM solution for high frequency equation with numerical ray estimation by MPM 
+Error_9:  L^{infty} error of Ray-FEM solution for high frequency equation with exact ray information 
+Error_10: relative L^{2} error of Ray-FEM solution for high frequency equation with exact ray information 
+--------------------------------------------------------------------------------
+>> 
+
+
+
+--------------------------------------------------------------------------------
+Point source location:  xs = 10,  ys = 10  
+--------------------------------------------------------------------------------
+omega/pi      &  2.50e+01  &  5.00e+01  &  1.00e+02  &  2.00e+02  &  4.00e+02
+--------------------------------------------------------------------------------
+Error_1       &  6.18e-03  &  3.65e-03  &  2.23e-03  &  1.42e-03  &  9.26e-04
+
+Error_2       &  1.02e-02  &  5.96e-03  &  3.61e-03  &  2.25e-03  &  1.43e-03
+
+Error_3       &  2.05e-03  &  1.13e-03  &  5.98e-04  &  3.34e-04  &  1.80e-04
+
+Error_4       &  2.05e-03  &  1.13e-03  &  5.98e-04  &  3.34e-04  &  1.80e-04
+
+Error_5       &  8.74e-04  &  5.41e-04  &  2.86e-04  &  1.69e-04  &  9.61e-05
+
+Error_6       &  1.06e-04  &  6.59e-05  &  3.89e-05  &  2.18e-05  &  1.16e-05
+
+Error_7       &  1.14e-05  &  6.01e-06  &  2.91e-06  &  1.45e-06  &  7.46e-07
+
+Error_8       &  5.31e-06  &  2.60e-06  &  1.28e-06  &  6.37e-07  &  3.17e-07
+
+Error_9       &  1.14e-05  &  5.88e-06  &  2.87e-06  &  1.44e-06  &  7.43e-07
+
+Error_10      &  5.27e-06  &  2.57e-06  &  1.27e-06  &  6.32e-07  &  3.15e-07
+
+--------------------------------------------------------------------------------
+Error_1:  L^{infty} error of the solution for low frequency equation  
+Error_2:  relative L^{2} error of the solution for low frequency equation  
+Error_3:  ray angle estimation L^{infty} error with sampling direction angle 0 
+Error_4:  ray angle estimation L^{infty} error with sampling direction angle pi/2 
+Error_5:  ray angle estimation L^{infty} error with two orthogonal sampling direction angles 0 and pi/2 
+Error_6:  ray angle estimation relative L^{2} error with two orthogonal sampling direction angles 0 and pi/2 
+Error_7:  L^{infty} error of Ray-FEM solution for high frequency equation with numerical ray estimation by MPM 
+Error_8:  relative L^{2} error of Ray-FEM solution for high frequency equation with numerical ray estimation by MPM 
+Error_9:  L^{infty} error of Ray-FEM solution for high frequency equation with exact ray information 
+Error_10: relative L^{2} error of Ray-FEM solution for high frequency equation with exact ray information 
+--------------------------------------------------------------------------------
+>> 

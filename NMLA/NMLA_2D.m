@@ -1,13 +1,13 @@
-function [angs,Bs] = NMLA_2D(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,opt,plt)
+function [angs] = NMLA_2D(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,opt,plt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NMLA: finding ray directions at observation point (x0,y0) in 2D case
 %  See details in 'Numerical MicroLocal Analysis Revisited' by Jean-David
 % Benamou, Francis Collino, SimonMarmorat : https://hal.inria.fr/inria-00558881/document
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%  INPUT:     
+%  INPUT:
 % 
-%     (x0,y0):     Observation point;    
+%     (x0,y0):     Observation point; 
 %     c0:          Medium speed at (x0,y0)
 %     omega:       Angular frequency
 % 
@@ -47,7 +47,6 @@ function [angs,Bs] = NMLA_2D(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,
 %  OUTPUT:
 %
 %     angs:        Dominant ray direction angles
-%     Bs:          A(x_0)exp(1i*omega*\phi(x_0)) \simeq u(x_0)
 %
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -57,8 +56,7 @@ gamma = 0.5 ;               %% parameter in impedance quantity
 largd = 3.5 ;               %% Parameters in the Gaussian function
 
 %% Truncation level and number of samples
-% p = [1,1,-2.5-0.93*(omega*Rest)^0.763];
-p = [1,0,1,-1.5-0.56*(omega*Rest)^0.75];
+p = [1,1,-2.5-0.93*(omega*Rest)^0.763];
 rt = roots(p);
 pidx = find(rt>0);
 pr = rt(pidx(1))/omega;     %% real radius of observation circle
@@ -121,17 +119,37 @@ end
 if Nray == 1               %% given one ray direciton
     locs = ii;
     angs = ang(locs);
-    Bs = beta(locs);
+    Bs = mm;
 elseif Nray                %% given multiple ray directions
     [~, high_idx] = sort(-pks);
     idx = high_idx(1:Nray);
     locs = locs(idx);
-    [locs] = sort(locs);
+    Bs = pks(idx);
+    [locs,idx] = sort(locs);
+    Bs = Bs(idx);
     angs = ang(locs);
-    Bs = beta(locs);
 else                       %% number of ray directions is not given
     angs = ang(locs);
-    Bs = beta(locs);
+    Bs = pks;
 end
+
+%% Post processing 
+% lb = [];
+% ub = [];
+% options = optimset('Display', 'off');
+% x = lsqnonlin(@(x) residual_fun(x), [angs;Bs], lb, ub, options);
+% NN = round(length(x)/2);
+% x = x(1:NN);
+% angs = sort(x);
+% 
+% 
+% function res = residual_fun(x)
+% NN = round(length(x)/2);
+% res = zeros(nb_theta,1);
+% for n = 1:NN
+%     res = res + x(NN + n)*exp(1i*kr0*( cos(ang')*cos(x(n)) + sin(ang')*sin(x(n))));
+% end
+% res = Field - res;
+% end
 
 end

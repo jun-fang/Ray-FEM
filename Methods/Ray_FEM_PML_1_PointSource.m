@@ -44,6 +44,7 @@ function [u,A,v,b] = Ray_FEM_PML_1_PointSource(node,elem,omega,wpml,sigmaMax,xs,
 
 %% FEM set up
 N = size(node,1);       % number of grid points
+NT = size(elem,1);
 Nray = size(ray,2);     % number of rays crossing at each grid node
 Ndof = N*Nray;          % degree of freedom 
 % n = round(sqrt(N));         % number of grid points in each dimension
@@ -54,13 +55,14 @@ kk = repmat(k,1,Nray);
 
 xmin = node(1,1);    xmax = node(end,1);
 ymin = node(1,2);    ymax = node(end,2);
+h = (xmax-xmin)/round(sqrt(N));    % mesh size
 
-h = node(2,2) - node(1,2);    % mesh size
-n = round((ymax-ymin)/h + 1);
-
-xn = round((xs - xmin)/h);
-yn = round((ys - ymin)/h);
-xyn = n*xn + yn + 1;
+% h = node(2,2) - node(1,2);    % mesh size
+% n = round((ymax-ymin)/h + 1);
+% 
+% xn = round((xs - xmin)/h);
+% yn = round((ys - ymin)/h);
+% xyn = n*xn + yn + 1;
 
 
 %% PML set up
@@ -86,7 +88,7 @@ nQuad = size(lambda,1);
 
 %% Assemble the linear system Av = b
 A = sparse(Ndof,Ndof);
-M = A;
+bt = zeros(NT,3);       % the right hand side
 
 fprintf('Assembling time:\n');
 tic;
@@ -94,12 +96,23 @@ for p = 1:nQuad
     pxy = lambda(p,1)*node(elem(:,1),:) ...
         + lambda(p,2)*node(elem(:,2),:) ...
         + lambda(p,3)*node(elem(:,3),:);
+    reppxy = repmat(pxy,Nray,1);
     sx = s_x(pxy(:,1),pxy(:,2));
     sy = s_y(pxy(:,1),pxy(:,2));
     sxy = s_xy(pxy(:,1),pxy(:,2));
     k2 = (omega./speed(pxy)).^2;
+    fp = nodal_basis(xs,ys,h,reppxy);
     
-    for i = 1:3       
+    for i = 1:3 
+        gradtempi = - ray(elem(:,i),:);
+        gradtempi = gradtempi(:);
+        gradtempi = [real(gradtempi), imag(gradtempi)];
+        fphasei = gradtempi(:,1).*reppxy(:,1) + gradtempi(:,2).*reppxy(:,2);
+        kki = kk(elem(:,i),:);
+        kki = kki(:);
+        phasei = exp(1i*kki.*fphasei);
+        bt(:,i) = bt(:,i) + weight(p)*phi(p,i)*phasei.*fp;
+        
         for j = 1:3
             for nii = 1: Nray
                 gradtempi = - ray(elem(:,i),nii);
@@ -131,10 +144,10 @@ for p = 1:nQuad
                     ii = (nii-1)*N + elem(:,i);
                     jj = (njj-1)*N + elem(:,j);
                     Aij = weight(p)*(tempA1 + tempA2 - tempA3 - tempM).*exp_phase.*area;
-                    Mij = weight(p)*sxy*phi(p,i)*phi(p,j).*exp_phase.*area;
+%                     Mij = weight(p)*sxy*phi(p,i)*phi(p,j).*exp_phase.*area;
                     
                     A = A + sparse(ii,jj,Aij,Ndof,Ndof); 
-                    M = M + sparse(ii,jj,Mij,Ndof,Ndof); 
+%                     M = M + sparse(ii,jj,Mij,Ndof,Ndof); 
                     
                 end
             end
@@ -143,9 +156,11 @@ for p = 1:nQuad
 end
 toc;
 
-b = M(:,xyn)/h^2;
-clear Aij Mij Dphi fphasei fphasej phasei phasej exp_phase gradtempi gradtempj;
-clear k2 ki kj kki pxy fp reppxy tempA1 tempA2 tempA3 tempM;
+bt = bt.*repmat(area,1,3);
+b = accumarray(elem(:),bt(:),[N 1]);
+b = b/(h*h); %normalize b
+% clear Aij Mij Dphi fphasei fphasej phasei phasej exp_phase gradtempi gradtempj;
+% clear k2 ki kj kki pxy fp reppxy tempA1 tempA2 tempA3 tempM;
 
 
 %% Boundaries

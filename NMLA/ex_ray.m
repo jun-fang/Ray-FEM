@@ -3,8 +3,8 @@ function ray = ex_ray(node,xs,ys,opt)
 xx = node(:,1)-xs; 
 yy = node(:,2)-ys;
 ray = atan2(yy,xx);
-d = sqrt(xx.^2 + yy.^2);
 ray = ray + 2*pi*(ray < 0);
-if opt 
-    ray = exp(1i*ray).*(d>10*eps);
+if opt
+    rr = sqrt(xx.^2 + yy.^2);
+    ray = exp(1i*ray).*(rr>10*eps);
 end

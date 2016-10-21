@@ -1,0 +1,190 @@
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+
+--------------------------------------------------------------------------------
+Point source problem in homogeneous medium:
+
+  u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-0)^2 + (y-0)^2)) 
+

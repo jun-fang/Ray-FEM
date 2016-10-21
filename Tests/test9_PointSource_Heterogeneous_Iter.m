@@ -41,7 +41,10 @@ a = lg_a;                      % large computational domain [-lg_a, lg_a]^2
 omega = low_omega;
 [u_std] = Standard_FEM_PML_PointSource(lnode,lelem,omega,wpml,sigmaMax,xs,ys,speed,fquadorder,plt);
 
-
+if plt
+    figure(10);
+    FJ_showresult(lnode, lelem, real(u_std))
+end
 %% Step 2: Use NMLA to find ray directions d_c with low frequency sqrt(\omega)
 fprintf(['\n' '-'*ones(1,80) '\n']);
 fprintf('\nStep2: NMLA, low frequency\n');
@@ -111,6 +114,7 @@ cray = ex_ray(cnode,xs,ys);
 fprintf('NMLA time: \n');
 tic;
 for i = 1:cN
+   
     x0 = cnode(i,1);  y0 = cnode(i,2);
     d0 = sqrt((x0-xs)^2 + (y0-ys)^2);
     if d0 <= r              % ray directions near source point
@@ -159,7 +163,7 @@ N = size(node,1);
 n = round(sqrt(N));
 su = reshape(su,n,n);
 
-
+%%
 load('test9_reference_solution_40.mat');
 rn = round(1/rh) + 1;
 ru = reshape(ru,rn,rn);

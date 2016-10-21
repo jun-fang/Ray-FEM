@@ -1,3 +1,18 @@
+%% test for the hankel function
+omega = 100*pi;
+
+f1 = @(x) sqrt(omega)*besselh(0,1,omega*sqrt( (x(:,1).^2 + x(:,2).^2) ));
+f2 = @(x) (2./(pi*sqrt( (x(:,1).^2 + x(:,2).^2) ))).^(1/2).*exp(1i*(omega*sqrt( (x(:,1).^2 + x(:,2).^2) ) - pi/4));
+ang = pi/4;
+r = 1:20; r = r';
+x = r*cos(ang); y = r*sin(ang);
+xy = [x,y];
+df = abs(f1(xy) - f2(xy));
+showrate(r,df)
+
+
+
+if (0)
 pde = Helmholtz_data3;
     
 global omega;
@@ -31,7 +46,7 @@ acos(asin(max(imag(z)))/(omega*T))
 % z = mpencil(y,2,8) ;
 % log(z)
 
-
+end
 
 
 

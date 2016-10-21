@@ -1,13 +1,14 @@
 %% test 4: MPM for one point source problem, inside domain
 
 %% What does matter for the accuracy of the angle estimation:
-% 1) distance from the source point
+% 4) anlysis of the model
+% 1) distance to the source point
 % 2) sampling direction
 % 3) measurement of the error
-% 4) anlysis of the model
 
-% rec_omega = [ 3200 6400]*pi;
-rec_omega = [100 200 400 800 1600 3200 6400]*pi;
+
+% rec_omega = [ 3200 ]*pi;
+rec_omega = [100 200 400 800 1600]*pi;
 rec_err1 = zeros(length(rec_omega),1);
 rec_err2 = rec_err1;
 rec_err3 = rec_err1;
@@ -31,41 +32,21 @@ for j = 1:length(rec_omega)
     Nray = 1;
     
     a = 1/2;
-    b = 2*a;
-%     [node,elem] = squaremesh([-a,a,-a,a],h);
-    %     [lnode,lelem] = squaremesh([-b,b,-b,b],h);
-    if omega > 25*pi
-        [node,elem] = squaremesh([-a,a,-a,a],4*h);
-    end
-    if omega > 50*pi
-        [node,elem] = squaremesh([-a,a,-a,a],8*h);
-    end
-    if omega > 100*pi
-        [node,elem] = squaremesh([-a,a,-a,a],16*h);
-    end
-    if omega > 200*pi
-        [node,elem] = squaremesh([-a,a,-a,a],32*h);
-    end
-    if omega > 400*pi
-        [node,elem] = squaremesh([-a,a,-a,a],128*h);
-    end
-    if omega > 800*pi
-        [node,elem] = squaremesh([-a,a,-a,a],256*h);
-    end
-    if omega > 1600*pi
-        [node,elem] = squaremesh([-a,a,-a,a],512*h);
-    end
-    if omega > 3200*pi
-        [node,elem] = squaremesh([-a,a,-a,a],1024*h);
-    end
-    if omega > 6400*pi
-        [node,elem] = squaremesh([-a,a,-a,a],2048*h);
-    end
+
+%     for ii = 1: 9
+%         if omega > 25*pi*2^(ii-1)
+%             [node,elem] = squaremesh([-a,a,-a,a],2^(ii)*2*h);
+%         end
+%     end
+    
+    [node,elem] = squaremesh([-a,a,-a,a],h);
+    
     N = size(node,1);
     err1 = zeros(N,Nray);
     err2 = err1;
     err3 = err1;
     exray = pde.ray(node);
+    rec_ray = 0*exray;
     count = 0;   
         
     %     tic;
@@ -73,11 +54,12 @@ for j = 1:length(rec_omega)
         x0 = node(i,1);
         y0 = node(i,2);
         d0 = sqrt((x0-xs)^2 + (y0-ys)^2);
-        if d0 > 8*wl
+        if d0 > 8*wl && d0 <= 10*wl
             r = -wl:h:wl;
             r = r';
 %             est_ang =  exray(i)/1.1 + pi/12; 
-            est_ang =  exray(i);% + (-1)^(exray(i)>pi)*pi/30;
+            est_ang =  exray(i) + (-1)^(exray(i)>pi)*pi/30;
+            rec_ray(i) = exray(i);
             x = r*cos(est_ang) + x0;
             y = r*sin(est_ang) + y0;
             xy = [x, y];
@@ -99,7 +81,7 @@ for j = 1:length(rec_omega)
             %             end
             
             err1(i,:) = abs(abs(exray(i) - est_ang) - abs(acos(1i*imag(log(z(1)))/(1i*omega*h))) );
-            err2(i,:) = abs(1i*imag(log(z(1)))/(1i*omega*h) - 1);   
+            err2(i,:) = abs( exp(1i*omega*h*cos(exray(i) - est_ang)) - z );   
             err3(i,:) = abs(cos(exray(i) - est_ang) - 1i*imag(log(z(1)))/(1i*omega*h));
             
 %             err1(i,:) = min( abs(abs(exray(i) - est_ang) - asin(sqrt(abs(1-(1i*imag(log(z(1)))/(1i*omega*h))^2))) ),...
@@ -133,9 +115,13 @@ for j = 1:length(rec_omega)
     
 %         count
     
-    rec_err1(j) = norm(err1(:))*h/(norm(exray(:))*h);
-    rec_err2(j) = norm(err2(:))*h/(norm(exray(:))*h);
-    rec_err3(j) = norm(err3(:))*h/(norm(exray(:))*h);
+%     rec_err1(j) = norm(err1(:))*h/(norm(exray(:))*h);
+%     rec_err2(j) = norm(err2(:))*h/(norm(exray(:))*h);
+%     rec_err3(j) = norm(err3(:))*h/(norm(exray(:))*h);
+    
+    rec_err1(j) = norm(err1(:))/norm(rec_ray);
+    rec_err2(j) = norm(err1(:),inf);
+    rec_err3(j) = norm(err2(:),2)*h;
 end
 
 fprintf(['\n' '-'*ones(1,80) '\n']);
@@ -145,6 +131,10 @@ fprintf('Sample data angle: %d pi ', est_ang/pi);
 fprintf(['\n' '-'*ones(1,80) '\n']);
 fprintf('theta_1     ');
 fprintf('  &  %.2e',rec_err1');
+fprintf('\n\n');
+
+fprintf('theta_2     ');
+fprintf('  &  %.2e',rec_err2');
 fprintf('\n\n');
 
 fprintf('theta_3     ');

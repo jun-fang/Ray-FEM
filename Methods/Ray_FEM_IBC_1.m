@@ -1,9 +1,9 @@
 function [u,A,v,b,rel_L2_err] = Ray_FEM_IBC_1(node,elem,omega,pde,ray,fquadorder,plt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Ray-based FEM for solving the Helmholtz equation with Impedance Boundary Condition(IBC): 
+%% Ray-based FEM for solving the Helmholtz equation with Impedance Boundary Condition(IBC):
 %         -\Delta u - (omega/c)^2 u = f               in D
-%         \partial u / \partial n + i omega/c u = g   on \partial D 
-%  Version 1: Assume the numbers of rays crossing at each grid node are the same!!! 
+%         \partial u / \partial n + i omega/c u = g   on \partial D
+%  Version 1: Assume the numbers of rays crossing at each grid node are the same!!!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % INPUT:
@@ -11,13 +11,13 @@ function [u,A,v,b,rel_L2_err] = Ray_FEM_IBC_1(node,elem,omega,pde,ray,fquadorder
 %   node  N x 2 matrix that contains the physical position of each node
 %         node(:,1) provides the x coordinate
 %         node(:,2) provides the y coordinate
-% 
+%
 %   elem: NT x 3 matrix that contains the indices of the nodes for each
 %         triangle element
 %
 %   omega: angular frequency
 %
-%   pde: Structure of functions containing the pde information  
+%   pde: Structure of functions containing the pde information
 %        like speed c(x), right hand side f(x)
 %
 %   ray: N x Nray matrix that contains the ray information
@@ -31,11 +31,11 @@ function [u,A,v,b,rel_L2_err] = Ray_FEM_IBC_1(node,elem,omega,pde,ray,fquadorder
 % OUTPUT:
 %
 %   u: N x 1 vector, stored as the solution value at grid nodes
-%   A: Ndof x Ndof assembling matrix 
+%   A: Ndof x Ndof assembling matrix
 %   v: Ndof x 1 vector, the solution of Av = b, the coefficients of bases
 %   b: Ndof x 1 vector, the right hand side
 %   rel_L2_err: relative L2 error
-%   
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -43,7 +43,7 @@ function [u,A,v,b,rel_L2_err] = Ray_FEM_IBC_1(node,elem,omega,pde,ray,fquadorder
 N = size(node,1);       % number of grid points
 NT = size(elem,1);      % number of triangle elements
 Nray = size(ray,2);     % number of rays crossing at each grid node
-Ndof = N*Nray;          % degree of freedom 
+Ndof = N*Nray;          % degree of freedom
 
 c = pde.speed(node);    % medium speed
 k = omega./c;           % wavenumber
@@ -62,11 +62,15 @@ reparea = repmat(area,Nray,1);
 
 
 %% Assemble the linear system Av = b
-% Nvec = nQuad*3*3*Nray*Nray*NT;
-% rows = zeros(Nvec,1);
-% cols = rows;
-% vals = rows;
-% inds = 1:NT;
+
+threshold = 50*pi;
+if fquadorder < 6 || omega <= threshold % fast but more memory
+    Nvec = nQuad*3*3*Nray*Nray*NT;
+    rows = zeros(Nvec,1);
+    cols = rows;
+    vals = rows;
+    inds = 1:NT;
+end
 
 A = sparse(Ndof,Ndof);
 
@@ -111,33 +115,44 @@ for p = 1:nQuad
                     phasej = exp(1i*kj.*fphasej);
                     exp_phase = phasei.*phasej;
                     
-                    tempA1 = Dphi(:,1,i).*Dphi(:,1,j) + Dphi(:,2,i).*Dphi(:,2,j); 
+                    tempA1 = Dphi(:,1,i).*Dphi(:,1,j) + Dphi(:,2,i).*Dphi(:,2,j);
                     
                     tempA2 = 1i*ki*phi(p,i).*(gradtempi(:,1).*Dphi(:,1,j) + gradtempi(:,2).*Dphi(:,2,j))...
-                        + 1i*kj*phi(p,j).*(gradtempj(:,1).*Dphi(:,1,i) + gradtempj(:,2).*Dphi(:,2,i));  
+                        + 1i*kj*phi(p,j).*(gradtempj(:,1).*Dphi(:,1,i) + gradtempj(:,2).*Dphi(:,2,i));
                     
                     tempA3 = phi(p,i)*phi(p,j)*ki.*kj.*(gradtempi(:,1).*gradtempj(:,1)...
                         + gradtempi(:,2).*gradtempj(:,2));
                     
                     tempM = k2*phi(p,i)*phi(p,j);
                     
-                    ii = (nii-1)*N + elem(:,i);
-                    jj = (njj-1)*N + elem(:,j);
-                    Aij = weight(p)*(tempA1 + tempA2 - tempA3 - tempM).*exp_phase.*area;
-                    A = A + sparse(ii,jj,Aij,Ndof,Ndof); 
-%                     rows(inds) = (nii-1)*N + elem(:,i);
-%                     cols(inds) = (njj-1)*N + elem(:,j);
-%                     vals(inds) = weight(p)*(tempA1 + tempA2 - tempA3 - tempM).*exp_phase.*area;
-%                     inds = inds + NT;
+                    if fquadorder >= 6 && omega > threshold % slow but less memory
+                        ii = (nii-1)*N + elem(:,i);
+                        jj = (njj-1)*N + elem(:,j);
+                        Aij = weight(p)*(tempA1 + tempA2 - tempA3 - tempM).*exp_phase.*area;
+                        A = A + sparse(ii,jj,Aij,Ndof,Ndof);
+                    end
+                    
+                    if fquadorder < 6 || omega <= threshold % fast but more memory
+                        rows(inds) = (nii-1)*N + elem(:,i);
+                        cols(inds) = (njj-1)*N + elem(:,j);
+                        vals(inds) = weight(p)*(tempA1 + tempA2 - tempA3 - tempM).*exp_phase.*area;
+                        inds = inds + NT;
+                    end
                 end
             end
         end
     end
 end
 
+if fquadorder < 6 || omega <= threshold % fast but more memory
+    A = sparse(rows,cols,vals,Ndof,Ndof);
+end
+
 clear Aij Dphi fphasei fphasej phasei phasej exp_phase gradtempi gradtempj;
 clear k2 ki kj kki pxy fp reppxy tempA1 tempA2 tempA3 tempM;
-% % A = sparse(rows,cols,vals,Ndof,Ndof);
+
+% u = 0;v=0;rel_L2_err=0;
+% return;
 
 bt = bt.*repmat(reparea,1,3);
 for ni = 1:Nray
@@ -159,7 +174,7 @@ el = sqrt(sum((node(bdEdge(:,1),:) - node(bdEdge(:,2),:)).^2,2));
 repel = repmat(el,Nray,1);
 
 [lambdagN,weightgN] = quadpts1(fquadorder);
-phigN = lambdagN;                
+phigN = lambdagN;
 nQuadgN = size(lambdagN,1);
 
 

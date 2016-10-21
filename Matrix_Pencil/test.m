@@ -1,32 +1,60 @@
-global omega;
-global xs;
-global ys;
+test_MPM10_2_point_sources_two_directions;
+test_MPM10_3_point_sources_two_directions;
+test_MPM10_4point_sources_two_directions;
 
-xs = 0;
-ys = 0;
 
-omega = 3200*pi;
-NPW = 6;
-h = 1/round((NPW*omega)/(2*pi));   % mesh size
-wl = 2*pi/omega;    % wavelength
 
-pde = MPM_data4;
 
-x0 = rand(1);   
-y0 = rand(1);
-
-r = -wl:h:wl;
-r = r';
-est_ang =  pde.ray([x0,y0]);
-x = r*cos(est_ang) + x0;
-y = r*sin(est_ang) + y0;
-xy = [x, y];
-u = pde.ex_u(xy);
-u = u.*sqrt((x-xs).^2 + (y-ys).^2).^(1/2);
-
-%% MPM
-[z] = Matrix_Pencil_2(u);
-[~,sz] = sort(imag(z));
-z = z(sz);  % [5/4*pi, 7/4*pi, 3/4*pi, 1/4*pi]
-
-abs(z-exp(1i*omega*h))
+% rec_omega = [25 50 100 200 400 800 1600]*pi;
+% rec_err1 = zeros(length(rec_omega),1);
+% rec_err2 = rec_err1;
+% rec_err3 = rec_err1;
+% rec_err0 = rec_err1;
+% global omega;
+% global xs;
+% global ys;
+% global a;
+% 
+% pde = Helmholtz_data1_0;
+% plt = 0;                           % plot solution or not
+% fquadorder = 3;                    % numerical quadrature order
+% solver = 'DIR';
+% 
+% xs = 10;
+% ys = 10;
+% a = 1/2;
+% 
+% nn = 2;
+% 
+% for j = 1:nn%length(rec_omega)
+%    
+%     low_omega = sqrt(rec_omega(j));
+%     omega = rec_omega(j);
+%     NPW = 8;
+%     h = 1/round((NPW*omega)/(2*pi));   % mesh size
+%     
+%     omega = low_omega;
+%     
+%     wl = 2*pi/omega;    % wavelength
+%     rh = wl/NPW;
+%     
+%     a = 1/2;
+%     a = a + h*(round(wl/h) + 1);
+%     a
+%     1/h
+%     [lnode,lelem] = squaremesh([-a,a,-a,a],h);
+%     [lu,~,~,rel_L2_err] = Standard_FEM_IBC(lnode,lelem,omega,pde,fquadorder,solver,plt);
+%     eu = pde.ex_u(lnode);
+% 
+% %     rec_err0(j) = rel_L2_err; %norm(lu-eu,inf);
+%     rec_err0(j) = norm(lu-eu,inf);
+% 
+% end
+% 
+% fprintf(['\n' '-'*ones(1,80) '\n']);
+% fprintf('Error_0     ');
+% fprintf('  &  %.2e',rec_err0');
+% fprintf('\n\n');
+% 
+% 
+% showrate(rec_omega(1:nn), rec_err0(1:nn)')

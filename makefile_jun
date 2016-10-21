@@ -1,0 +1,178 @@
+Default: program1
+
+driver1.o: driver1.c constants.h functions.h FeikoPQ5.h FeikonalPQ5.h FSM5.h WENO3.h Extrapolation4.h WENO5.h Extrapolation5.h Feiko5_WENO3_LxF.h Feikonal5_WENO3_Sweeping.h Feiko5_WENO5_LxF.h Feikonal5_WENO5_Sweeping.h SmootherVel.h AeikoPQ5.h AeikonalPQ5.h Aeiko5_WENO3_LxF.h Aeikonal5_WENO3_Sweeping.h Aeiko5_WENO5_LxF.h Aeikonal5_WENO5_Sweeping.h SmootherFunction.h SmootherFunction_x.h SmootherFunction2.h SmootherFunction2_x.h  SmootherFunction2_y.h SmootherFunction2_xx.h SmootherFunction2_yy.h FSM5_WENO3_LxF.h FSM5_Feikonal5_WENO3_Sweeping.h FSM5_WENO5_LxF.h FSM5_Feikonal5_WENO5_Sweeping.h FSM5_Aeikonal5_WENO3_Sweeping.h FSM5_Aeikonal5_WENO5_Sweeping.h SmootherConnection.h SmootherConnection_x.h SmootherConnection_y.h  PolyConnection.h PolyConnection_x.h PolyConnection_y.h FSM5_Local_Solver.h FSM5_Sweeping.h FSM5_FeikonalPQ5.h FSM5_AeikonalPQ5.h Amplitude2_Babich.h Amplitude2_Babich_square.h Gradient.h Laplacian.h Amplitude2_WENO3_Babich.h Amplitude2_WENO3_Babich_square.h Amplitude2_WENO3_Babich_Term2.h Amplitude2_WENO3_Babich_Term2_square.h Amplitude2_Babich_Term2.h Amplitude2_Babich_Term2_square.h Amplitude2_WENO5_Babich_square.h WENO5_LxF.h
+    clang -w -c driver1.c
+
+
+functions.o: functions.c constants.h
+    clang -w -c functions.c
+
+FeikoPQ5.o: FeikoPQ5.c  constants.h functions.h
+    clang -w -c FeikoPQ5.c
+
+FeikonalPQ5.o: FeikonalPQ5.c constants.h functions.h FeikoPQ5.h
+    clang -w -c FeikonalPQ5.c
+
+AeikoPQ5.o: AeikoPQ5.c  constants.h functions.h
+    clang -w -c AeikoPQ5.c
+
+AeikonalPQ5.o: AeikonalPQ5.c constants.h functions.h AeikoPQ5.h
+    clang -w -c AeikonalPQ5.c
+
+Feiko5_WENO3_LxF.o: Feiko5_WENO3_LxF.c  constants.h functions.h
+    clang -w -c Feiko5_WENO3_LxF.c
+
+FSM5_WENO3_LxF.o: FSM5_WENO3_LxF.c  constants.h functions.h
+    clang -w -c FSM5_WENO3_LxF.c
+
+Feikonal5_WENO3_Sweeping.o: Feikonal5_WENO3_Sweeping.c constants.h functions.h Feiko5_WENO3_LxF.h
+    clang -w -c Feikonal5_WENO3_Sweeping.c
+
+FSM5_Feikonal5_WENO3_Sweeping.o: FSM5_Feikonal5_WENO3_Sweeping.c constants.h functions.h Feiko5_WENO3_LxF.h FSM5_WENO3_LxF.h
+    clang -w -c FSM5_Feikonal5_WENO3_Sweeping.c
+
+Feiko5_WENO5_LxF.o: Feiko5_WENO5_LxF.c  constants.h functions.h
+    clang -w -c Feiko5_WENO5_LxF.c
+
+FSM5_WENO5_LxF.o: FSM5_WENO5_LxF.c  constants.h functions.h
+    clang -w -c FSM5_WENO5_LxF.c
+
+Feikonal5_WENO5_Sweeping.o: Feikonal5_WENO5_Sweeping.c constants.h functions.h Feiko5_WENO5_LxF.h
+    clang -w -c Feikonal5_WENO5_Sweeping.c
+
+FSM5_Feikonal5_WENO5_Sweeping.o: FSM5_Feikonal5_WENO5_Sweeping.c constants.h functions.h Feiko5_WENO5_LxF.h FSM5_WENO5_LxF.h
+    clang -w -c FSM5_Feikonal5_WENO5_Sweeping.c
+
+Aeiko5_WENO3_LxF.o: Aeiko5_WENO3_LxF.c  constants.h functions.h
+    clang -w -c Aeiko5_WENO3_LxF.c
+
+Aeikonal5_WENO3_Sweeping.o: Aeikonal5_WENO3_Sweeping.c constants.h functions.h Aeiko5_WENO3_LxF.h
+    clang -w -c Aeikonal5_WENO3_Sweeping.c
+
+FSM5_Aeikonal5_WENO3_Sweeping.o: FSM5_Aeikonal5_WENO3_Sweeping.c constants.h functions.h Aeiko5_WENO3_LxF.h FSM5_WENO3_LxF.h
+    clang -w -c FSM5_Aeikonal5_WENO3_Sweeping.c
+
+Aeiko5_WENO5_LxF.o: Aeiko5_WENO5_LxF.c  constants.h functions.h
+    clang -w -c Aeiko5_WENO5_LxF.c
+
+Aeikonal5_WENO5_Sweeping.o: Aeikonal5_WENO5_Sweeping.c constants.h functions.h Aeiko5_WENO5_LxF.h
+    clang -w -c Aeikonal5_WENO5_Sweeping.c
+
+FSM5_Aeikonal5_WENO5_Sweeping.o: FSM5_Aeikonal5_WENO5_Sweeping.c constants.h functions.h Aeiko5_WENO5_LxF.h FSM5_WENO3_LxF.h
+    clang -w -c FSM5_Aeikonal5_WENO5_Sweeping.c
+
+FSM5.o: FSM5.c constants.h functions.h
+    clang -w -c FSM5.c
+
+WENO3.o: WENO3.c constants.h functions.h
+    clang -w -c WENO3.c
+
+Extrapolation4.o: Extrapolation4.c constants.h functions.h
+    clang -w -c Extrapolation4.c
+
+WENO5.o: WENO5.c constants.h functions.h
+    clang -w -c WENO5.c
+
+Extrapolation5.o: Extrapolation5.c constants.h functions.h
+    clang -w -c Extrapolation5.c
+
+Amplitude2_Babich.o: Amplitude2_Babich.c constants.h functions.h
+    clang -w -c Amplitude2_Babich.c
+
+Amplitude2_Babich_square.o: Amplitude2_Babich_square.c constants.h functions.h
+    clang -w -c Amplitude2_Babich_square.c
+
+Amplitude2_WENO3_Babich.o: Amplitude2_WENO3_Babich.c constants.h functions.h WENO3.h Extrapolation4.h
+    clang -w -c Amplitude2_WENO3_Babich.c
+
+Amplitude2_WENO3_Babich_square.o: Amplitude2_WENO3_Babich_square.c constants.h functions.h WENO3.h Extrapolation4.h
+    clang -w -c Amplitude2_WENO3_Babich_square.c
+
+Amplitude2_WENO5_Babich_square.o: Amplitude2_WENO5_Babich_square.c constants.h functions.h WENO5_LxF.h Extrapolation5.h
+    clang -w -c Amplitude2_WENO5_Babich_square.c
+
+WENO5_LxF.o: WENO5_LxF.c  constants.h functions.h WENO5.h Extrapolation5.h
+    clang -w -c WENO5_LxF.c
+
+Amplitude2_Babich_Term2.o: Amplitude2_Babich_Term2.c constants.h functions.h
+    clang -w -c Amplitude2_Babich_Term2.c
+
+Amplitude2_Babich_Term2_square.o: Amplitude2_Babich_Term2_square.c constants.h functions.h
+    clang -w -c Amplitude2_Babich_Term2_square.c
+
+Amplitude2_WENO3_Babich_Term2.o: Amplitude2_WENO3_Babich_Term2.c constants.h functions.h WENO3.h Extrapolation4.h
+    clang -w -c Amplitude2_WENO3_Babich_Term2.c
+
+Amplitude2_WENO3_Babich_Term2_square.o: Amplitude2_WENO3_Babich_Term2_square.c constants.h functions.h WENO3.h Extrapolation4.h
+    clang -w -c Amplitude2_WENO3_Babich_Term2_square.c
+
+Gradient.o: Gradient.c constants.h functions.h WENO3.h Extrapolation4.h
+    clang -w -c Gradient.c
+
+Laplacian.o: Laplacian.c constants.h functions.h
+    clang -w -c Laplacian.c
+
+SmootherVel.o: SmootherVel.c  constants.h functions.h
+    clang -w -c  SmootherVel.c
+
+SmootherFunction.o: SmootherFunction.c  constants.h functions.h
+    clang -w -c  SmootherFunction.c
+
+SmootherFunction_x.o: SmootherFunction_x.c  constants.h functions.h
+    clang -w -c  SmootherFunction_x.c
+
+SmootherFunction2.o: SmootherFunction2.c  constants.h functions.h
+    clang -w -c  SmootherFunction2.c
+
+SmootherFunction2_x.o: SmootherFunction2_x.c  constants.h functions.h
+    clang -w -c  SmootherFunction2_x.c
+
+SmootherFunction2_y.o: SmootherFunction2_y.c  constants.h functions.h
+    clang -w -c  SmootherFunction2_y.c
+
+SmootherFunction2_xx.o: SmootherFunction2_xx.c  constants.h functions.h
+    clang -w -c  SmootherFunction2_xx.c
+
+SmootherFunction2_yy.o: SmootherFunction2_yy.c  constants.h functions.h
+    clang -w -c  SmootherFunction2_yy.c
+
+SmootherConnection.o: SmootherConnection.c  constants.h functions.h
+    clang -w -c  SmootherConnection.c
+
+SmootherConnection_x.o: SmootherConnection_x.c  constants.h functions.h
+    clang -w -c  SmootherConnection_x.c
+
+SmootherConnection_y.o: SmootherConnection_y.c  constants.h functions.h
+    clang -w -c  SmootherConnection_y.c
+
+PolyConnection.o: PolyConnection.c  constants.h functions.h
+    clang -w -c  PolyConnection.c
+
+PolyConnection_x.o: PolyConnection_x.c  constants.h functions.h
+    clang -w -c  PolyConnection_x.c
+
+PolyConnection_y.o: PolyConnection_y.c  constants.h functions.h
+    clang -w -c  PolyConnection_y.c
+
+FSM5_Local_Solver.o: FSM5_Local_Solver.c  constants.h functions.h
+    clang -w -c  FSM5_Local_Solver.c
+
+FSM5_Sweeping.o: FSM5_Sweeping.c  constants.h functions.h FSM5_Local_Solver.h
+    clang -w -c  FSM5_Sweeping.c
+
+FSM5_FeikonalPQ5.o: FSM5_FeikonalPQ5.c constants.h functions.h FeikoPQ5.h  FSM5_Local_Solver.h
+    clang -w -c FSM5_FeikonalPQ5.c
+
+FSM5_AeikonalPQ5.o: FSM5_AeikonalPQ5.c constants.h functions.h AeikoPQ5.h  FSM5_Local_Solver.h
+    clang -w -c FSM5_AeikonalPQ5.c
+
+
+program1: driver1.o functions.o FSM5.o FeikoPQ5.o FeikonalPQ5.o WENO3.o Extrapolation4.o WENO5.o Extrapolation5.o Feiko5_WENO3_LxF.o Feikonal5_WENO3_Sweeping.o Feiko5_WENO5_LxF.o Feikonal5_WENO5_Sweeping.o SmootherVel.o AeikoPQ5.o AeikonalPQ5.o Aeiko5_WENO3_LxF.o Aeikonal5_WENO3_Sweeping.o Aeiko5_WENO5_LxF.o Aeikonal5_WENO5_Sweeping.o SmootherFunction.o SmootherFunction_x.o SmootherFunction2.o SmootherFunction2_x.o  SmootherFunction2_y.o SmootherFunction2_xx.o SmootherFunction2_yy.o FSM5_WENO3_LxF.o FSM5_Feikonal5_WENO3_Sweeping.o FSM5_WENO5_LxF.o FSM5_Feikonal5_WENO5_Sweeping.o FSM5_Aeikonal5_WENO3_Sweeping.o FSM5_Aeikonal5_WENO5_Sweeping.o SmootherConnection.o SmootherConnection_x.o SmootherConnection_y.o PolyConnection.o PolyConnection_x.o PolyConnection_y.o FSM5_Local_Solver.o FSM5_Sweeping.o FSM5_FeikonalPQ5.o FSM5_AeikonalPQ5.o Amplitude2_Babich.o Amplitude2_Babich_square.o Amplitude2_WENO3_Babich.o Amplitude2_WENO3_Babich_square.o Gradient.o Laplacian.o Amplitude2_WENO3_Babich_Term2.o Amplitude2_WENO3_Babich_Term2_square.o Amplitude2_Babich_Term2.o Amplitude2_Babich_Term2_square.o Amplitude2_WENO5_Babich_square.o WENO5_LxF.o
+    clang -w driver1.o -o program1 functions.o FSM5.o FeikoPQ5.o FeikonalPQ5.o WENO3.o Extrapolation4.o WENO5.o Extrapolation5.o Feiko5_WENO3_LxF.o Feikonal5_WENO3_Sweeping.o Feiko5_WENO5_LxF.o Feikonal5_WENO5_Sweeping.o SmootherVel.o AeikoPQ5.o AeikonalPQ5.o Aeiko5_WENO3_LxF.o Aeikonal5_WENO3_Sweeping.o Aeiko5_WENO5_LxF.o Aeikonal5_WENO5_Sweeping.o  SmootherFunction.o SmootherFunction_x.o SmootherFunction2.o SmootherFunction2_x.o  SmootherFunction2_y.o SmootherFunction2_xx.o SmootherFunction2_yy.o FSM5_WENO3_LxF.o FSM5_Feikonal5_WENO3_Sweeping.o FSM5_WENO5_LxF.o FSM5_Feikonal5_WENO5_Sweeping.o FSM5_Aeikonal5_WENO3_Sweeping.o FSM5_Aeikonal5_WENO5_Sweeping.o SmootherConnection.o SmootherConnection_x.o SmootherConnection_y.o PolyConnection.o PolyConnection_x.o PolyConnection_y.o FSM5_Local_Solver.o FSM5_Sweeping.o FSM5_FeikonalPQ5.o FSM5_AeikonalPQ5.o Amplitude2_Babich.o Amplitude2_Babich_square.o Amplitude2_WENO3_Babich.o Amplitude2_WENO3_Babich_square.o Gradient.o Laplacian.o Amplitude2_WENO3_Babich_Term2.o Amplitude2_WENO3_Babich_Term2_square.o Amplitude2_Babich_Term2.o Amplitude2_Babich_Term2_square.o Amplitude2_WENO5_Babich_square.o WENO5_LxF.o  -lm
+
+
+clean:
+    rm *o
+
+cleanall: clean
+    rm program* *~

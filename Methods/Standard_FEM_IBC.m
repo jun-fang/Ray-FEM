@@ -62,8 +62,8 @@ nQuad = size(lambda,1);
 A = sparse(Ndof,Ndof);
 bt = zeros(NT,3);       % the right hand side
 
-fprintf('Assembling time:\n');
-tic;
+% fprintf('Assembling time:\n');
+% tic;
 for p = 1:nQuad
     % quadrature points in the x-y coordinate
     pxy = lambda(p,1)*node(elem(:,1),:) ...
@@ -101,7 +101,7 @@ bt = bt.*repmat(area,1,3);
 b = accumarray(elem(:),bt(:),[Ndof 1]);
 
 clear bt area;
-toc;
+% toc;
 
 
 %% Boundaries
@@ -147,10 +147,10 @@ clear rows cols vals;
 %% Solve the linear system Au = b
 % Direct solver
 if (strcmp(solver,'DIR'))    
-    fprintf('Direct solver time:\n');
-    tic;
+%     fprintf('Direct solver time:\n');
+%     tic;
     u = A\b;
-    toc;
+%     toc;
 end
 
 % HIF-DE

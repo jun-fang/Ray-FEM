@@ -15,7 +15,7 @@ plt = 0;                   % show solution or not
 fquadorder = 3;            % numerical quadrature order
 solver = 'DIR';            % linear system solver
 
-rec_N = 1;                 % we test rec_N examples
+rec_N = 4;                 % we test rec_N examples
 
 % record h and omega
 rec_omega = zeros(1,rec_N);
@@ -63,11 +63,11 @@ Rest = 1;
 high_omega = 192*pi;
 NPW = 6;
 
-% cp_omega = [20 40 60 80]*2*pi;
+cp_omega = [20 40 60 80]*2*pi;
 tstart = tic;
 for rec_i = 1: rec_N
-%     high_omega = cp_omega(rec_i);
-    high_omega = high_omega + 8*pi;
+    high_omega = cp_omega(rec_i);
+%     high_omega = high_omega + 8*pi;
     low_omega = sqrt(high_omega);
 %     NPW = 2*NPW;
 %     h = 1/2^(round(log2((NPW*high_omega)/(2*pi))));

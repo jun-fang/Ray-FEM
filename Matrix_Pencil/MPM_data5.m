@@ -1,13 +1,11 @@
 function pde = MPM_data5
 %% uexact = sqrt(k)*besselh(0,1,k*sqrt((x+xs)^2 + (y+ys)^2))
+%         - sqrt(k)*besselh(0,1,k*sqrt((x-xs)^2 + (y+ys)^2))
 %         + sqrt(k)*2*besselh(0,1,k*sqrt((x-xs)^2 + (y-ys)^2))
 %         + sqrt(k)*0.5*besselh(0,1,k*sqrt((x+xs)^2 + (y-ys)^2))
-%         - sqrt(k)*besselh(0,1,k*sqrt((x-xs)^2 + (y+ys)^2))
 
 
-global omega
-global xs;
-global ys;
+global omega xs ys a;
 
 pde = struct(...
     'f',@f,...                    % right hand side source
@@ -38,9 +36,9 @@ pde = struct(...
         k = omega;
         x = p(:,1);    y = p(:,2);
         u = besselh(0,1,k*sqrt((x+xs).^2 + (y+ys).^2))...
+            - besselh(0,1,k*sqrt((x-xs).^2 + (y+ys).^2))...
             + 2*besselh(0,1,k*sqrt((x-xs).^2 + (y-ys).^2))...
-            + 0.5*besselh(0,1,k*sqrt((x+xs).^2 + (y-ys).^2))...
-            - besselh(0,1,k*sqrt((x-xs).^2 + (y+ys).^2));
+            + 0.5*besselh(0,1,k*sqrt((x+xs).^2 + (y-ys).^2));
         u = sqrt(k)*u;
     end
 
@@ -80,7 +78,7 @@ pde = struct(...
 
     % exact ray
     function ray = ray(p)
-        ray = gradphase(p);
+        ray = ray_ang(p);
     end
 
     % gradient u
@@ -106,7 +104,6 @@ pde = struct(...
 
     % Neumann Boundary Du \dot n  
     function uN =  Du_n(p)
-        global a;
         x = p(:,1); y = p(:,2);
         DDu = Du(p);
         Dux = DDu(:,1);   Duy = DDu(:,2);

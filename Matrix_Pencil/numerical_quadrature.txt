@@ -1,0 +1,38 @@
+>> test_numerical_quadrature_order(200*pi,1/400,2/400,1/400)
+Table: Error of quadrature for e^{i \omega d \cdot x}
+ n      Error     
+1   1.58543e-06
+2   1.74058e-12
+3   1.92342e-12
+4   1.43683e-12
+5   1.43683e-12
+6   1.43299e-12
+7   1.43800e-12
+8   1.43533e-12
+9   1.56615e-12
+
+>> test_numerical_quadrature_order(200*pi,1/400,2/400,5/400)
+Table: Error of quadrature for e^{i \omega d \cdot x}
+ n      Error     
+1   1.00411e-05
+2   6.45788e-10
+3   1.90501e-11
+4   5.62582e-13
+5   5.62612e-13
+6   5.66121e-13
+7   5.61275e-13
+8   5.63948e-13
+9   4.33286e-13
+
+>> test_numerical_quadrature_order(200*pi,1/400,sqrt(3)/2,sqrt(1)/2)
+Table: Error of quadrature for e^{i \omega d \cdot x}
+ n      Error     
+1   4.72080e-02
+2   3.24923e-04
+3   4.41779e-04
+4   1.65938e-06
+5   9.76771e-07
+6   1.80160e-09
+7   1.67396e-09
+8   7.45681e-12
+9   1.61776e-12

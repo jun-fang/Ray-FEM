@@ -15,7 +15,7 @@ sigmaMax = 25/wpml;                % Maximun absorbtion
 
 NPW = 40;
 rh = 1/(NPW*round(omega/(2*pi*cmin)));
-fprintf('omega/(2*pi) = %d,   1/h = %d,   NPW = %d \n',omega/(2*pi), 1/h, NPW);
+fprintf('omega/(2*pi) = %d,   1/h = %d,   NPW = %d \n',omega/(2*pi), 1/rh, NPW);
 [node,elem] = squaremesh([-a,a,-a,a],rh);
 [ru] = Standard_FEM_PML_PointSource(node,elem,omega,wpml,sigmaMax,xs,ys,speed,fquadorder,plt);
 clear node elem;

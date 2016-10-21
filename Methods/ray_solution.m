@@ -1,4 +1,6 @@
 function uray = ray_solution(node,elem,omega,speed,v,ray,xy)
+%% Ray-FEM solution at any nodes xy
+
 Nray = size(ray,2);
 
 xmin = node(1,1);    xmax = node(end,1);

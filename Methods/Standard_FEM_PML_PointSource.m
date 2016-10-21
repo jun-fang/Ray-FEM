@@ -40,19 +40,12 @@ function [u,A,b] = Standard_FEM_PML_PointSource(node,elem,omega,wpml,sigmaMax,xs
 
 %% FEM set up
 N = size(node,1);           % number of grid points
-% NT = size(elem,1);          % number of triangle elements
+NT = size(elem,1);          % number of triangle elements
 Ndof = N;                   % degree of freedom 
-% n = round(sqrt(N));         % number of grid points in each dimension
 
 xmin = node(1,1);    xmax = node(end,1);
 ymin = node(1,2);    ymax = node(end,2);
-
-h = node(2,2) - node(1,2);    % mesh size
-n = round((ymax-ymin)/h + 1);
-
-xn = round((xs - xmin)/h);
-yn = round((ys - ymin)/h);
-xyn = n*xn + yn + 1;
+h = (xmax-xmin)/round(sqrt(N));    % mesh size
 
 
 %% PML set up
@@ -77,9 +70,8 @@ nQuad = size(lambda,1);
 
 %% Assemble the stiffness matrix A
 A = sparse(Ndof,Ndof);
-M = A;
-fprintf('Assembling time:\n');
-tic;
+bt = zeros(NT,3);       % the right hand side
+
 for p = 1:nQuad
     % quadrature points in the x-y coordinate
     pxy = lambda(p,1)*node(elem(:,1),:) ...
@@ -89,8 +81,11 @@ for p = 1:nQuad
     sx = s_x(pxy(:,1),pxy(:,2));
     sy = s_y(pxy(:,1),pxy(:,2));
     sxy = s_xy(pxy(:,1),pxy(:,2));
+    
+    fp = nodal_basis(xs,ys,h,pxy);
    
     for i = 1:3
+        bt(:,i) = bt(:,i) + weight(p)*phi(p,i)*fp;
         for j = 1:3
             % $Delta_{ij}|_{\tau} = \int_{\tau} ( s1/s2 \partial_1 \phi_i \partial_1 \phi_j + s2/s1 \partial_2 \phi_i \partial_2 \phi_j ) dxdy$           
 %             Deltaij = sx.*Dphi(:,1,i).*Dphi(:,1,j) + sy.*Dphi(:,2,i).*Dphi(:,2,j);
@@ -102,34 +97,24 @@ for p = 1:nQuad
 %             MMij = weight(p)*Mij.*area;
             
             Aij = weight(p)*(sx.*Dphi(:,1,i).*Dphi(:,1,j) + sy.*Dphi(:,2,i).*Dphi(:,2,j) - k2.*sxy*phi(p,i)*phi(p,j)).*area;
-            MMij = weight(p)*(sxy*phi(p,i)*phi(p,j)).*area;
-            M = M + sparse(elem(:,i),elem(:,j),MMij,Ndof,Ndof);
             A = A + sparse(elem(:,i),elem(:,j),Aij,Ndof,Ndof);   %% save memory
         end
     end
 end
-toc;
 
-b = M(:,xyn)/h^2;
-clear Aij Deltaij Mij M Dphi k2 pxy area;
-
-
+bt = bt.*repmat(area,1,3);
+b = accumarray(elem(:),bt(:),[N 1]);
+b = b/(h*h/2);
 
 %% Boundary conditions
-[bdNode,~,isBdNode] = findboundary(elem);
+[~,~,isBdNode] = findboundary(elem);
 freeNode = find(~isBdNode);
 
 
 %% Solve linear system Au = b
 u = zeros(N,1);
-
 % Direct solver
-fprintf('Direct solver time:\n');
-tic;
 u(freeNode) = A(freeNode,freeNode)\b(freeNode);
-toc;
-
-
 
 %% plot the solution
 if plt
