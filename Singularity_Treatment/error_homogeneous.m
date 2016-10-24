@@ -1,6 +1,6 @@
-%% L2 error of Ray-FEM solution in homogeneous medium
-% 1. need suitable parameters: epsilon and omega
-% 2. fix epsilon error \sim \omega^-0.5
+%% Compute errors of Ray-FEM solution in homogeneous medium
+% 1. need suitable parameters: epsilon, omega, wpml
+% 2. fix epsilon error \sim \omega^??
 
 function error = error_homogeneous(omega,epsilon)
 
@@ -14,13 +14,14 @@ NPW = 6;
 h = wavelength/NPW;
 h = 1/round(1/h);
    
-wpml = 1.8*round(wavelength/h)*h;                 % width of PML
+wpml = 0.08;%3*round(wavelength/h)*h;                 % width of PML
 sigmaMax = 25/wpml;                % Maximun absorbtion
 
 a = 1/2;
 [node,elem] = squaremesh([-a,a,-a,a],h);
 Nray = 1; N = size(node,1); Ndof = N;
 
+%% Exact ray information
 xx = node(:,1)-xs;  yy = node(:,2)-ys;
 rr = sqrt(xx.^2 + yy.^2);
 ray = atan2(yy,xx);
@@ -65,9 +66,9 @@ aa = epsilon; bb = 2*epsilon;
 x_eps = cutoff(aa,bb,node);
 v = ub.*x_eps;
 us = u;
-
 uu = us + v;
 toc;
+
 
 du = ub -uu;
 x = node(:,1); y = node(:,2);
@@ -76,14 +77,8 @@ du(y>=a-wpml)=0; du(y<= -a+wpml) = 0;
 r = sqrt(x.*x+y.*y);
 du(r<h/2) = 0;
 
-% ub(r<h/2) = 0;
-% max_error = norm(du,inf);
-% l2_error = norm(du)*h;
-% rel_l2_error = norm(du)/norm(ub);
-% error = [max_error, l2_error, rel_l2_error];
-% showsolution(node,elem,real(du));
 
-
+%% Compute the errors of wavefield at y=0.4
 px = 0.4;
 px = round(px/h)*h;
 indx = 1 + round((px+a)/h);
@@ -99,7 +94,6 @@ rel_max_err = norm(du,inf)/norm(eu,inf);
 l2_err = norm(du)*h;
 rel_l2_err = norm(du)/norm(eu);
 error = [max_err,rel_max_err,l2_err,rel_l2_err];
-
 
 
 

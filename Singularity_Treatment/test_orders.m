@@ -64,7 +64,7 @@
 % relative l2 error \sim constant
 
 epsilon = 0.137;
-x = [40 60 80 120 160 240 320]*pi;
+x = [40 60 80 120 160 240 320 480 640]*pi;
 y1 = x;
 y2 = x;
 y3 = x;
@@ -88,14 +88,5 @@ FJ_showrate(x,y3);
 subplot(2,2,4);
 FJ_showrate(x,y4);
 
-% omega = 80*pi;
-% n = [1,2,3,4];
-% x = 2.1.^(n+2);
-% y = x;
-% for ni = 1:length(y)
-%     ni
-%     epsilon = x(ni);
-%     error = error_homogeneous(omega,epsilon);
-%     y(ni) = error
-% end
-% showrate(x,y)
+
+

@@ -1,32 +1,31 @@
-%% Homogeneous medium
-% check: 1. assembling matirx 2. right hand side 3. smoothness of function
-% 4.suitable parameters
+%% L2 error of Ray-FEM solution in homogeneous medium
+% 1. need suitable parameters: epsilon and omega
+% 2. fix epsilon error \sim \omega^-0.5
 
+function error = error_homogeneous(omega,epsilon)
 
 xs = 0;   ys = 0;                  % point source location
 speed = @(x) ones(size(x,1),1);    % medium speed
 
 fquadorder = 3;                    % numerical quadrature order
 
-omega = 160*pi;    
 wavelength = 2*pi/omega; 
-epsilon = 0.137;%0.11/wavelength;
 NPW = 6;
 h = wavelength/NPW;
 h = 1/round(1/h);
    
-wpml = 0.08; %h*round(wavelength/h);                 % width of PML
+wpml = 0.08;%3*round(wavelength/h)*h;                 % width of PML
 sigmaMax = 25/wpml;                % Maximun absorbtion
 
 a = 1/2;
 [node,elem] = squaremesh([-a,a,-a,a],h);
-Nray = 1; N = size(node,1); Ndof = N; n = round(sqrt(N));
+Nray = 1; N = size(node,1); Ndof = N;
 
+%% Exact ray information
 xx = node(:,1)-xs;  yy = node(:,2)-ys;
 rr = sqrt(xx.^2 + yy.^2);
 ray = atan2(yy,xx);
-ray = exp(1i*ray).*(rr>eps);
-
+ray = exp(1i*ray).*(rr>10*eps);
 
 tic;
 %% Assembling
@@ -63,7 +62,7 @@ u = sum(u,2);
 xx = node(:,1)-xs;  yy = node(:,2)-ys;
 rr = sqrt(xx.^2 + yy.^2);
 ub = 1i/4*besselh(0,1,omega*rr);
-aa = epsilon;  bb = 2*epsilon;
+aa = epsilon; bb = 2*epsilon;
 x_eps = cutoff(aa,bb,node);
 v = ub.*x_eps;
 us = u;
@@ -71,44 +70,29 @@ us = u;
 uu = us + v;
 toc;
 
-figure(11);
-showsolution(node,elem,real(us));
-
-figure(12);
-showsolution(node,elem,real(uu));
-
-figure(13);
-showsolution(node,elem,real(x_eps));
-
 du = ub -uu;
 x = node(:,1); y = node(:,2);
 du(x>=a-wpml)=0; du(x<= -a+wpml) = 0;
 du(y>=a-wpml)=0; du(y<= -a+wpml) = 0;
-figure(14);
-showsolution(node,elem,real(du));
+r = sqrt(x.*x+y.*y);
+du(r<h/2) = 0;
 
 
-%% plot wavefield 
-figure(22);
 px = 0.4;
 px = round(px/h)*h;
 indx = 1 + round((px+a)/h);
 n = round(sqrt(N));
-uh = reshape(uu,n,n);
+du = reshape(du,n,n);
 uex = reshape(ub,n,n);
 
-xx = -a:h:a;
-yh = uh(indx,:);
-yex = uex(indx,:);
+du = du(indx,:);
+eu = uex(indx,:);
 
-plot(xx,real(yh),'ro-');
-hold on;
-plot(xx,real(yex));
-title('real part of the wavefield at y = 0.4','FontSize', 30);
-xlabel('x','FontSize', 30)
-ylabel('wavefield','FontSize', 30)
-legend('Numerical solution','Exact solution','Location','best');
-
+max_err = norm(du,inf);
+rel_max_err = norm(du,inf)/norm(eu,inf);
+l2_err = norm(du)*h;
+rel_l2_err = norm(du)/norm(eu);
+error = [max_err,rel_max_err,l2_err,rel_l2_err];
 
 
 

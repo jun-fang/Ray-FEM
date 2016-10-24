@@ -23,24 +23,26 @@ fquadorder = 3;            % numerical quadrature order
 solver = 'DIR';            % linear system solver
 Nray = 1;                  % one ray direction
 sec_opt = 1;               % NMLA second order correction or not
-epsilon = 0.113;
+epsilon = 0.137;
 
 NPW = 6;                   % number of points per wavelength
-test_num = 5;              % we test test_num examples
+test_num = 6;              % we test test_num examples
 
 % frequency
-high_omega = [40 80 120 160 200 320]*pi;   
-low_omega = sqrt(high_omega); 
+high_omega = [40 80 120 160 240 320]*pi;
+low_omega = sqrt(high_omega);
 
 % error
 low_rayerr = 0*high_omega;
 high_rayerr = 0*high_omega;
-l2_error = 0*high_omega;
-max_error = 0*high_omega;
+l2_err = 0*high_omega;
+rel_l2_err = 0*high_omega;
+rel_max_err = 0*high_omega;
+max_err = 0*high_omega;
 
 % wavelength
-high_wl = 2*pi./high_omega;    
-low_wl = 2*pi./low_omega;     
+high_wl = 2*pi./high_omega;
+low_wl = 2*pi./low_omega;
 
 % mesh size
 fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
@@ -48,8 +50,8 @@ ch = 1./(20*round(low_omega/(2*pi)));        % coarse mesh size
 
 % width of PML
 % high_wpml = ch*ceil(high_wl/ch);
-high_wpml = fh*ceil(high_wl/fh);
-low_wpml = fh*ceil(low_wl/fh);
+high_wpml = 0.08*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
+low_wpml = fh.*ceil(low_wl./fh);
 
 
 %% Generate the domain sizes
@@ -138,7 +140,7 @@ for ti = 1: test_num
     mr = sqrt((mnode(:,1)-xs).^2 + (mnode(:,2)-ys).^2);
     numray1 = numray1.*(mr>2*epsilon) + exray.*(mr<=2*epsilon);
     rayerr1 = numray1 - exray;
-    low_rayerr(ti) = norm(rayerr1)*h;
+    low_rayerr(ti) = norm(rayerr1)*h/(norm(exray)*h);
     numray = numray1;
     
     
@@ -199,7 +201,7 @@ for ti = 1: test_num
     sr = sqrt((node(:,1)-xs).^2 + (node(:,2)-ys).^2);
     numray2 = numray2.*(sr>2*epsilon) + exray.*(sr<=2*epsilon);
     rayerr2 = numray2 - exray;
-    high_rayerr(ti) = norm(rayerr2)*h;
+    high_rayerr(ti) = norm(rayerr2)*h/(norm(exray)*h);
     numray = numray2;
     
     
@@ -210,21 +212,23 @@ for ti = 1: test_num
     tic;
     
     % Assembling
+    wpml = 0.08;                % width of PML
+    sigmaMax = 25/wpml;                 % Maximun absorbtion
     ray = numray;
     [A] = assemble_Helmholtz_matrix_with_ray_1(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_with_ray_sing(node,elem,epsilon,omega,speed,ray,fquadorder);
-     
+    
     % Boundaries
     [~,~,isBdNode] = findboundary(elem);
     rep_isBdNode = repmat(isBdNode,1,Nray);
     isBdNode = rep_isBdNode(:);
     freeNode = find(~isBdNode);
-        
+    
     % Solve the linear system Au = b
     N = size(node,1); Ndof = N;
     v = zeros(Ndof,1);
     v(freeNode) = A(freeNode,freeNode)\b(freeNode);
-        
+    
     % Compute solution values at grid nodes
     grad = ray(:);
     grad = [real(grad),imag(grad)];
@@ -252,13 +256,26 @@ for ti = 1: test_num
     du = ub -uu;
     x = node(:,1); y = node(:,2);
     rxy = sqrt((x-xs).^2 + (y-ys).^2);
-    du(rxy<h/2) = 0; 
+    du(rxy<h/2) = 0;
     du(x>=a-wpml)=0; du(x<= -a+wpml) = 0;
     du(y>=a-wpml)=0; du(y<= -a+wpml) = 0;
     
-    exu = ub;  exu(rxy<h/2) = 0;
-    l2_error(ti) = norm(du)*h/(norm(exu)*h);
-    max_error(ti) = norm(du,inf)/norm(exu,inf);
+    
+    %% Compute the errors of wavefield at y=0.4
+    px = 0.4;
+    px = round(px/h)*h;
+    indx = 1 + round((px+a)/h);
+    n = round(sqrt(N));
+    du = reshape(du,n,n);
+    uex = reshape(ub,n,n);
+    
+    du = du(indx,:);
+    eu = uex(indx,:);
+    
+    max_err(ti) = norm(du,inf);
+    rel_max_err(ti) = norm(du,inf)/norm(eu,inf);
+    l2_err(ti) = norm(du)*h;
+    rel_l2_err(ti) = norm(du)/norm(eu);
     
     
 end
@@ -268,12 +285,74 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 figure(1);
 subplot(1,2,1);
-FJ_showrate(high_omega(1:test_num),l2_error(1:test_num))
-subplot(1,2,2)
-FJ_showrate(high_omega(1:test_num),max_error(1:test_num))
+FJ_showrate(high_omega(1:test_num),low_rayerr(1:test_num));
+subplot(1,2,2);
+FJ_showrate(high_omega(1:test_num),high_rayerr(1:test_num));
+
+figure(2);
+subplot(2,2,1);
+FJ_showrate(high_omega(1:test_num),max_err(1:test_num));
+subplot(2,2,2);
+FJ_showrate(high_omega(1:test_num),rel_max_err(1:test_num));
+subplot(2,2,3);
+FJ_showrate(high_omega(1:test_num),l2_err(1:test_num));
+subplot(2,2,4);
+FJ_showrate(high_omega(1:test_num),rel_l2_err(1:test_num));
 
 
 
 
+%% print result
+fprintf( fileID,['\n' '-'*ones(1,80) '\n']);
+fprintf( fileID,'omega:                  ');
+fprintf( fileID,'&  %.2e  ',high_omega );
+fprintf( fileID,'\nomega/2pi:              ');
+fprintf( fileID,'&  %.2e  ',high_omega/(2*pi) );
+fprintf( fileID,'\n\nGrid size h:            ');
+fprintf( fileID,'&  %.2e  ',fh);
+fprintf( fileID,'\n1/h:                    ');
+fprintf( fileID,'&  %.2e  ',1./fh);
+
+fprintf( fileID,['\n' '-'*ones(1,80) '\n']);
+fprintf( fileID,'Low freq ray error:     ');
+fprintf( fileID,'&  %1.2d  ',low_rayerr);
+fprintf( fileID,'\n\nHigh freq ray error:    ');
+fprintf( fileID,'&  %1.2d  ',high_rayerr);
+fprintf( fileID,'\n\nMax error:              ');
+fprintf( fileID,'&  %1.2d  ',max_err);
+fprintf( fileID,'\n\nRelative max error:     ');
+fprintf( fileID,'&  %1.2d  ',rel_max_err);
+fprintf( fileID,'\n\nL2 error:               ');
+fprintf( fileID,'&  %1.2d  ',l2_err);
+fprintf( fileID,'\n\nRelative L2 error:      ');
+fprintf( fileID,'&  %1.2d  ',rel_l2_err);
+
+
+fprintf( ['\n' '-'*ones(1,80) '\n']);
+fprintf( 'omega:                  ');
+fprintf( '&  %.2e  ',high_omega );
+fprintf( '\nomega/2pi:              ');
+fprintf( '&  %.2e  ',high_omega/(2*pi) );
+fprintf( '\n\nGrid size h:            ');
+fprintf( '&  %.2e  ',fh);
+fprintf( '\n1/h:                    ');
+fprintf( '&  %.2e  ',1./fh);
+
+fprintf( ['\n' '-'*ones(1,80) '\n']);
+fprintf( 'Low freq ray error:     ');
+fprintf( '&  %1.2d  ',low_rayerr);
+fprintf( '\n\nHigh freq ray error:    ');
+fprintf( '&  %1.2d  ',high_rayerr);
+fprintf( '\n\nMax error:              ');
+fprintf( '&  %1.2d  ',max_err);
+fprintf( '\n\nRelative max error:     ');
+fprintf( '&  %1.2d  ',rel_max_err);
+fprintf( '\n\nL2 error:               ');
+fprintf( '&  %1.2d  ',l2_err);
+fprintf( '\n\nRelative L2 error:      ');
+fprintf( '&  %1.2d  ',rel_l2_err);
+
+
+fprintf( ['\n' '-'*ones(1,80) '\n']);
 
 
