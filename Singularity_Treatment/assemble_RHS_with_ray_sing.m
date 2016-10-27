@@ -1,4 +1,4 @@
-function b = assemble_RHS_with_ray_sing(node,elem,epsilon,omega,speed,ray,fquadorder)
+function b = assemble_RHS_with_ray_sing(node,elem,epsilon,omega,speed,xs,ys,ray,fquadorder)
 %% Function to assemble the right hand side : 
 %         -\Delta u - (omega/c)^2 u = f               in D
 %                                 u = 0               on \partial D 
@@ -60,7 +60,7 @@ for p = 1:nQuad
     reppxy = repmat(pxy,Nray,1);
     
     % we suppose that the source is well inside the physical domain
-    fp = sing_rhs(epsilon,omega,pxy);
+    fp = sing_rhs(epsilon,omega,pxy,xs,ys);
 %     fp = source(pxy).*( pxy(:,1) < xmax - wpml ).*( pxy(:,1) > xmin + wpml )...
 %         .*( pxy(:,2) < ymax - wpml ).*( pxy(:,2) > ymin + wpml ); 
     for i = 1:3

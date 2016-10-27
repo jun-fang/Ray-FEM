@@ -31,7 +31,7 @@ ray = exp(1i*ray).*(rr>eps);
 tic;
 %% Assembling
 [A] = assemble_Helmholtz_matrix_with_ray_1(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
-b = assemble_RHS_with_ray_sing(node,elem,epsilon,omega,speed,ray,fquadorder);
+b = assemble_RHS_with_ray_sing(node,elem,epsilon,omega,speed,xs,ys,ray,fquadorder);
 
 
 %% Boundaries
@@ -64,7 +64,7 @@ xx = node(:,1)-xs;  yy = node(:,2)-ys;
 rr = sqrt(xx.^2 + yy.^2);
 ub = 1i/4*besselh(0,1,omega*rr);
 aa = epsilon;  bb = 2*epsilon;
-x_eps = cutoff(aa,bb,node);
+x_eps = cutoff(aa,bb,node,xs,ys);
 v = ub.*x_eps;
 us = u;
 

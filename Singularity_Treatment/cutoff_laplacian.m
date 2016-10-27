@@ -1,14 +1,14 @@
-% function cfl = cutoff_laplacian(epsilon,p)
-function cfl = cutoff_laplacian(a,b,p)
+%% Laplacian of the cut-off function
+% output is 0 if r>=b or r<=a, smooth in the intermediate annulus
 
-r = sqrt(p(:,1).^2 + p(:,2).^2);
-% a = 1/epsilon;
-% b = 2/epsilon;
+function cfl = cutoff_laplacian(a,b,p,xs,ys)
+x = p(:,1)-xs;  y = p(:,2)-ys;
+r = sqrt(x.^2 + y.^2);
 cfl = g2(r,a,b) + g1(r,a,b)./r;
 cfl(r<a+eps) = 0;   cfl(r>b-eps) = 0;
 
 function f = f(x)
-f = (x>0).*exp(-1./x);
+f = (x>0).*exp(-1./abs(x));
 
 function f1 = f1(x)
 f1 = f(x)./(x.*x);
