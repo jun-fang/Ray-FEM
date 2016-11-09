@@ -10,61 +10,79 @@
 
 
 %% Test for cut-off function wrt epsilon
-% gradient \sim eps^0.5,
-% laplacian \sim eps^2.5
+% gradient L2: \sim eps^-0.5, L^{ifty} \sim eps^-2
+% laplacian L2: \sim eps^-2.5, L^{ifty} \sim eps^-4
 
 % h = 1/3900;  a = 1/2;
 % [node,elem] = squaremesh([-a,a,-a,a],h);
 % p = node;
 % n = [1,2,3,4,5];
-% x = 1.7.^(n+2);
+% x = 1.7.^-(n+2);
 % y0 = x; y1 = x; y2 = x;
 % for ni = 1:length(n)
 %     ni
 %     epsilon = x(ni);
-%     a = 1/epsilon;  b = 2/epsilon;
-%     cg = cutoff_gradient(a,b,p);
-% %     abscg = sqrt(abs(cg(:,1)).^2 + abs(cg(:,1)).^2);
-% %     cl = cutoff_laplacian(a,b,p);
-%     cf = cutoff(a,b,p);
-%     y0(ni) = norm(cf);
-% %     y1(ni) = norm(abscg);
-% %     y2(ni) = norm(cl);
+%     a = epsilon;  b = 2*epsilon;
+%     cg = cutoff_gradient(a,b,p,0,0);
+%     abscg = sqrt(abs(cg(:,1)).^2 + abs(cg(:,1)).^2);
+%     cl = cutoff_laplacian(a,b,p,0,0);
+%     cf = cutoff(a,b,p,0,0);
+%     y0(ni) = norm(cf,inf);
+%     y1(ni) = norm(abscg,inf);
+%     y2(ni) = norm(cl,inf);
 % end
-% showrate(x,y0);
+% figure(2);
+% subplot(3,1,1);
+% showrate(x,y0)
+% subplot(3,1,2);
 % showrate(x,y1)
+% subplot(3,1,3);
 % showrate(x,y2)
 
 
 %% Test for singularity treatment right hand side
-% RHS \sim \omega^0.5
+% RHS \sim \omega^0.5, the first term dominates
 
 % h = 1/900;  a = 1/2;
+% xs = 0;  ys = 0;
 % [node,elem] = squaremesh([-a,a,-a,a],h); p = node;
-% r = sqrt(p(:,1).^2 + p(:,2).^2);  
+% r = sqrt((p(:,1)-xs).^2 + (p(:,2)-ys).^2);  
 % x = 2*[80 160 320 640]*pi;
-% y = x;  y1 = x; y2 = x; 
-% epsilon = 1/0.13;
-% a = 1/epsilon;  b = 2/epsilon;
-% for ni = 1:length(y)
+% y0 = x;  y1 = x; y2 = x; 
+% epsilon = 0.137;
+% a = epsilon;  b = 2*epsilon;
+% for ni = 1:length(x)
 %     ni
 %     omega = x(ni);
-% %     f = sing_rhs(epsilon,omega,p);
-% %     y(ni) = norm(f)*h;
+%     ub = 1i/4*besselh(0,1,omega*r);
+%     cf_lap = cutoff_laplacian(a,b,p,xs,ys);
+%     rhs2 = ub.*cf_lap;
+%     rhs2(r<=a) = 0; rhs2(r>=b) = 0;
 %     
-%     f1 = -1i/4*omega*besselh(1,1,omega*r)./(r.*r).*p(:,1);
-%     f1(r<a) = 0;  f1(r>b) = 0;
-%     y1(ni) = norm(f1)*h;
+%     rhs = sing_rhs(epsilon,omega,p,xs,ys);
+%     rhs1 = rhs - rhs2;
+%     rhs1(r<=a) = 0; rhs1(r>=b) = 0;
+%     
+%     y0(ni) = norm(rhs)*h;
+%     y1(ni) = norm(rhs1)*h;
+%     y2(ni) = norm(rhs2)*h;
 % end
+% figure(3);
+% subplot(3,1,1);
+% showrate(x,y0)
+% subplot(3,1,2);
 % showrate(x,y1)
+% subplot(3,1,3);
+% showrate(x,y2)
+
 
 
 %% Test for the error of solution
 % error \sim \omega^-0.5
 % relative l2 error \sim constant
 
-epsilon = 0.137;
-x = [40 60 80 120 160 240 320 480 640]*pi;
+epsilon = 0.103;
+x = [40 60 80 120 160 240 320]*pi;
 y1 = x;
 y2 = x;
 y3 = x;
@@ -78,6 +96,8 @@ for ni = 1:length(y1)
     y3(ni) = error(3);
     y4(ni) = error(4);
 end
+
+%%
 figure(1);
 subplot(2,2,1);
 FJ_showrate(x,y1);

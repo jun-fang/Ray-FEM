@@ -1,9 +1,12 @@
 %% A test example for Ray-FEM: assembling with ray information
 
 rec_omega = [ 25 50 100 200 400]*pi;
-n = 3;
-rec_maxerr = zeros(1,n);
-rec_l2err = zeros(1,n);
+high_omega = rec_omega;
+n = 5;
+max_err = zeros(1,n);
+rel_max_err = zeros(1,n);
+l2_err = zeros(1,n);
+rel_l2_err = zeros(1,n);
 for i = 1:n
     i
     tic;
@@ -13,8 +16,8 @@ for i = 1:n
     sigma = 1/100;
     
     %% Load source data
-    u_exact = @(x) sqrt(omega)*besselh(0,1,omega*sqrt((x(:,1)-xc).^2 + (x(:,2)-yc).^2));
-    u_pl = @(x) (2/pi./(sqrt((x(:,1)-xc).^2 + (x(:,2)-yc).^2))).^0.5.*exp(1i*(omega*sqrt((x(:,1)-xc).^2 + (x(:,2)-yc).^2) - pi/4));
+    u_exact = @(x) besselh(0,1,omega*sqrt((x(:,1)-xc).^2 + (x(:,2)-yc).^2));
+    %u_pl = @(x) (2/pi./(sqrt((x(:,1)-xc).^2 + (x(:,2)-yc).^2))).^0.5.*exp(1i*(omega*sqrt((x(:,1)-xc).^2 + (x(:,2)-yc).^2) - pi/4));
 %     source = @(x) -4*sqrt(omega)*1i*1/(2*pi*sigma^2)*exp( -( (x(:,1)-xc).^2 + (x(:,2)-yc).^2  )/(2*sigma^2) );
     source = @(x) 0*ones(size(x(:,1)));
     speed = @(x) ones(size(x(:,1)));
@@ -33,7 +36,7 @@ for i = 1:n
     bd = 1/omega^(1/4);
     bd = round(bd/h)*h;
     bd = 0.3;
-    wpml = 0.1;  bd = 0.3;
+    wpml = 0.1;  bd = 0.2;
     
     a = 1/2+wpml;
     [node,elem] = squaremesh_annulus([-a,a,-a,a],[-bd,bd,-bd,bd],h);
@@ -79,7 +82,7 @@ for i = 1:n
     
     %% Solve Av=b and reconstruct the solution
     v = zeros(Ndof,1);
-    v(idx2) = u_pl(BdNode2).*exp(-1i*omega*dx);
+    v(idx2) = u_exact(BdNode2).*exp(-1i*omega*dx);
     b = b - A*v;
     v(freeNode) = A(freeNode,freeNode)\b(freeNode);
     
@@ -105,16 +108,23 @@ for i = 1:n
     idx0 = inpml>0;
     ddu(idx0) = du(idx0);
     du = du(idx0);
-    rec_maxerr(i) = norm(du,inf);
-    rec_l2err(i) = norm(du,2)/norm(u_ex(idx0),2);
+    rel_max_err(i) = norm(du,inf)/norm(u_ex,inf);
+    max_err(i) = norm(du,inf);
+    rel_l2_err(i) = norm(du,2)/norm(u_ex(idx0),2);
+    l2_err(i) = norm(du,2)*h;
     toc;
 end
 
-figure(1);
-subplot(1,2,1);
-showrate(rec_omega(1:n),rec_maxerr);
-subplot(1,2,2);
-showrate(rec_omega(1:n),rec_l2err);
+figure(2);
+subplot(2,2,1);
+FJ_showrate(high_omega(1:n),max_err);
+subplot(2,2,2);
+FJ_showrate(high_omega(1:n),rel_max_err);
+subplot(2,2,3);
+FJ_showrate(high_omega(1:n),l2_err);
+subplot(2,2,4);
+FJ_showrate(high_omega(1:n),rel_l2_err);
+
 
 
        

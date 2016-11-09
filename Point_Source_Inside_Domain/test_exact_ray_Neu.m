@@ -35,7 +35,7 @@ for i = 1:n
     % [node,elem] = squaremesh([-a,a,-a,a],h);
 %     bd = 0.1;
     
-%     a = 0.8; bd = 0.2;
+    a = 0.8; bd = 0.2;
     [node,elem] = squaremesh_annulus([-a,a,-a,a],[-bd,bd,-bd,bd],h);
     
     

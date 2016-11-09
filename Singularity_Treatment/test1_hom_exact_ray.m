@@ -3,7 +3,8 @@
 % 4.suitable parameters
 
 
-xs = 0;   ys = 0;                  % point source location
+xs = 0.1;   ys = 0.1;                  % point source location
+% xs = 0;   ys = 0;
 speed = @(x) ones(size(x,1),1);    % medium speed
 
 fquadorder = 3;                    % numerical quadrature order
@@ -15,11 +16,13 @@ NPW = 6;
 h = wavelength/NPW;
 h = 1/round(1/h);
    
-wpml = 0.08; %h*round(wavelength/h);                 % width of PML
+wpml = 0.15; %h*round(wavelength/h);                 % width of PML
 sigmaMax = 25/wpml;                % Maximun absorbtion
 
 a = 1/2;
-[node,elem] = squaremesh([-a,a,-a,a],h);
+% [node,elem] = squaremesh([-a,a,-a,a],h);
+[node,elem] = squaremesh([-.4,.6,-.4,.6],h);
+
 Nray = 1; N = size(node,1); Ndof = N; n = round(sqrt(N));
 
 xx = node(:,1)-xs;  yy = node(:,2)-ys;
@@ -66,48 +69,64 @@ ub = 1i/4*besselh(0,1,omega*rr);
 aa = epsilon;  bb = 2*epsilon;
 x_eps = cutoff(aa,bb,node,xs,ys);
 v = ub.*x_eps;
+v(rr<h/2) = 0; 
+ub(rr<h/2) = 0; 
+
 us = u;
 
 uu = us + v;
 toc;
 
-figure(11);
+figure(10);
 showsolution(node,elem,real(us));
+title('solution of smooth part')
+
+figure(11);
+showsolution(node,elem,real(v));
+title('singularity part');
 
 figure(12);
 showsolution(node,elem,real(uu));
+title('numerical solution');
 
 figure(13);
 showsolution(node,elem,real(x_eps));
+title('cut-off function');
 
 du = ub -uu;
 x = node(:,1); y = node(:,2);
-du(x>=a-wpml)=0; du(x<= -a+wpml) = 0;
-du(y>=a-wpml)=0; du(y<= -a+wpml) = 0;
+du(rr<h/2) = 0;
+du(x>=max(x)-wpml)=0; du(x<= min(x)+wpml) = 0;
+du(y>=max(y)-wpml)=0; du(y<= min(y)+wpml) = 0;
 figure(14);
 showsolution(node,elem,real(du));
+title('error')
+
+figure(15);
+showsolution(node,elem,real(ub));
+title('exact solution')
 
 
 %% plot wavefield 
-figure(22);
-px = 0.4;
-px = round(px/h)*h;
-indx = 1 + round((px+a)/h);
-n = round(sqrt(N));
-uh = reshape(uu,n,n);
-uex = reshape(ub,n,n);
-
-xx = -a:h:a;
-yh = uh(indx,:);
-yex = uex(indx,:);
-
-plot(xx,real(yh),'ro-');
-hold on;
-plot(xx,real(yex));
-title('real part of the wavefield at y = 0.4','FontSize', 30);
-xlabel('x','FontSize', 30)
-ylabel('wavefield','FontSize', 30)
-legend('Numerical solution','Exact solution','Location','best');
+% figure(22);
+% px = 0.4;
+% px = round(px/h)*h;
+% indx = 1 + round((px+a)/h);
+% n = round(sqrt(N));
+% uh = reshape(uu,n,n);
+% uex = reshape(ub,n,n);
+% 
+% xx = -a:h:a;
+% yh = uh(indx,:);
+% yex = uex(indx,:);
+% 
+% plot(xx,real(yh),'ro-');
+% hold on;
+% plot(xx,real(yex));
+% title('real part of the wavefield at y = 0.4','FontSize', 30);
+% xlabel('x','FontSize', 30)
+% ylabel('wavefield','FontSize', 30)
+% legend('Numerical solution','Exact solution','Location','best');
 
 
 

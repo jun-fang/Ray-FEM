@@ -4,11 +4,12 @@
 function rhs = sing_rhs(epsilon,omega,p,xs,ys)
 
 a = epsilon;  b = 2*epsilon;
-r = sqrt((p(:,1)-xs).^2 + (p(:,2)-ys).^2);
+x = (p(:,1)-xs);  y = (p(:,2)-ys);
+r = sqrt(x.^2 + y.^2);
 
 ub = 1i/4*besselh(0,1,omega*r);
-ub_g1 = -1i/4*omega*besselh(1,1,omega*r)./r.*p(:,1);
-ub_g2 = -1i/4*omega*besselh(1,1,omega*r)./r.*p(:,2);
+ub_g1 = -1i/4*omega*besselh(1,1,omega*r)./r.*x;
+ub_g2 = -1i/4*omega*besselh(1,1,omega*r)./r.*y;
 
 cf_grad = cutoff_gradient(a,b,p,xs,ys);
 cf_lap = cutoff_laplacian(a,b,p,xs,ys);
