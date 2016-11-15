@@ -83,6 +83,7 @@
 
 epsilon = 0.103;
 x = [40 60 80 120 160 240 320]*pi;
+epss = x.^-.25/2;
 y1 = x;
 y2 = x;
 y3 = x;
@@ -90,6 +91,7 @@ y4 = x;
 for ni = 1:length(y1)
     ni
     omega = x(ni);
+    epsilon = epss(ni);
     error = error_homogeneous(omega,epsilon);
     y1(ni) = error(1);
     y2(ni) = error(2);

@@ -101,15 +101,15 @@ du(r<h/2) = 0;
 
 
 %% Compute the errors in a box [0.2,0.4]^2
-% du = ub -uu;
-% x = node(:,1); y = node(:,2);
-% du = du((x>=0.2-eps)&(x<=0.4+eps)&(y>=0.2-eps)&(y<=0.4+eps));
-% eu = ub((x>=0.2-eps)&(x<=0.4+eps)&(y>=0.2-eps)&(y<=0.4+eps));
+du = ub -uu;
+x = node(:,1); y = node(:,2);
+du = du((x>=0.2-eps)&(x<=0.4+eps)&(y>=0.2-eps)&(y<=0.4+eps));
+eu = ub((x>=0.2-eps)&(x<=0.4+eps)&(y>=0.2-eps)&(y<=0.4+eps));
 
 
 %% Compute the errors in annulus epsilon < r < 2*epsilon
-du = du(r>=aa & r<=bb);
-eu = ub(r>=aa & r<=bb);
+% du = du(r>=aa & r<=bb);
+% eu = ub(r>=aa & r<=bb);
 
 
 %% Compute the errors outside one wavelength to the source point

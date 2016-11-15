@@ -26,7 +26,7 @@ sec_opt = 1;               % NMLA second order correction or not
 epsilon = 0.137;
 
 NPW = 6;                   % number of points per wavelength
-test_num = 6;              % we test test_num examples
+test_num = 5;              % we test test_num examples
 
 % frequency
 high_omega = [40 80 120 160 240 320]*pi;
@@ -72,6 +72,7 @@ ld = ceil(ld*10)/10;
 tstart = tic;
 for ti = 1: test_num
     omega = high_omega(ti);
+    epsilon = (omega^-.25)/1.8;
     h = fh(ti);  h_c = ch(ti);
     fprintf(['-'*ones(1,80) '\n']);
     fprintf('\ncase %d: \nomega/(2*pi) = %d,   1/h = %d   1/h_c = %d,  NPW = %d \n',...
