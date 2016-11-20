@@ -51,7 +51,7 @@ ch = 1./(20*round(low_omega/(2*pi)));        % coarse mesh size
 % width of PML
 % high_wpml = ch*ceil(high_wl/ch);
 high_wpml = 0.08*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
-low_wpml = fh.*ceil(low_wl./fh);
+low_wpml = ch.*ceil(low_wl./ch);
 
 
 %% Generate the domain sizes
@@ -72,7 +72,7 @@ ld = ceil(ld*10)/10;
 tstart = tic;
 for ti = 1: test_num
     omega = high_omega(ti);
-    epsilon = (omega^-.25)/1.8;
+    epsilon = (omega^-.25)/1.7;
     h = fh(ti);  h_c = ch(ti);
     fprintf(['-'*ones(1,80) '\n']);
     fprintf('\ncase %d: \nomega/(2*pi) = %d,   1/h = %d   1/h_c = %d,  NPW = %d \n',...

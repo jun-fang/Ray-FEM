@@ -18,7 +18,7 @@ solver = 'DIR';            % linear system solver
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 
-rec_N = 10;                 % we test rec_N examples
+rec_N = 6;                 % we test rec_N examples
 
 % record h and omega
 rec_omega = zeros(1,rec_N);
@@ -215,7 +215,7 @@ for rec_i = 1: rec_N
     
     
     %% Exact Ray-based FEM:
-    if (1)
+    if (0)
         fprintf('\nExact Ray-based FEM: \n');
         tic;
         ray = pde.ray(node);

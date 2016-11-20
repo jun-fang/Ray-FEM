@@ -1847,3 +1847,8 @@ Exact Ray-based FEM:
 
 
 Relative L2 error:      &  00  &  00  &  00  
+
+Four point sources problem: 
+
+(20,20),(-20,20),(20,-20),(-20,-20) 
+
