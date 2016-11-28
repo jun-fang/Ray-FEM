@@ -20,7 +20,7 @@ pct = 1/8;
 Nray = 4;
 sec_opt = 0;               % NMLA second order correction or not
 
-rec_N = 6;                 % we test rec_N examples
+rec_N = 8;                 % we test rec_N examples
 
 % record h and omega
 rec_omega = zeros(1,rec_N);

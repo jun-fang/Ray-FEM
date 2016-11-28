@@ -1,109 +1,162 @@
 function pde = Helmholtz_data2
-%% uexact = (exp(x) + exp(y))*exp(1i*k*sqrt(2)/2*(x+y))
+%% uexact = sqrt(k)*besselh(0,1,k*sqrt((x+xs)^2 + (y+ys)^2))
+%         + sqrt(k)*2*besselh(0,1,k*sqrt((x-xs)^2 + (y-ys)^2))
+%         + sqrt(k)*0.5*besselh(0,1,k*sqrt((x+xs)^2 + (y-ys)^2))
+%         - sqrt(k)*besselh(0,1,k*sqrt((x-xs)^2 + (y+ys)^2))
+
+global omega a xs ys;
 
 fprintf(['-'*ones(1,80) '\n'])
-fprintf('Perfect plane wave problem: \n\n  u_ex = (exp(x) + exp(y))*exp(1i*k*sqrt(2)/2*(x+y)) \n\n');
+fprintf('Four point sources problem (outside domain): \n\n  (-xs,-2),(xs,2),(-xs,2),(xs,-2) \n\n');
 
 
 pde = struct(...
     'f',@f,...                    % right hand side source
     'speed',@speed,...            % medium speed
     'ex_u',@ex_u,...              % exact solution
+    'ex_u1',@ex_u1,'ex_u2',@ex_u2,'ex_u3',@ex_u3,'ex_u4',@ex_u4,...
     'Nphase',@Nphase,...          % number of phases
     'phase',@phase,...            % exact phase
     'gradphase',@gradphase,...    % gradient of exact phase 
-    'ray',@ray,...                % exact ray direction
+    'ray',@ray,...                % exact ray information, stored as complex form e^{i*\theta}
+    'ray_ang',@ray_ang,...        % exact ray direction angles [0,2pi]
     'Du',@Du,...                  % gradient of exact solution  
     'Du_n',@Du_n,...              % Neumann boundary condition \partial u / \partial n or Du \cdot n
     'g_IBC',@g_IBC);              % Impedance boundary condition  \partial u / \partial n + iku = g_IBC
 
-
     % right hand side function
-    function rhs =  f(p)       
-        global omega;
-        k = omega;
-        x = p(:,1); y = p(:,2);
-        rhs = -((1 + 1i*k*sqrt(2))*(exp(x) + exp(y)).*exp(1i*k*sqrt(2)/2*(x+y)));
+    function rhs =  f(p)
+        rhs = 0*p(:,1);
     end
 
     % medium speed
     function c = speed(p)
         n = length(p(:,1));
         c = ones(n,1);
-    end 
+    end
 
     % exact solution
     function u =  ex_u(p)
-        global omega;
         k = omega;
-        x = p(:,1); y = p(:,2);
-        u = (exp(x) + exp(y)).*exp(1i*k*sqrt(2)/2*(x+y));
+        x = p(:,1);    y = p(:,2);
+        u = besselh(0,1,k*sqrt((x+xs).^2 + (y+ys).^2))...
+            + 2*besselh(0,1,k*sqrt((x-xs).^2 + (y-ys).^2))...
+            + 0.5*besselh(0,1,k*sqrt((x+xs).^2 + (y-ys).^2))...
+            - besselh(0,1,k*sqrt((x-xs).^2 + (y+ys).^2));
+        u = sqrt(k)*u;
+    end
+
+    function u =  ex_u1(p)
+        k = omega;
+        x = p(:,1);    y = p(:,2);
+        u = besselh(0,1,k*sqrt((x+xs).^2 + (y+ys).^2));
+        u = sqrt(k)*u;
+    end
+
+    function u =  ex_u2(p)
+        k = omega;
+        x = p(:,1);    y = p(:,2);
+        u = 2*besselh(0,1,k*sqrt((x-xs).^2 + (y-ys).^2));
+        u = sqrt(k)*u;
+    end
+
+% exact solution
+    function u =  ex_u3(p)
+        k = omega;
+        x = p(:,1);    y = p(:,2);
+        u = 0.5*besselh(0,1,k*sqrt((x+xs).^2 + (y-ys).^2));
+        u = sqrt(k)*u;
+    end
+
+% exact solution
+    function u =  ex_u4(p)
+        k = omega;
+        x = p(:,1);    y = p(:,2);
+        u = besselh(0,1,k*sqrt((x-xs).^2 + (y+ys).^2));
+        u = sqrt(k)*u;
     end
 
     % number of phases
-    pde.Nphase = 1;
-    
-    
+    pde.Nphase = 4;
+
     % exact phase
     function phase =  phase(p)
-        x = p(:,1); y = p(:,2); 
-        phase = sqrt(2)/2*(x+y);
+        N = length(p(:,1));
+        phase = zeros(N,4);
+        x = p(:,1);  y = p(:,2);
+        
+        phase(:,1) = sqrt((x+xs).^2 + (y+ys).^2);
+        phase(:,2) = sqrt((x-xs).^2 + (y+ys).^2);
+        phase(:,3) = sqrt((x-xs).^2 + (y-ys).^2);
+        phase(:,4) = sqrt((x+xs).^2 + (y-ys).^2);
+    end
+
+    % ray direction angles
+    function ray_ang = ray_ang(p)
+        N = length(p(:,1));
+        ray_ang = zeros(N,4);
+        x = p(:,1);  y = p(:,2);
+        
+        ray_ang(:,1) = atan2(y+ys,x+xs);
+        ray_ang(:,2) = atan2(y+ys,x-xs);
+        ray_ang(:,3) = atan2(y-ys,x-xs);
+        ray_ang(:,4) = atan2(y-ys,x+xs);
+        ray_ang = ray_ang + 2*pi*(ray_ang<0);
     end
 
     % gradient phase
     function gphase =  gradphase(p)
-        n = length(p(:,1));
-        gphase = exp(1i*pi/4)*ones(n,1);  
+        angle = ray_ang(p);
+        gphase = exp(1i*angle);  
     end
 
     % exact ray
     function ray = ray(p)
-        n = length(p(:,1));
-        ray = exp(1i*pi/4)*ones(n,1);  
+        ray = gradphase(p);
     end
 
     % gradient u
     function Du =  Du(p)
-        global omega;
         k = omega;
         x = p(:,1); y = p(:,2);
+        r1 = sqrt((x+xs).^2 + (y+ys).^2);
+        r2 = sqrt((x-xs).^2 + (y+ys).^2);
+        r3 = sqrt((x-xs).^2 + (y-ys).^2);
+        r4 = sqrt((x+xs).^2 + (y-ys).^2);
         
-        exp_phase = exp(1i*k*sqrt(2)/2*(x+y));
-        Ux = (exp(x) + 1i*k*sqrt(2)/2*(exp(x) + exp(y))).*exp_phase;
-        Uy = (exp(y) + 1i*k*sqrt(2)/2*(exp(x) + exp(y))).*exp_phase;
-        Du = [Ux, Uy];
+        Dux = - besselh(1,1,k*r1).*k.*(x+xs)./r1...
+            + besselh(1,1,k*r2).*k.*(x-xs)./r2...
+            - 2*besselh(1,1,k*r3).*k.*(x-xs)./r3...
+            - 0.5*besselh(1,1,k*r4).*k.*(x+xs)./r4;
+        Duy = - besselh(1,1,k*r1).*k.*(y+ys)./r1...
+            + besselh(1,1,k*r2).*k.*(y+ys)./r2...
+            - 2*besselh(1,1,k*r3).*k.*(y-ys)./r3...
+            - 0.5*besselh(1,1,k*r4).*k.*(y-ys)./r4;
+        
+        Du = [sqrt(k)*Dux,sqrt(k)*Duy];
     end
-    
-    % Neumann Boundary Du \dot n   
+
+    % Neumann Boundary Du \dot n  
     function uN =  Du_n(p)
-        global omega;
-        global a;
-        k = omega;
         x = p(:,1); y = p(:,2);
-        
-        exp_phase = exp(1i*k*sqrt(2)/2*(x+y));
-        Ux = (exp(x) + 1i*k*sqrt(2)/2*(exp(x) + exp(y))).*exp_phase;
-        Uy = (exp(y) + 1i*k*sqrt(2)/2*(exp(x) + exp(y))).*exp_phase;
-        uN = exp_phase;
+        DDu = Du(p);
+        Dux = DDu(:,1);   Duy = DDu(:,2);
+        uN = Dux;
         
         east_idx = find(abs(x-a)<eps);
-        uN(east_idx) = Ux(east_idx);
-        
+        uN(east_idx) = Dux(east_idx);
         west_idx = find(abs(x+a)<eps);
-        uN(west_idx) = -Ux(west_idx);
+        uN(west_idx) = -Dux(west_idx);
         
         north_idx = find(abs(y-a)<eps);
-        uN(north_idx) = Uy(north_idx);
-        
+        uN(north_idx) = Duy(north_idx);
         south_idx = find(abs(y+a)<eps);
-        uN(south_idx) = -Uy(south_idx);
+        uN(south_idx) = -Duy(south_idx);
     end
 
     % Impedance Boundary Condition
     function g =  g_IBC(p)
-        global omega;
         k = omega;
         g = Du_n(p) + 1i*k*ex_u(p);
-    end    
-    
+    end
 end

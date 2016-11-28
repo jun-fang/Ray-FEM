@@ -1,9 +1,10 @@
+if (0)
 %% WT normalize the column of mass matrix
 h = 1/128;
 [node,elem] = squaremesh([-1,1,-1,1],h);
 f = nodal_basis(0,0,1,node);
 sum(f)*(h*h)
-
+end
 
 
 if (0)
@@ -103,3 +104,28 @@ ang_err
 % showrate(cp_omega(1:N),ang_err)
 
 end
+
+global omega a xs ys;
+pde = Helmholtz_data1;
+plt = 0;                   % show solution or not
+fquadorder = 9;            % numerical quadrature order
+solver = 'DIR';            % linear system solver
+Nray = 1;                  % one ray direction
+sec_opt = 0;               % NMLA second order correction or not
+NPW = 6;
+a = 1/2;
+xs =20; ys = 20;
+
+
+omega = 20*pi;
+h = 1/(NPW*round(omega/(2*pi)));
+[node,elem] = squaremesh([-a,a,-a,a],h);
+
+ray = pde.ray(node);
+[~,~,~,~,rel_L2_err,err] = Ray_FEM_IBC_1(node,elem,omega,pde,ray,fquadorder,plt);
+ 
+rel_L2_err, err
+
+u = pde.ex_u(node);
+norm(u)*h
+

@@ -1852,3 +1852,9 @@ Four point sources problem:
 
 (20,20),(-20,20),(20,-20),(-20,-20) 
 
+
+
+Four point sources problem: 
+
+(20,20),(-20,20),(20,-20),(-20,-20) 
+
