@@ -82,21 +82,24 @@
 % relative l2 error \sim constant
 
 epsilon = 0.103;
-x = [40 60 80 120 160 240 320]*pi;
-epss = x.^-.25/2;
+x = pi*[40 60 80 120 160 240 320]*pi;
+epss = 1/2*x.^(-.2)
 y1 = x;
 y2 = x;
 y3 = x;
 y4 = x;
+y0 = x;
 for ni = 1:length(y1)
     ni
     omega = x(ni);
     epsilon = epss(ni);
     error = error_homogeneous(omega,epsilon);
+    
     y1(ni) = error(1);
     y2(ni) = error(2);
     y3(ni) = error(3);
     y4(ni) = error(4);
+    y0(ni) = error(5);
 end
 
 %%
@@ -109,6 +112,9 @@ subplot(2,2,3);
 FJ_showrate(x,y3);
 subplot(2,2,4);
 FJ_showrate(x,y4);
+
+figure(2);
+FJ_showrate(x,y0);
 
 
 

@@ -121,7 +121,11 @@ max_err = norm(du,inf);
 rel_max_err = norm(du,inf)/norm(eu,inf);
 l2_err = norm(du)*h;
 rel_l2_err = norm(du)/norm(eu);
-error = [max_err,rel_max_err,l2_err,rel_l2_err];
+
+
+rhs = sing_rhs(epsilon,omega,node,xs,ys);
+rhsL2 = norm(rhs)*h;
+error = [max_err,rel_max_err,l2_err,rel_l2_err,rhsL2];
 
 %figure()
 
