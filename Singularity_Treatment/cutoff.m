@@ -1,5 +1,5 @@
 %% Cut-off function
-% output is 0 if r>=b and 1 if r<=a, smooth in the intermediate annulus
+% output is 0 if r>=b and 1 if r<=a, smooth in the annulus {r| a<r<b}
 
 function cf = cutoff(a,b,p,xs,ys)
 r = sqrt((p(:,1)-xs).^2 + (p(:,2)-ys).^2);
