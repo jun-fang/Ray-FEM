@@ -9,7 +9,7 @@ speed = @(x) ones(size(x,1),1);    % medium speed
 
 fquadorder = 3;                    % numerical quadrature order
 
-omega = 160*pi;    
+omega = 80*pi;    
 wavelength = 2*pi/omega; 
 epsilon = 0.137;%0.11/wavelength;
 NPW = 6;

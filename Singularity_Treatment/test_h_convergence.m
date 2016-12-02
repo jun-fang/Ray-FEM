@@ -1,84 +1,119 @@
-global omega a;
-xs = 0;   ys = 0;
-omega = 10*pi;
-speed = @(p) ones(size(p,1),1);    % medium speed
 
 
-% exu = @(p) ( exp(p(:,1))+exp(p(:,2)) )...
-%     .*exp( 1i*omega*sqrt(2)/2*( p(:,1)+p(:,2) ) );
-% source = @(p) -(1+1i*sqrt(2)*omega).*exu(p);
-
-fquadorder = 3;                    % numerical quadrature order
-pde = Helmholtz_data9;
-solver = 'DIR';
-plt = 0;
-
-omega = 10*pi;
-epsilon = 0.131;
+xs = 0; ys = 0;
+omega = 40*pi;
 wl = 2*pi/omega;
+epsilon = 0.143;
+speed = @(p) ones(size(p(:,1)));
 
-NPW = 6;
-h = wl/NPW;
-h = 1/round(1/h);
 
-wpml = 0.2;%3*round(wavelength/h)*h;                 % width of PML
-sigmaMax = 25/wpml;                % Maximun absorbtion
+wpml = 25/128;
+sigmaMax = 25/wpml;
+fquadorder = 3;
+a = 1/2;
 
-a = 1;
-
+if(1)
+%% test h convergence: Ray-FEM 
 nt = 3;
-
-hs = zeros(1,nt);
-error = zeros(4,nt);
+hs = zeros(nt,1);
+RFEM_errs = zeros(nt,1);  % error on physical domain
+h = 1/200;
 for ii = 1:nt
     ii
     tic;
     h = h/2;
     hs(ii) = h;
     [node,elem] = squaremesh([-a,a,-a,a],h);
-    N = size(node,1);
-%     [u,A,b,rel_L2_err] = Standard_FEM_IBC(node,elem,omega,pde,fquadorder,solver,plt);
-%     error(4,ii) = rel_L2_err;
-
-    [u,A,b] = Standard_FEM_PML(node,elem,omega,wpml,sigmaMax,pde,fquadorder,solver,plt);
+    
+    %% Exact ray information
+    xx = node(:,1)-xs;  yy = node(:,2)-ys;
+    rr = sqrt(xx.^2 + yy.^2);
+    ray = atan2(yy,xx);
+    ray = exp(1i*ray).*(rr>10*eps);
+    
+    A = assemble_Helmholtz_matrix_with_ray_1(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
+    b = assemble_RHS_with_sing_RayFEM(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder);    
+    
+    %% Boundary conditions
+    [bdNode,~,isBdNode] = findboundary(elem);
+    freeNode = find(~isBdNode);
+    N = size(node,1);  Nray = size(ray,2); n = round(sqrt(N));
+    v = zeros(N,1);
+    v(freeNode) = A(freeNode,freeNode)\b(freeNode);
+    
+    %% construct solution
+    grad = ray(:);
+    grad = [real(grad),imag(grad)];
+    repnode = repmat(node,Nray,1);
+    temp = grad(:,1).*repnode(:,1) + grad(:,2).*repnode(:,2);
+    
+    k = omega./speed(node);           % wavenumber
+    kk = repmat(k,1,Nray);
+    u = v.*exp(1i*kk(:).*temp);
+    u = reshape(u,N,Nray);
+    u = sum(u,2);
     
     
-%     A = assemble_Helmholtz_matrix_SFEM(node,elem,omega,wpml,sigmaMax,speed,fquadorder);
-%     b = assemble_RHS_PML(node,elem,omega,wpml,sigmaMax,source,fquadorder);
     
-%     %% Boundary conditions
-%     [bdNode,~,isBdNode] = findboundary(elem);
-%     freeNode = find(~isBdNode);
-%     u = zeros(N,1);
-%     u(freeNode) = A(freeNode,freeNode)\b(freeNode);
-%     
-    v = exu(node);
-    
-    du = u-v;
     x = node(:,1); y = node(:,2);
-    du(x>=max(x)-wpml)=0; du(x<= min(x)+wpml) = 0;
-    du(y>=max(y)-wpml)=0; du(y<= min(y)+wpml) = 0;
+    rr = sqrt((x-xs).^2 + (y-ys).^2);
+
+    ub = 1i/4*besselh(0,1,omega*rr);
+    cf = cutoff(epsilon,2*epsilon,node,xs,ys);
+    uex = (1-cf).*ub;
+    uex(rr<epsilon) = 0;
+    du = u - uex;
     
-    max_err = norm(du,inf);
-    rel_max_err = norm(du,inf)/norm(v,inf);
-    l2_err = norm(du)*h;
-    rel_l2_err = norm(du)/norm(v);
-    
-    error(:,ii) = [max_err,rel_max_err,l2_err,rel_l2_err]';
+    idx = find( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ); 
+    du_phy = du(idx);
+    RFEM_errs(ii) = norm(du_phy)/norm(uex(idx));
     toc;
 end
 
-error
+figure(10);
+showrate(hs,RFEM_errs);
+end
 
-subplot(2,2,1);
-FJ_showrate(hs,error(1,:));
-subplot(2,2,2);
-FJ_showrate(hs,error(2,:));
-subplot(2,2,3);
-FJ_showrate(hs,error(3,:));
-subplot(2,2,4);
-FJ_showrate(hs,error(4,:));
+if (0)
+%% test h convergence: S-FEM 
+nt = 3;
+hs = zeros(nt,1);
+SFEM_errs = zeros(nt,1);  % error on physical domain
+h = 1/100;
+for ii = 1:nt
+    ii
+    tic;
+    h = h/2;
+    hs(ii) = h;
+    [node,elem] = squaremesh([-a,a,-a,a],h);
+    A = assemble_Helmholtz_matrix_SFEM(node,elem,omega,wpml,sigmaMax,speed,fquadorder);
+    b = assemble_RHS_with_sing_SFEM(node,elem,xs,ys,omega,wpml,sigmaMax,epsilon,fquadorder);    
+    
+    %% Boundary conditions
+    [bdNode,~,isBdNode] = findboundary(elem);
+    freeNode = find(~isBdNode);
+    N = size(node,1);  n = round(sqrt(N));
+    u = zeros(N,1);
+    u(freeNode) = A(freeNode,freeNode)\b(freeNode);
+    
+    x = node(:,1); y = node(:,2);
+    rr = sqrt((x-xs).^2 + (y-ys).^2);
 
+    ub = 1i/4*besselh(0,1,omega*rr);
+    cf = cutoff(epsilon,2*epsilon,node,xs,ys);
+    uex = (1-cf).*ub;
+    uex(rr<epsilon) = 0;
+    du = u - uex;
+    
+    idx = find( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ); 
+    du_phy = du(idx);
+    SFEM_errs(ii) = norm(du_phy)/norm(uex(idx));
+    toc;
+end
 
+figure(11);
+showrate(hs,SFEM_errs);
 
-
+end 

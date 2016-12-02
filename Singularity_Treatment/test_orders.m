@@ -82,7 +82,7 @@
 % relative l2 error \sim constant
 
 epsilon = 0.103;
-x = pi*[40 60 80 120 160 240 320]*pi;
+x = pi*[40 60 80 120 160]% 240 320];
 epss = 1/2*x.^(-.2)
 y1 = x;
 y2 = x;

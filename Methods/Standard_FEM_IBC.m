@@ -188,6 +188,8 @@ err = getL2error(node,elem,@pde.ex_u,u);
 err0 = getL2error(node,elem,@pde.ex_u,0*u);
 rel_L2_err = err/err0;
 
+% uex = pde.ex_u(node);
+% rel_L2_err = norm(u-uex)/norm(uex);
 
 
 

@@ -67,6 +67,31 @@ u = reshape(u,N,Nray);
 u = sum(u,2);
 
 
+xx = node(:,1)-xs;  yy = node(:,2)-ys;
+rr = sqrt(xx.^2 + yy.^2);
+ub = 1i/4*besselh(0,1,omega*rr);
+aa = epsilon; bb = 2*epsilon;
+x_eps = cutoff(aa,bb,node,xs,ys);
+v = (1-x_eps).*ub;
+v(rr<aa)=0;
+
+du = u-v;
+x = node(:,1); y = node(:,2);
+du(x>=max(x)-wpml)=0; du(x<= min(x)+wpml) = 0;
+du(y>=max(y)-wpml)=0; du(y<= min(y)+wpml) = 0;
+
+max_err = norm(du,inf);
+rel_max_err = norm(du,inf)/norm(v,inf);
+l2_err = norm(du)*h;
+rel_l2_err = norm(du)/norm(v);
+
+rhs = sing_rhs(epsilon,omega,node,xs,ys);
+rhsL2 = norm(rhs)*h;
+error = [max_err,rel_max_err,l2_err,rel_l2_err,rhsL2];
+
+if(0)
+
+
 %% Construct the solution
 xx = node(:,1)-xs;  yy = node(:,2)-ys;
 rr = sqrt(xx.^2 + yy.^2);
@@ -129,5 +154,5 @@ error = [max_err,rel_max_err,l2_err,rel_l2_err,rhsL2];
 
 %figure()
 
-
+end
 

@@ -12,7 +12,8 @@ ub_g1 = -1i/4*omega*besselh(1,1,omega*r)./r.*x;
 ub_g2 = -1i/4*omega*besselh(1,1,omega*r)./r.*y;
 
 cf_grad = cutoff_gradient(a,b,p,xs,ys);
-cf_lap = cutoff_laplacian(a,b,p,xs,ys);
+% cf_lap = cutoff_laplacian(a,b,p,xs,ys);
+cf_lap = cutoff_lap(epsilon,p,xs,ys);
 
 rhs = 2*(ub_g1.*cf_grad(:,1) + ub_g2.*cf_grad(:,2)) + ub.*cf_lap;
 rhs(r<a) = 0;   rhs(r>b) = 0;
