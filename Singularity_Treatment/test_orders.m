@@ -45,27 +45,34 @@
 % 
 
 %% Test for singularity treatment right hand side
-% RHS \sim \omega^0.5, the first term dominates
+% fixed epsilon, RHS \sim \omega^0.5, the first term dominates
+% with fixed omega, why the order of the second term is different from
+% cutoff laplacian?? I see, the support of cut-off function depends on
+% epsilon.   
+%     RHS1: L^2 \sim eps^-1, L^{\infty} \sim eps^-2.5
+%     RHS2: L^2 \sim eps^-3, L^{\infty} \sim eps^-4.5
+%     RHS:  L^2 \sim eps^-2.2, L^{\infty} \sim eps^-3.6
 % need to figure it out
 
 h = 1/900;  a = 1/2;
 xs = 0;  ys = 0;
 [node,elem] = squaremesh([-a,a,-a,a],h); p = node;
 r = sqrt((p(:,1)-xs).^2 + (p(:,2)-ys).^2);  
-% x = 2*[80 160 320 640]*pi;
-omega = 80*pi;
-n = [1,2,3,4,5];
-x = 1.7.^-(n+2);
+x = 1/4*[80 160 320 640]*pi;
+
+% omega = 640*pi;
+% n = [1,2,3,4,5];
+% x = 1.7.^-(n+2);
 
 y0 = x;  y1 = x; y2 = x; 
-% epsilon = 0.137;
-% a = epsilon;  b = 2*epsilon;
+epsilon = 0.137;
+a = epsilon;  b = 2*epsilon;
 for ni = 1:length(x)
     ni
-    epsilon = x(ni);
-    a = epsilon;  b = 2*epsilon;
+%     epsilon = x(ni);
+%     a = epsilon;  b = 2*epsilon;
 
-%     omega = x(ni);
+    omega = x(ni);
     ub = 1i/4*besselh(0,1,omega*r);
     cf_lap = cutoff_laplacian(a,b,p,xs,ys);
     rhs2 = ub.*cf_lap;
@@ -76,9 +83,9 @@ for ni = 1:length(x)
     rhs1 = rhs - rhs2;
     rhs1(r<=a) = 0; rhs1(r>=b) = 0;
     
-    y0(ni) = norm(rhs,inf);
-    y1(ni) = norm(rhs1,inf);
-    y2(ni) = norm(rhs2,inf);
+    y0(ni) = norm(rhs,inf)*h;
+    y1(ni) = norm(rhs1,inf)*h;
+    y2(ni) = norm(rhs2,inf)*h;
 end
 figure(3);
 subplot(3,1,1);
