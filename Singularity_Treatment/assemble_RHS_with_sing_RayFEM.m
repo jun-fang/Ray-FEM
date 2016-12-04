@@ -1,4 +1,4 @@
-function b = assemble_RHS_with_sing_RayFEM(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder)
+function b = assemble_RHS_with_sing_RayFEM(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,sing_rhs,fquadorder)
 %% Function to assemble the right hand side : 
 %         -\Delta u - (omega/c)^2 u = f               in D
 %                                 u = 0               on \partial D 
