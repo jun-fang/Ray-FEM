@@ -1,5 +1,10 @@
 %% Test the convergence order of SFEM and RayFEM for singularity removel problem
 
+
+
+
+%% SFEM: omega convergence
+if (0)
 xs = 0; ys = 0;
 omega = 40*pi;
 wl = 2*pi/omega;
@@ -59,7 +64,7 @@ show_convergence_rate(omegas,rhss,'omega',[],'||f||_{L^2(\Omega)}');
 subplot(1,2,2);
 show_convergence_rate(omegas,erros,'omega',[],'||u - u_h||_{L^2(\Omega)}');
 
-
+end
 
 
 
@@ -135,7 +140,7 @@ if(0)
     end
     
     figure(10);
-    show_convergence_rate(hs,RFEM_errs,'h');
+    show_convergence_rate(hs,RFEM_errs,'h',,[],'||u - u_h||_{L^2(\Omega)}');
 end
 
 
@@ -153,7 +158,7 @@ if (0)
     fquadorder = 3;
     a = 1/2;
     
-    nt = 3;
+    nt = 4;
     hs = zeros(nt,1);
     SFEM_errs = zeros(nt,1);  % error on physical domain
     h = 1/100;
@@ -190,7 +195,7 @@ if (0)
     end
     
     figure(11);
-    show_convergence_rate(hs,SFEM_errs,'h');
+    show_convergence_rate(hs,SFEM_errs,'h',[],'||u - u_h||_{L^2(\Omega)}');
 end
 
 
