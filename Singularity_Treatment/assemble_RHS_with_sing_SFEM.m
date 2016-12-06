@@ -66,7 +66,7 @@ for p = 1:nQuad
     sxy = s_xy(pxy(:,1),pxy(:,2));
     
     % we suppose that the source is well inside the physical domain
-    fp = sing_rhs(epsilon,omega,pxy,xs,ys).*sxy;
+    fp = sing_rhs_homo(epsilon,omega,pxy,xs,ys).*sxy;
 
     for i = 1:3
         bt(:,i) = bt(:,i) + weight(p)*phi(p,i)*fp;

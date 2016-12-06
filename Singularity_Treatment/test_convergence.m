@@ -1,8 +1,72 @@
+%% Test the convergence order of SFEM and RayFEM for singularity removel problem
+
+xs = 0; ys = 0;
+omega = 40*pi;
+wl = 2*pi/omega;
+epsilon = sqrt(18/40/pi);
+speed = @(p) ones(size(p(:,1)));
+
+wpml = 0.1;
+sigmaMax = 25/wpml;
+fquadorder = 3;
+a = 1;
+
+h = 1/1000;
+
+[node,elem] = squaremesh([-a,a,-a,a],h);
+
+%% Exact ray information
+xx = node(:,1)-xs;  yy = node(:,2)-ys;
+rr = sqrt(xx.^2 + yy.^2);
+ray = atan2(yy,xx);
+ray = exp(1i*ray).*(rr>10*eps);
+
+nt = 4;
+errors = zeros(1,nt);
+rhss = zeros(1,nt);
+omegas = pi*[40,60,80,100];
+for ii = 1:4
+    ii
+    omega = omegas(ii);
+    
+    rhs = sing_rhs_homo(epsilon,omega,node,xs,ys);
+    rhss(ii) = norm(rhs)*h;
+
+    tic;
+    % [~,A,b,~] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,@sing_rhs_homo,fquadorder);
+    [u0,A0,b0,~] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,0*ray,speed,@sing_rhs_homo,fquadorder);
+    
+    x = node(:,1); y = node(:,2);
+    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    
+    ub = 1i/4*besselh(0,1,omega*rr);
+    cf = cutoff(epsilon,2*epsilon,node,xs,ys);
+    uex = (1-cf).*ub;
+    uex(rr<epsilon) = 0;
+    du = u0 - uex;
+    
+    idx = find( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) );
+    du_phy = du(idx);
+    errors(ii) = norm(du_phy)*h;%/norm(uex(idx));
+    toc;
+end
+
+
+figure(1);
+subplot(1,2,1);
+show_convergence_rate(omegas,rhss,'omega',[],'||f||_{L^2(\Omega)}');
+subplot(1,2,2);
+show_convergence_rate(omegas,erros,'omega',[],'||u - u_h||_{L^2(\Omega)}');
 
 
 
 
-%% test h convergence: Ray-FEM
+
+
+
+
+%% test h convergence: Ray-FEM error \sim O(h^2)
 if(0)
     xs = 0; ys = 0;
     omega = 40*pi;
@@ -76,7 +140,7 @@ end
 
 
 
-%% test h convergence: S-FEM
+%% test h convergence: S-FEM  error \sim O(h^2)
 if (0)
     xs = 0; ys = 0;
     omega = 40*pi;
@@ -128,3 +192,7 @@ if (0)
     figure(11);
     show_convergence_rate(hs,SFEM_errs,'h');
 end
+
+
+
+
