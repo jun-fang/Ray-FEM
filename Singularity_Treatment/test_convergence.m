@@ -154,7 +154,7 @@ if(0)
         ray = atan2(yy,xx);
         ray = exp(1i*ray).*(rr>10*eps);
         
-        u = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,@sing_rhs_homo,fquadorder);
+        [u,~,~,v] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,@sing_rhs_homo,fquadorder);
         
         x = node(:,1); y = node(:,2);
         rr = sqrt((x-xs).^2 + (y-ys).^2);
@@ -168,7 +168,9 @@ if(0)
         idx = find( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
             .*(y<= max(y)-wpml).*(y>= min(y)+wpml) );
         du_phy = du(idx);
-        RFEM_errs(ii) = norm(du_phy)*h;
+        
+        [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,wpml,ray,speed,v,9);
+        RFEM_errs(ii) = err;%norm(du_phy)*h;
         toc;
     end
     
@@ -183,20 +185,21 @@ if (1)
     xs = 0; ys = 0;
 %     omega = 40*pi;
     
-    epsilon = sqrt(18/40/pi);
+    epsilon = sqrt(18/80/pi);
     speed = @(p) ones(size(p(:,1)));
     
     wpml = 0.1;
     sigmaMax = 25/wpml;
     fquadorder = 3;
-    a = 1;
+    a = 0.65;
     
     
-    nt = 3;
+    nt = 6;
     errors = zeros(1,nt);
     rhss = zeros(1,nt);
-    omegas = pi*[40,60,80,120,160];
-    NPW = 6;
+    omegas = pi*[120,160,240,320,480,640];
+    NPW = 4;
+    
     
     
     for ii = 1:nt
@@ -206,7 +209,7 @@ if (1)
         h = 1/round(1/(wl/NPW));
         1/h
     
-%     h = 1/800;
+    h = 1/240;
     
     [node,elem] = squaremesh([-a,a,-a,a],h);
     
@@ -221,6 +224,9 @@ if (1)
 %         omega = 40*pi;
         rhs = sing_rhs_homo(epsilon,omega,node,xs,ys);
         rhss(ii) = norm(rhs)*h;
+        
+     
+        
         
         tic;
         [u,~,~,v] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,@sing_rhs_homo,fquadorder);
@@ -239,10 +245,11 @@ if (1)
         du_phy = du(idx);
         
         dd = 0*du; dd(idx) = du(idx);
-        figure(2);showsolution(node,elem,real(dd));
+%         figure(2);showsolution(node,elem,real(dd));
         
         
-        [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,ray,speed,v,9);
+        [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,wpml,ray,speed,v,9);
+        
         errors(ii) = err;%norm(du_phy)*h;%/norm(uex(idx));
         toc;
     end

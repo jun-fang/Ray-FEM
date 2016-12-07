@@ -1,4 +1,4 @@
-function [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,ray,speed,v,fquadorder)
+function [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,wpml,ray,speed,v,fquadorder)
 
 %% FEM set up
 N = size(node,1);       % number of grid points
@@ -8,6 +8,9 @@ Nray = size(ray,2);     % number of rays crossing at each grid node
 c = speed(node);    % medium speed
 k = omega./c;           % wavenumber
 kk = repmat(k,1,Nray);
+
+xmax = max(node(:,1)); xmin = min(node(:,1));
+ymax = max(node(:,2)); ymin = min(node(:,2));
 
 
 %% Numerical Quadrature
@@ -50,7 +53,13 @@ for p = 1:nQuad
     cf = cutoff(epsilon,2*epsilon,pxy,xs,ys);
     uex = (1-cf).*ub;
     uex(rr<epsilon) = 0;
-        
+    
+    idx = ~( (x<=xmax-wpml).*(x>= xmin+wpml)...
+            .*(y<= ymax-wpml).*(y>= ymin+wpml) ) ;
+    uex(idx) = 0;
+    uhp(idx) = 0;
+    
+    
     abs_err = abs(uex - uhp);
     err = err + weight(p)*(abs_err).^2;
     rel_err = rel_err + weight(p)*(abs(uex)).^2;
