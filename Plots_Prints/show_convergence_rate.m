@@ -1,4 +1,4 @@
-function r = show_convergence_rate(N,err,xlab,k,opt,str)
+function r = show_convergence_rate(N,err,xlab,k,str,opt)
 %% show convergence rate of an error sequence
 %
 %  r = show_convergence_rate(N,err) finds the number r such that err = N^r and plots the
@@ -41,19 +41,19 @@ if ~exist('xlab','var')
     axis tight;
     xlabel('Number of unknowns','FontSize', 20); ylabel('Error','FontSize', 20);
     title(['Rate of convergence: O(N^{' num2str(r) '})'],'FontSize', 20);
-    h_legend = legend(str,['CN^{' num2str(r,2) '}'],'LOCATION','northwest');
-    set(h_legend,'FontSize', 14);
+    h_legend = legend(str,['CN^{' num2str(r) '}'],'LOCATION','northwest');
+    set(h_legend,'FontSize', 18);
 elseif xlab == 'omega'
     axis tight;
-    xlabel('frequency \omega','FontSize', 20); ylabel('Error','FontSize', 20);
-    title(['Error \sim O(\omega^{' num2str(r) '})'],'FontSize', 20);
-    h_legend = legend(str,['C \omega^{' num2str(r,2) '}'],'LOCATION','northwest');
-    set(h_legend,'FontSize', 14);
+    xlabel('frequency \omega','FontSize', 20); ylabel(str,'FontSize', 20);
+    title([str,' \sim O(\omega^{' num2str(r) '})'],'FontSize', 20);
+    h_legend = legend(str,['C \omega^{' num2str(r) '}'],'LOCATION','northwest');
+    set(h_legend,'FontSize', 18);
 elseif xlab == 'h'
     axis tight;
-    xlabel('mesh size h','FontSize', 20); ylabel('Error','FontSize', 20);
-    title(['Error \sim O(h^{' num2str(r) '})'],'FontSize', 20);
-    h_legend = legend(str,['Ch^{' num2str(r,2) '}'],'LOCATION','northwest');
-    set(h_legend,'FontSize', 14);
+    xlabel('mesh size h','FontSize', 20); ylabel(str,'FontSize', 20);
+    title([str,' \sim O(h^{' num2str(r) '})'],'FontSize', 20);
+    h_legend = legend(str,['Ch^{' num2str(r) '}'],'LOCATION','northwest');
+    set(h_legend,'FontSize', 18);
 end
 
