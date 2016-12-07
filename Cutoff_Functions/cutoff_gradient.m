@@ -1,11 +1,11 @@
-function g = cutoff_gradient(node,xs,ys,a,b)
+function g = cutoff_gradient(a,b,node,xs,ys)
 %% Gradient of smooth cut-off function 
 % Input: 
+%     a,b: positve numbers such that 0<a<b
 %     node: Nx2 matrix, x=node(:,1) and y=node(:,2) are x,y coordinates
 %     (xs,ys): center, r = sqrt((node(:,1)-xs).^2 + (node(:,2)-yx).^2)
-%     a,b: positve numbers such that 0<a<b
 % 
-% Ouput:  
+% Output:  
 %     g: Nx2 matrix, 
 %           
 %     g(j,:) = [0,0]      if r<=a or r>=b

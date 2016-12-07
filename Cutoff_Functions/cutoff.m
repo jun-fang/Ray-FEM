@@ -1,11 +1,11 @@
-function cf = cutoff(node,xs,ys,a,b)
+function cf = cutoff(a,b,node,xs,ys)
 %% Smooth cut-off function 
 % Input: 
+%     a,b: positve numbers such that 0<a<b
 %     node: Nx2 matrix, x=node(:,1) and y=node(:,2) are x,y coordinates
 %     (xs,ys): center, r = sqrt((node(:,1)-xs).^2 + (node(:,2)-yx).^2)
-%     a,b: positve numbers such that 0<a<b
 % 
-% Ouput:  
+% Output:  
 %     cf: Nx1 vector, 
 %           
 %     cf(j) = 1        if r<=a
