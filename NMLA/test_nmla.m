@@ -1,10 +1,9 @@
-% test the accuray order for one point source problem with NMLA corrected
-% version
+% test the accuray order for one point source problem 
 
-global omega xs ys;
-xs = 2; ys = 2;
+xs = 0; ys = 0;
+speed = @(p) ones(size(p(:,1)));
 
-pde = Helmholtz_data_point_source;
+pde = [];
 Rest = 1;
 Nray = 1;                  % one ray direction
 sec_opt = 1;
@@ -40,17 +39,35 @@ for rec_i = 1: length(rec_omega)
     cnumray = zeros(cN,Nray);
     cr = zeros(cN,Nray);
     
+    x = lnode(:,1); y = lnode(:,2);
+    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    ul = 1i/4*sqrt(omega)*besselh(0,1,omega*rr);
     
-    u_std = pde.ex_u(lnode);
-    Du = pde.Du(lnode);
-    ux = Du(:,1); uy = Du(:,2);
+    lN = size(lnode,1);
+    ln = round(sqrt(lN));
+    n = ln;
+    
+    uu = reshape(ul,n,n);
+    uux = uu;   uuy = uu;   % numerical Du
+    
+    uux(:,2:n-1) = (uu(:,3:n) - uu(:,1:n-2))/(2*h);
+    uux(:,n) = 2*uux(:,n-1) - uux(:,n-2);
+    uux(:,1) = 2*uux(:,2) - uux(:,3);
+    ux = uux(:);
+    
+    uuy(2:n-1,:) = (uu(3:n,:) - uu(1:n-2,:))/(2*h);
+    uuy(n,:) = 2*uuy(n-1,:) - uuy(n-2,:);
+    uuy(1,:) = 2*uuy(2,:) - uuy(3,:);
+    uy = uuy(:);
+    
+    
     
     fprintf('NMLA time: \n');
     tic;
     for i = 1:1 %cN
         x0 = cnode(i,1);  y0 = cnode(i,2);
-        c0 = pde.speed(cnode(i,:));
-        [cnumray_angle(i),r] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,pde,1/5,Nray,'num',sec_opt,plt);
+        c0 = speed(cnode(i,:));
+        [cnumray_angle(i),r] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,ul,ux,uy,pde,1/5,Nray,'num',sec_opt,plt);
     end
     
     numray_angle = interpolation(cnode,celem,node,cnumray_angle);
@@ -65,7 +82,7 @@ for rec_i = 1: length(rec_omega)
     
     
     omega = low_omega;
-    [cnumray_angle(i),r] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,pde,1/5,Nray,'num',sec_opt,plt);
+    [cnumray_angle(i),r] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,ul,ux,uy,pde,1/5,Nray,'num',sec_opt,plt);
     rec_cr(rec_i) = r;
 end
 
