@@ -133,3 +133,38 @@ show_convergence_rate(x,y1)
 subplot(3,1,3);
 show_convergence_rate(x,y2)
 
+
+
+
+%% Test for the exact solution of smooth part
+% h = 1/900;  a = 1/2;
+% xs = 0;  ys = 0;
+% [node,elem] = squaremesh([-a,a,-a,a],h); p = node;
+% xx = p(:,1)-xs;   yy = p(:,2)-ys;
+% r = sqrt(xx.^2 + yy.^2);
+% 
+% nt = 4;
+% y = zeros(1,nt);
+% x = [80 160 320 640]*pi;
+% 
+% for ii = 1:nt
+%     
+%     omega = x(ii);
+%     ub = 1i/4*besselh(0,1,omega*r);
+%     epsilon = 0.143;
+%     a = epsilon;  b = 2*epsilon;
+%     cf = cutoff(a,b,p,xs,ys);
+%     
+%     uex = (1-cf).*ub;
+%     uex(r<=a) = 0;
+%     
+%     amp = uex./exp(1i*omega*r);
+%     amp(r<=a) = 0;
+%     l2amp = norm(amp)*h;
+%     
+%     y(ii) = l2amp;
+% end
+% 
+% show_convergence_rate(x,y)
+
+
