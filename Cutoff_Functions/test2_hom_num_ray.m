@@ -17,8 +17,8 @@ Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 epsilon = 50/(80*pi); %4/sqrt(160*pi)
 
-NPW = 4;                   % number of points per wavelength
-test_num = 4;              % we test test_num examples
+NPW = 6;                   % number of points per wavelength
+test_num = 5;              % we test test_num examples
 
 % frequency
 high_omega = [160 240 320 480 640]*pi;
@@ -54,22 +54,28 @@ low_wpml = ch.*ceil(low_wl(1)./ch);
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = sqrt(2)*sd;
+% Rest = sqrt(2)*sd;
+% epsilons = 4./sqrt(high_omega);
+% Rest = epsilons; 
+Rest = epsilon;
 
 high_r = NMLA_radius(high_omega,Rest);
 md = sd + high_r + high_wpml;
 md = ceil(md*10)/10;
 
-Rest = sqrt(2)*md;
+% Rest = sqrt(2)*md;
 low_r = NMLA_radius(low_omega,Rest);
 ld = md + low_r + low_wpml;
 ld = ceil(ld*10)/10;
+% ld = ones(size(ld));
 
 
 %% Test
 tstart = tic;
 for ti = 1: test_num
     omega = high_omega(ti);
+%     epsilon = epsilons(ti)  ;
+%     Rest = epsilon;
     h = fh(ti);  h_c = ch(ti);
     fprintf(['-'*ones(1,80) '\n']);
     fprintf('\ncase %d: \nomega/(2*pi) = %d,   1/h = %d   1/h_c = %d,  NPW = %d \n',...
@@ -124,7 +130,7 @@ for ti = 1: test_num
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
         if r0>epsilon
-            Rest = r0;
+%             Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) = ex_ray_angle([x0,y0],xs,ys);
@@ -186,7 +192,7 @@ for ti = 1: test_num
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
         if r0>epsilon
-            Rest = r0;
+%             Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) = ex_ray_angle([x0,y0],xs,ys);
@@ -220,6 +226,7 @@ for ti = 1: test_num
     [u,~,~,v] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,@sing_rhs_homo,fquadorder);
       
     [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,wpml,ray,speed,v,9);
+    toc;
     
     l2_err(ti) = err;
     rel_l2_err(ti) = rel_L2_err;
@@ -249,50 +256,24 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 figure(1);
 subplot(2,2,1);
-show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num));
+show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num),'omega',[],'low max');
 subplot(2,2,2);
-show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num));
+show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega',[],'low l2');
 subplot(2,2,3);
-show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num));
+show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num),'omega',[],'high max');
 subplot(2,2,4);
-show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num));
+show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega',[],'high l2');
 
 figure(2);
 subplot(2,2,1);
-show_convergence_rate(high_omega(1:test_num),max_err(1:test_num));
+show_convergence_rate(high_omega(1:test_num),max_err(1:test_num),'omega',[],'max err');
 subplot(2,2,2);
-show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num));
+show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega',[],'L2 err');
 subplot(2,2,3);
-show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num));
+show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num),'omega',[],'Rel max ');
 subplot(2,2,4);
-show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num));
+show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega',[],'Rel L2 ');
 
-
-
-% %% print result
-% fprintf( fileID,['\n' '-'*ones(1,80) '\n']);
-% fprintf( fileID,'omega:                  ');
-% fprintf( fileID,'&  %.2e  ',high_omega );
-% fprintf( fileID,'\nomega/2pi:              ');
-% fprintf( fileID,'&  %.2e  ',high_omega/(2*pi) );
-% fprintf( fileID,'\n\nGrid size h:            ');
-% fprintf( fileID,'&  %.2e  ',fh);
-% fprintf( fileID,'\n1/h:                    ');
-% fprintf( fileID,'&  %.2e  ',1./fh);
-% 
-% fprintf( fileID,['\n' '-'*ones(1,80) '\n']);
-% fprintf( fileID,'Low freq ray error:     ');
-% fprintf( fileID,'&  %1.2d  ',low_rayerr);
-% fprintf( fileID,'\n\nHigh freq ray error:    ');
-% fprintf( fileID,'&  %1.2d  ',high_rayerr);
-% fprintf( fileID,'\n\nMax error:              ');
-% fprintf( fileID,'&  %1.2d  ',max_err);
-% fprintf( fileID,'\n\nRelative max error:     ');
-% fprintf( fileID,'&  %1.2d  ',rel_max_err);
-% fprintf( fileID,'\n\nL2 error:               ');
-% fprintf( fileID,'&  %1.2d  ',l2_err);
-% fprintf( fileID,'\n\nRelative L2 error:      ');
-% fprintf( fileID,'&  %1.2d  ',rel_l2_err);
 
 
 fprintf( ['\n' '-'*ones(1,80) '\n']);

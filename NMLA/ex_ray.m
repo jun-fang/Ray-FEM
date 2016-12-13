@@ -1,5 +1,5 @@
 function ray = ex_ray(node,xs,ys,opt)
-%% exact ray angle for point source in homogeneous medium
+%% exact ray/angle for point source in homogeneous medium
 xx = node(:,1)-xs; 
 yy = node(:,2)-ys;
 ray = atan2(yy,xx);
