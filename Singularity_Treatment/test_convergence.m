@@ -9,7 +9,7 @@ if (0)
     epsilon = 0.143;
     speed = @(p) ones(size(p(:,1)));
     
-    wpml = 25/128;
+    wpml = 0.2;
     sigmaMax = 25/wpml;
     fquadorder = 3;
     a = 1/2;
@@ -61,13 +61,13 @@ if (0)
     xs = 0; ys = 0;
     omega = 40*pi;
     wl = 2*pi/omega;
-    epsilon = sqrt(18/40/pi);
+    epsilon = 0.143;
     speed = @(p) ones(size(p(:,1)));
     
     wpml = 0.1;
     sigmaMax = 25/wpml;
     fquadorder = 3;
-    a = 1;
+    a = 1/2;
     
     h = 1/1000;
     
@@ -115,7 +115,7 @@ if (0)
     subplot(1,2,1);
     show_convergence_rate(omegas,rhss,'omega',[],'||f||_{L^2(\Omega)}');
     subplot(1,2,2);
-    show_convergence_rate(omegas,erros,'omega',[],'||u - u_h||_{L^2(\Omega)}');
+    show_convergence_rate(omegas,errors,'omega',[],'||u - u_h||_{L^2(\Omega)}');
     
 end
 
@@ -132,7 +132,7 @@ if(0)
     epsilon = 0.143;
     speed = @(p) ones(size(p(:,1)));
     
-    wpml = 25/128;
+    wpml = 0.2;
     sigmaMax = 25/wpml;
     fquadorder = 3;
     a = 1/2;
@@ -185,19 +185,19 @@ if (1)
     xs = 0; ys = 0;
 %     omega = 40*pi;
     
-    epsilon = sqrt(18/80/pi);
+    epsilon = 0.143;
     speed = @(p) ones(size(p(:,1)));
     
     wpml = 0.1;
     sigmaMax = 25/wpml;
     fquadorder = 3;
-    a = 0.65;
+    a = 1/2;
     
     
-    nt = 6;
+    nt = 5;
     errors = zeros(1,nt);
     rhss = zeros(1,nt);
-    omegas = pi*[120,160,240,320,480,640];
+    omegas = pi*[160,240,320,480,640];
     NPW = 4;
     
     
@@ -208,8 +208,10 @@ if (1)
         wl = 2*pi/omega;
         h = 1/round(1/(wl/NPW));
         1/h
+        epsilon = sqrt(18/omega);
+        epsilon
     
-    h = 1/240;
+%     h = 1/240;
     
     [node,elem] = squaremesh([-a,a,-a,a],h);
     

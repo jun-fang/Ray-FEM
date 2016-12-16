@@ -1,136 +1,78 @@
-%% Homogeneous medium
-% check: 1. assembling matirx 2. right hand side 3. smoothness of function
-% 4.suitable parameters
+xs = 0; ys = 0;
 
+epsilon = 50/(80*pi);
+speed = @(p) ones(size(p(:,1)));
 
-xs = 0.1;   ys = 0.1;                  % point source location
-% xs = 0;   ys = 0;
-speed = @(x) ones(size(x,1),1);    % medium speed
-
-fquadorder = 3;                    % numerical quadrature order
-
-omega = 80*pi;    
-wavelength = 2*pi/omega; 
-epsilon = 0.137;%0.11/wavelength;
-NPW = 6;
-h = wavelength/NPW;
-h = 1/round(1/h);
-   
-wpml = 0.15; %h*round(wavelength/h);                 % width of PML
-sigmaMax = 25/wpml;                % Maximun absorbtion
-
+wpml = 0.1;
+sigmaMax = 25/wpml;
+fquadorder = 3;
 a = 1/2;
-% [node,elem] = squaremesh([-a,a,-a,a],h);
-[node,elem] = squaremesh([-.4,.6,-.4,.6],h);
-
-Nray = 1; N = size(node,1); Ndof = N; n = round(sqrt(N));
-
-xx = node(:,1)-xs;  yy = node(:,2)-ys;
-rr = sqrt(xx.^2 + yy.^2);
-ray = atan2(yy,xx);
-ray = exp(1i*ray).*(rr>eps);
 
 
-tic;
-%% Assembling
-[A] = assemble_Helmholtz_matrix_with_ray_1(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
-b = assemble_RHS_with_ray_sing(node,elem,epsilon,omega,speed,xs,ys,ray,fquadorder);
-
-
-%% Boundaries
-[~,~,isBdNode] = findboundary(elem);
-rep_isBdNode = repmat(isBdNode,1,Nray);
-isBdNode = rep_isBdNode(:);
-freeNode = find(~isBdNode);
-
-
-%% Solve the linear system Au = b
-v = zeros(Ndof,1);
-v(freeNode) = A(freeNode,freeNode)\b(freeNode);
-
-
-%% Compute solution values at grid nodes
-grad = ray(:);
-grad = [real(grad),imag(grad)];
-repnode = repmat(node,Nray,1);
-temp = grad(:,1).*repnode(:,1) + grad(:,2).*repnode(:,2);
-
-k = omega./speed(node);           % wavenumber
-kk = repmat(k,1,Nray);
-u = v.*exp(1i*kk(:).*temp);
-u = reshape(u,N,Nray);
-u = sum(u,2);
-
-
-%% Construct the solution
-xx = node(:,1)-xs;  yy = node(:,2)-ys;
-rr = sqrt(xx.^2 + yy.^2);
-ub = 1i/4*besselh(0,1,omega*rr);
-aa = epsilon;  bb = 2*epsilon;
-x_eps = cutoff(aa,bb,node,xs,ys);
-v = ub.*x_eps;
-v(rr<h/2) = 0; 
-ub(rr<h/2) = 0; 
-
-us = u;
-
-uu = us + v;
-toc;
-
-figure(10);
-showsolution(node,elem,real(us));
-title('solution of smooth part')
-
-figure(11);
-showsolution(node,elem,real(v));
-title('singularity part');
-
-figure(12);
-showsolution(node,elem,real(uu));
-title('numerical solution');
-
-figure(13);
-showsolution(node,elem,real(x_eps));
-title('cut-off function');
-
-du = ub -uu;
-x = node(:,1); y = node(:,2);
-du(rr<h/2) = 0;
-du(x>=max(x)-wpml)=0; du(x<= min(x)+wpml) = 0;
-du(y>=max(y)-wpml)=0; du(y<= min(y)+wpml) = 0;
-figure(14);
-showsolution(node,elem,real(du));
-title('error')
-
-figure(15);
-showsolution(node,elem,real(ub));
-title('exact solution')
-
-
-%% plot wavefield 
-% figure(22);
-% px = 0.4;
-% px = round(px/h)*h;
-% indx = 1 + round((px+a)/h);
-% n = round(sqrt(N));
-% uh = reshape(uu,n,n);
-% uex = reshape(ub,n,n);
-% 
-% xx = -a:h:a;
-% yh = uh(indx,:);
-% yex = uex(indx,:);
-% 
-% plot(xx,real(yh),'ro-');
-% hold on;
-% plot(xx,real(yex));
-% title('real part of the wavefield at y = 0.4','FontSize', 30);
-% xlabel('x','FontSize', 30)
-% ylabel('wavefield','FontSize', 30)
-% legend('Numerical solution','Exact solution','Location','best');
+nt = 3;
+errors = zeros(1,nt);
+rhss = zeros(1,nt);
+omegas = pi*[120,160,240,320,480,640];
+NPW = 4;
 
 
 
+for ii = 1:nt
+    ii
+    omega = omegas(ii);
+    wl = 2*pi/omega;
+    h = 1/round(1/(wl/NPW));
+    1/h
+%     epsilon = sqrt(18/omega);
+    
+    %     h = 1/240;
+    
+    [node,elem] = squaremesh([-a,a,-a,a],h);
+    
+    %% Exact ray information
+    xx = node(:,1)-xs;  yy = node(:,2)-ys;
+    rr = sqrt(xx.^2 + yy.^2);
+    ray = atan2(yy,xx);
+    ray = exp(1i*ray).*(rr>10*eps);
+    
+    
+    
+    %         omega = 40*pi;
+    rhs = sing_rhs_homo(epsilon,omega,node,xs,ys);
+    rhss(ii) = norm(rhs)*h;
+    
+    
+    
+    
+    tic;
+    [u,~,~,v] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,@sing_rhs_homo,fquadorder);
+    
+    x = node(:,1); y = node(:,2);
+    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    
+    ub = 1i/4*besselh(0,1,omega*rr);
+    cf = cutoff(epsilon,2*epsilon,node,xs,ys);
+    uex = (1-cf).*ub;
+    uex(rr<epsilon) = 0;
+    du = u - uex;
+    
+    idx = find( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) );
+    du_phy = du(idx);
+    
+    dd = 0*du; dd(idx) = du(idx);
+    %         figure(2);showsolution(node,elem,real(dd));
+    
+    
+    [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,wpml,ray,speed,v,9);
+    
+    errors(ii) = err;%norm(du_phy)*h;%/norm(uex(idx));
+    toc;
+end
 
 
-
-
+figure(22);
+subplot(1,2,1);
+show_convergence_rate(omegas(1:nt),rhss,'omega',[],'||f||_{L^2(\Omega)}');
+subplot(1,2,2);
+show_convergence_rate(omegas(1:nt),errors,'omega',[],'||u - u_h||_{L^2(\Omega)}');
