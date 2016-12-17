@@ -1,4 +1,4 @@
-function r = show_convergence_rate(N,err,xlab,k,str,opt)
+function r = show_convergence_rate(N,err,xlab,k,siz,str,opt)
 %% show convergence rate of an error sequence
 %
 %  r = show_convergence_rate(N,err) finds the number r such that err = N^r and plots the
@@ -20,6 +20,9 @@ end
 if ~exist('str','var')
     str = 'Error';
 end
+if ~exist('siz','var')
+    siz = 14;
+end
 err(err == 0) = 1e-16; % Prevent the case err = 0, log(err) = -Inf.
 p = polyfit(log(N(k:end)),log(err(k:end)),1);
 r = single(p(1));
@@ -39,21 +42,21 @@ end
 
 if ~exist('xlab','var')
     axis tight;
-    xlabel('Number of unknowns','FontSize', 20); ylabel('Error','FontSize', 20);
-    title(['Rate of convergence: O(N^{' num2str(r) '})'],'FontSize', 20);
-    h_legend = legend(str,['CN^{' num2str(r) '}'],'LOCATION','northwest');
-    set(h_legend,'FontSize', 18);
+    xlabel('Number of unknowns','FontSize', siz); ylabel('Error','FontSize', siz);
+    title(['Rate of convergence: O(N^{' num2str(r) '})'],'FontSize', siz);
+    h_legend = legend(str,['CN^{' num2str(r) '}'],'LOCATION','best');
+    set(h_legend,'FontSize', siz);
 elseif xlab == 'omega'
     axis tight;
-    xlabel('frequency \omega','FontSize', 20); ylabel(str,'FontSize', 20);
-    title([str,' \sim O(\omega^{' num2str(r) '})'],'FontSize', 20);
-    h_legend = legend(str,['C \omega^{' num2str(r) '}'],'LOCATION','northwest');
-    set(h_legend,'FontSize', 18);
+    xlabel('frequency \omega','FontSize', siz); ylabel(str,'FontSize', siz);
+    title([str,' \sim O(\omega^{' num2str(r) '})'],'FontSize', siz);
+    h_legend = legend(str,['C \omega^{' num2str(r) '}'],'LOCATION','best');
+    set(h_legend,'FontSize', siz);
 elseif xlab == 'h'
     axis tight;
-    xlabel('mesh size h','FontSize', 20); ylabel(str,'FontSize', 20);
-    title([str,' \sim O(h^{' num2str(r) '})'],'FontSize', 20);
-    h_legend = legend(str,['Ch^{' num2str(r) '}'],'LOCATION','northwest');
-    set(h_legend,'FontSize', 18);
+    xlabel('mesh size h','FontSize', siz); ylabel(str,'FontSize', siz);
+    title([str,' \sim O(h^{' num2str(r) '})'],'FontSize', siz);
+    h_legend = legend(str,['Ch^{' num2str(r) '}'],'LOCATION','best');
+    set(h_legend,'FontSize', siz);
 end
 
