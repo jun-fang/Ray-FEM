@@ -1,19 +1,20 @@
-xs = 0; ys = 0;
+%% Convergence test for homogenenous case with exact ray information
 
-epsilon = 50/(80*pi);
-speed = @(p) ones(size(p(:,1)));
+xs = 0; ys = 0;                     % source location 
+epsilon = 50/(80*pi);               % cut-off parameter   
+speed = @(p) ones(size(p(:,1)));    % wave speed
 
-wpml = 0.1;
-sigmaMax = 25/wpml;
-fquadorder = 3;
-a = 1/2;
+wpml = 0.1;                         % width of PML  
+sigmaMax = 25/wpml;                 % absorption of PML  
+fquadorder = 3;                     % numerical quadrature order 
+a = 1/2;                            % computational domain [-a,a]^2
 
 
-nt = 3;
+nt = 3;                             % number of tests
 errors = zeros(1,nt);
 rhss = zeros(1,nt);
-omegas = pi*[120,160,240,320,480,640];
-NPW = 4;
+omegas = pi*[120,160,240,320];      % omega's
+NPW = 4;                            % grid number per wavelength
 
 
 
@@ -23,10 +24,6 @@ for ii = 1:nt
     wl = 2*pi/omega;
     h = 1/round(1/(wl/NPW));
     1/h
-%     epsilon = sqrt(18/omega);
-    
-    %     h = 1/240;
-    
     [node,elem] = squaremesh([-a,a,-a,a],h);
     
     %% Exact ray information
@@ -35,18 +32,16 @@ for ii = 1:nt
     ray = atan2(yy,xx);
     ray = exp(1i*ray).*(rr>10*eps);
     
-    
-    
-    %         omega = 40*pi;
+    %% right hand side
     rhs = sing_rhs_homo(epsilon,omega,node,xs,ys);
     rhss(ii) = norm(rhs)*h;
     
     
-    
-    
     tic;
+    % Ray-FEM solution with singularity treatment 
     [u,~,~,v] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,@sing_rhs_homo,fquadorder);
     
+    % get the exact solution
     x = node(:,1); y = node(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     
@@ -61,9 +56,8 @@ for ii = 1:nt
     du_phy = du(idx);
     
     dd = 0*du; dd(idx) = du(idx);
-    %         figure(2);showsolution(node,elem,real(dd));
     
-    
+    % compute the error
     [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,wpml,ray,speed,v,9);
     
     errors(ii) = err;%norm(du_phy)*h;%/norm(uex(idx));
@@ -71,8 +65,12 @@ for ii = 1:nt
 end
 
 
+%% plot
 figure(22);
 subplot(1,2,1);
-show_convergence_rate(omegas(1:nt),rhss,'omega',[],'||f||_{L^2(\Omega)}');
+show_convergence_rate(omegas(1:nt),rhss,'omega',[],16,'||f||_{L^2(\Omega)}');
 subplot(1,2,2);
-show_convergence_rate(omegas(1:nt),errors,'omega',[],'||u - u_h||_{L^2(\Omega)}');
+show_convergence_rate(omegas(1:nt),errors,'omega',[],16,'||u - u_h||_{L^2(\Omega)}');
+
+
+

@@ -1,4 +1,5 @@
 function [u,A,b,v] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,sing_rhs,fquadorder)
+%% Ray-FEM solution with singularity treatment
 
 A = assemble_Helmholtz_matrix_with_ray_1(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
 b = assemble_RHS_with_sing_RayFEM(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,sing_rhs,fquadorder);
@@ -6,7 +7,7 @@ b = assemble_RHS_with_sing_RayFEM(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ra
 %% Boundary conditions
 [~,~,isBdNode] = findboundary(elem);
 freeNode = find(~isBdNode);
-N = size(node,1);  Nray = size(ray,2); n = round(sqrt(N));
+N = size(node,1);  Nray = size(ray,2); 
 v = zeros(N,1);
 v(freeNode) = A(freeNode,freeNode)\b(freeNode);
 
