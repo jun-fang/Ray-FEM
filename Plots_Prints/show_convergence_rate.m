@@ -1,4 +1,4 @@
-function r = show_convergence_rate(N,err,xlab,k,siz,str,opt)
+function r = show_convergence_rate(N,err,xlab,str,k,siz,opt)
 %% show convergence rate of an error sequence
 %
 %  r = show_convergence_rate(N,err) finds the number r such that err = N^r and plots the
