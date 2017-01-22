@@ -15,7 +15,7 @@ sec_opt = 0;               % NMLA second order correction or not
 epsilon = 50/(80*pi); %4/sqrt(160*pi)
 
 NPW = 4;                   % number of points per wavelength
-test_num = 3;              % we test test_num examples
+test_num = 4;              % we test test_num examples
 
 % frequency
 high_omega = [160 240 320 480 640]*pi;
@@ -248,23 +248,23 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 %% plots
 figure(1);
 subplot(2,2,1);
-show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num),'omega',[],'low max');
+show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num),'omega','low max');
 subplot(2,2,2);
-show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega',[],'low l2');
+show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega','low l2');
 subplot(2,2,3);
-show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num),'omega',[],'high max');
+show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num),'omega','high max');
 subplot(2,2,4);
-show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega',[],'high l2');
+show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega','high l2');
 
 figure(2);
 subplot(2,2,1);
-show_convergence_rate(high_omega(1:test_num),max_err(1:test_num),'omega',[],'max err');
+show_convergence_rate(high_omega(1:test_num),max_err(1:test_num),'omega','max err');
 subplot(2,2,2);
-show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega',[],'L2 err');
+show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
 subplot(2,2,3);
-show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num),'omega',[],'Rel max ');
+show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num),'omega','Rel max ');
 subplot(2,2,4);
-show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega',[],'Rel L2 ');
+show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 ');
 
 
 %% print results

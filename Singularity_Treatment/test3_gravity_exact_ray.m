@@ -1,8 +1,32 @@
-%% Convergence test for homogenenous case with exact ray information
+%% Convergence test for gravity Helmholtz equation with exact ray information
+
+
+addpath(genpath('../../ifem/'));
+addpath('../Methods/');
+addpath('../NMLA/');
+addpath('../Cutoff_Functions/')
+addpath('../Plots_Prints/');
+
 
 xs = 0; ys = 0;                     % source location 
 epsilon = 50/(80*pi);               % cut-off parameter   
-speed = @(p) ones(size(p(:,1)));    % wave speed
+omega0 = 80*pi;
+E = omega0;
+speed = @(p) omega0./sqrt(E + (p(:,1)));    % wave speed
+
+h = 1/16;
+[node,elem] = squaremesh([-1,1,-1,1],h);
+c = speed(node);
+
+
+
+T = eikonal_cgss(S0, grad0, node0, node);
+
+showsolution(node,elem,c);
+
+
+
+
 
 wpml = 0.1;                         % width of PML  
 sigmaMax = 25/wpml;                 % absorption of PML  
