@@ -1,40 +1,33 @@
 %% Convergence test for gravity Helmholtz equation with exact ray information
 
+clear;
 
 addpath(genpath('../../ifem/'));
+addpath(genpath('../../lhelmfs/'));
 addpath('../Methods/');
 addpath('../NMLA/');
 addpath('../Cutoff_Functions/')
 addpath('../Plots_Prints/');
 
 
-xs = 0; ys = 0;                     % source location 
-epsilon = 50/(80*pi);               % cut-off parameter   
+xs = 0; ys = 0;                     % source location
+epsilon = 50/(80*pi);               % cut-off parameter
 omega0 = 80*pi;
-E = omega0;
-speed = @(p) omega0./sqrt(E + (p(:,1)));    % wave speed
+E0 = omega0^2;
+speed = @(p) omega0./sqrt(E0 + (p(:,1)));    % wave speed
 
-h = 1/16;
-[node,elem] = squaremesh([-1,1,-1,1],h);
-c = speed(node);
-
-
-
-T = eikonal_cgss(S0, grad0, node0, node);
-
-showsolution(node,elem,c);
+S02 = E0/omega0^2;
+g0 = [0, 1/(2*omega0*omega0)];
+node0 = [xs, ys];
 
 
-
-
-
-wpml = 0.1;                         % width of PML  
-sigmaMax = 25/wpml;                 % absorption of PML  
-fquadorder = 3;                     % numerical quadrature order 
+wpml = 0.1;                         % width of PML
+sigmaMax = 25/wpml;                 % absorption of PML
+fquadorder = 3;                     % numerical quadrature order
 a = 1/2;                            % computational domain [-a,a]^2
 
 
-nt = 3;                             % number of tests
+nt = 4;                             % number of tests
 errors = zeros(1,nt);
 rhss = zeros(1,nt);
 omegas = pi*[120,160,240,320];      % omega's
@@ -43,57 +36,72 @@ NPW = 4;                            % grid number per wavelength
 
 
 for ii = 1:nt
-    ii
+
     omega = omegas(ii);
     wl = 2*pi/omega;
     h = 1/round(1/(wl/NPW));
-    1/h
     [node,elem] = squaremesh([-a,a,-a,a],h);
+    fprintf('Case %d: omega/pi = %d,  1/h = %d\n', ii, round(omega/pi), 1/h);
     
-    %% Exact ray information
-    xx = node(:,1)-xs;  yy = node(:,2)-ys;
-    rr = sqrt(xx.^2 + yy.^2);
-    ray = atan2(yy,xx);
-    ray = exp(1i*ray).*(rr>10*eps);
+    % Exact ray information
+    [dx, dy] = eikonal_cgss(S02, g0, node0, node);
+    dr2 = dx.^2 + dy.^2;
+    ray_angle = atan2(dy,dx);
+    ray = exp(1i*ray_angle).*(dr2>10*eps);
     
-    %% right hand side
-    rhs = sing_rhs_homo(epsilon,omega,node,xs,ys);
-    rhss(ii) = norm(rhs)*h;
+    % Gravity parameters
+    alpha = (omega/omega0)^2;
+    E = E0*alpha;
     
-    
+    % Ray-FEM assembling with singularity treatment
     tic;
-    % Ray-FEM solution with singularity treatment 
-    [u,~,~,v] = RayFEM_singularity(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,@sing_rhs_homo,fquadorder);
+    A = assemble_Helmholtz_matrix_with_ray_1(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
+    b = assemble_RHS_gravity(node,elem,xs,ys,epsilon,wpml,sigmaMax,omega,E,alpha,speed,ray,fquadorder);
+    
+    % Boundary conditions
+    [~,~,isBdNode] = findboundary(elem);
+    freeNode = find(~isBdNode);
+    N = size(node,1);  Nray = size(ray,2);
+    v = zeros(N,1);
+    v(freeNode) = A(freeNode,freeNode)\b(freeNode);
+    
+    % construct solution
+    grad = ray(:);
+    grad = [real(grad),imag(grad)];
+    repnode = repmat(node,Nray,1);
+    temp = grad(:,1).*repnode(:,1) + grad(:,2).*repnode(:,2);
+    
+    k = omega./speed(node);           % wavenumber
+    kk = repmat(k,1,Nray);
+    u = v.*exp(1i*kk(:).*temp);
+    u = reshape(u,N,Nray);
+    u = sum(u,2);
     
     % get the exact solution
-    x = node(:,1); y = node(:,2);
-    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    trg = node';  src = [xs;ys];
+    ub = lhelmfs(trg,src,alpha,E,0);
+    ub = ub(:);
     
-    ub = 1i/4*besselh(0,1,omega*rr);
     cf = cutoff(epsilon,2*epsilon,node,xs,ys);
     uex = (1-cf).*ub;
+    x = node(:,1);  y = node(:,2);
+    xx = x - xs; yy = y - ys;
+    rr = sqrt(xx.*xx + yy.*yy);
     uex(rr<epsilon) = 0;
     du = u - uex;
     
     idx = find( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
         .*(y<= max(y)-wpml).*(y>= min(y)+wpml) );
-    du_phy = du(idx);
     
     dd = 0*du; dd(idx) = du(idx);
     
-    % compute the error
-    [err, rel_L2_err] = RayFEM_smooth_solution_error(node,elem,xs,ys,omega,epsilon,wpml,ray,speed,v,9);
-    
-    errors(ii) = err;%norm(du_phy)*h;%/norm(uex(idx));
+    errors(ii) = norm(dd)*h; %/norm(uex(idx));
     toc;
 end
 
 
 %% plot
-figure(22);
-subplot(1,2,1);
-show_convergence_rate(omegas(1:nt),rhss,'omega','||f||_{L^2(\Omega)}');
-subplot(1,2,2);
+figure(33);
 show_convergence_rate(omegas(1:nt),errors,'omega','||u - u_h||_{L^2(\Omega)}');
 
 
