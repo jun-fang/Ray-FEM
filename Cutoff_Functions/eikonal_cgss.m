@@ -38,6 +38,10 @@ dTdy = drdy.*dTdr;
 dTdx = dTdx + dSdx.*dS;
 dTdy = dTdy + dSdy.*dS;
 
+dTdx(r < 10*eps) = 0;
+dTdy(r < 10*eps) = 0;
+
+
 %% gradient check
 % S02 = 1;
 % g0 = [1, 2];
