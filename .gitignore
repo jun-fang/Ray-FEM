@@ -18,5 +18,8 @@
 # Matlab formatted data
 *.mat
 
+# Figure formatted data
+*.eps
+
 # Session info
 octave-workspace
