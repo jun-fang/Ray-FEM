@@ -1,4 +1,4 @@
-function b = assemble_RHS(node,elem,source,fquadorder)
+function b = assemble_RHS_SFEM(node,elem,source,fquadorder)
 %% Function to assemble the right hand side : 
 %         -\Delta u - (omega/c)^2 u = f               in D
 %                                 u = 0               on \partial D 
