@@ -1,4 +1,4 @@
-function [u,A,b] = Standard_FEM_PML_PointSource(node,elem,omega,wpml,sigmaMax,xs,ys,speed,fquadorder,plt)
+function [u,A,b,h] = Standard_FEM_PML_PointSource(node,elem,h,omega,wpml,sigmaMax,xs,ys,speed,fquadorder,plt)
 %% Standard FEM with PML for point source Helmholtz equation: 
 %         -\Delta u - (omega/c)^2 u = \delta(x_0)         in D
 %                                 u = 0               on \partial D 
@@ -45,7 +45,7 @@ Ndof = N;                   % degree of freedom
 
 xmin = node(1,1);    xmax = node(end,1);
 ymin = node(1,2);    ymax = node(end,2);
-h = (xmax-xmin)/round(sqrt(N));    % mesh size
+% h = (xmax-xmin)/round(sqrt(N));    % mesh size
 
 
 %% PML set up

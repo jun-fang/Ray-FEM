@@ -44,8 +44,8 @@ xmax = max(node(:,1));
 xmin = min(node(:,1));
 ymax = max(node(:,2));
 ymin = min(node(:,2));
-h = node(2,2) - node(1,2);
-dh = h/20;
+% h = node(2,2) - node(1,2);
+% dh = h/20;
 
 
 %% PML set up

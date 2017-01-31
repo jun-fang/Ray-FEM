@@ -7,7 +7,7 @@ h = node(2,2) - node(1,2);    % mesh size
 h = 1/round(1/h);
 m = round((xmax-xmin)/h + 1);
 n = round((ymax-ymin)/h + 1);
-% pct = 1/10;
+% pct = 1/10; rescale the length of the ray direction
 if ((m-1)/gap_num)>floor(((m-1)/gap_num))...
         || ((n-1)/gap_num)>floor(((n-1)/gap_num))
     fprintf('Gap number is not correct!!!\n');

@@ -26,7 +26,7 @@ epsilon = 50/(80*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 4;              % we test test_num examples
+test_num = 1;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640]*pi;
@@ -158,9 +158,6 @@ for ti = 1: test_num
     wpml = high_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     
-    % Gravity parameters
-    alpha = (omega/omega0)^2;
-    E = E0*alpha;
     
     % Ray-FEM assembling with singularity treatment
     A = assemble_Helmholtz_matrix_with_ray_1(mnode,melem,omega,wpml,sigmaMax,speed,ray,fquadorder);

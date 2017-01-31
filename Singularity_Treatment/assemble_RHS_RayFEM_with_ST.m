@@ -1,8 +1,8 @@
-function b = assemble_RHS_with_sing_RayFEM(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,sing_rhs,fquadorder)
-%% Function to assemble the right hand side : 
-%         -\Delta u - (omega/c)^2 u = f               in D
-%                                 u = 0               on \partial D 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option)
+%% Function to assemble the right hand side with singularity treatment (ST):
+%         -\Delta u - (omega/c)^2 u = 2 \nabla u_b \cdot \nabla \chi + u_b \Delta \chi,     in D
+%                                                u = 0               on \partial D
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % INPUT:
 %
@@ -13,18 +13,25 @@ function b = assemble_RHS_with_sing_RayFEM(node,elem,xs,ys,omega,epsilon,wpml,si
 %   elem: NT x 3 matrix that contains the indices of the nodes for each
 %         triangle element
 %
-%   source: function handle defining the source
-% 
+%   (xs, ys): source location;   omega: frequency;
+%
+%   epsilon: cut-off support size
+%
+%   wpml: width of PML;  sigmaMax: max absorption
+%
+%   ray: ray information;  speed: wave speed
+%
 %   fquadorder: The order of numerical quadrature
 %
+%   option: different types -- homogenenous, gravity
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
 % OUTPUT:
-%   
+%
 %   b: Ndof x 1 Galerkin projection of the source
-%   
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % fprintf('Assembling the right-hand side \n');
 
 % source = @(x) -1i*10*pi*exp(1i*10*pi*sqrt(x(:,1).^2+x(:,2).^2))./sqrt(x(:,1).^2+x(:,2).^2);
@@ -35,7 +42,7 @@ function b = assemble_RHS_with_sing_RayFEM(node,elem,xs,ys,omega,epsilon,wpml,si
 N = size(node,1);        % number of grid points
 NT = size(elem,1);       % number of triangle elements
 Nray = size(ray,2);
-Ndof = N*Nray;          % degree of freedom 
+Ndof = N*Nray;          % degree of freedom
 
 k = omega./speed(node);          % wavenumber
 kk = repmat(k,1,Nray);
@@ -48,9 +55,9 @@ ymin = min(node(:,2));
 
 %% PML set up
 sigmaPML_x = @(x)sigmaMax*( (x-xmin-wpml).^2.*(x < xmin + wpml) + ...
-                (x-(xmax-wpml)).^2.*(x > xmax - wpml))/wpml^2;         
+    (x-(xmax-wpml)).^2.*(x > xmax - wpml))/wpml^2;
 sigmaPML_y = @(y) sigmaMax*( (y-ymin-wpml).^2.*(y < ymin + wpml) ...
-                + (y-(ymax-wpml)).^2.*(y > ymax - wpml))/wpml^2;
+    + (y-(ymax-wpml)).^2.*(y > ymax - wpml))/wpml^2;
 s_xy = @(x,y) ((1+1i*sigmaPML_x(x)/omega).*(1+1i*sigmaPML_y(y)/omega));    %% 1/(s1*s2)
 
 
@@ -78,8 +85,31 @@ for p = 1:nQuad
     reppxy = repmat(pxy,Nray,1);
     sxy = s_xy(reppxy(:,1),reppxy(:,2));
     
-    % we suppose that the source is well inside the physical domain
-    fp = sing_rhs(epsilon,omega,reppxy,xs,ys).*sxy;
+    
+    % homogeneous case
+    if option == 'homogeneous'
+        x = (pxy(:,1)-xs);  y = (pxy(:,2)-ys);
+        r = sqrt(x.^2 + y.^2);
+        
+        ub = 1i/4*besselh(0,1,omega*r);                  % Babich expression
+        ub_g1 = -1i/4*omega*besselh(1,1,omega*r)./r.*x;  % partial derivative wrt x
+        ub_g2 = -1i/4*omega*besselh(1,1,omega*r)./r.*y;  % partial derivative wrt y
+    end
+    
+    % gravity case
+    if iscell(option) && option{1} == 'gravity'
+        alpha = option{2};   E = option{3};
+        trg = pxy';  src = [xs;ys];
+        ub = lhelmfs(trg,src,alpha,E);
+        
+        trg = repmat([xs;ys], 1, size(pxy,1)); src = pxy';
+        [~, ub_g1, ub_g2] = lhelmfs(trg,src,alpha,E,1);
+        ub = ub(:);  ub_g1 = ub_g1(:);  ub_g2 = ub_g2(:);
+    end
+    
+    fpxy = singularity_RHS(epsilon,xs,ys,pxy,ub,ub_g1,ub_g2);
+    fp = repmat(fpxy,Nray,1).*sxy;
+    
     
     for i = 1:3
         gradtempi = - ray(elem(:,i),:);
