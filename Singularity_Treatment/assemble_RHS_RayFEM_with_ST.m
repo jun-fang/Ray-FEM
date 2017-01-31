@@ -87,7 +87,7 @@ for p = 1:nQuad
     
     
     % homogeneous case
-    if option == 'homogeneous'
+    if ~iscell(option) && strcmp(option, 'homogeneous')
         x = (pxy(:,1)-xs);  y = (pxy(:,2)-ys);
         r = sqrt(x.^2 + y.^2);
         
@@ -97,7 +97,7 @@ for p = 1:nQuad
     end
     
     % gravity case
-    if iscell(option) && option{1} == 'gravity'
+    if iscell(option) && strcmp(option{1}, 'gravity')
         alpha = option{2};   E = option{3};
         trg = pxy';  src = [xs;ys];
         ub = lhelmfs(trg,src,alpha,E);

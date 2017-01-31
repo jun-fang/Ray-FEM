@@ -1,4 +1,4 @@
-function b = assemble_RHS_with_sing_SFEM(node,elem,xs,ys,omega,wpml,sigmaMax,epsilon,fquadorder)
+function b = assemble_RHS_SFEM_with_ST(node,elem,xs,ys,omega,wpml,sigmaMax,epsilon,fquadorder)
 %% Function to assemble the right hand side : 
 %         -\Delta u - (omega/c)^2 u = f               in D
 %                                 u = 0               on \partial D 
@@ -66,7 +66,13 @@ for p = 1:nQuad
     sxy = s_xy(pxy(:,1),pxy(:,2));
     
     % we suppose that the source is well inside the physical domain
-    fp = sing_rhs_homo(epsilon,omega,pxy,xs,ys).*sxy;
+    x = (pxy(:,1)-xs);  y = (pxy(:,2)-ys);
+    r = sqrt(x.^2 + y.^2);
+    ub = 1i/4*besselh(0,1,omega*r);                  % Babich expression
+    ub_g1 = -1i/4*omega*besselh(1,1,omega*r)./r.*x;  % partial derivative wrt x
+    ub_g2 = -1i/4*omega*besselh(1,1,omega*r)./r.*y;  % partial derivative wrt y
+    
+    fp = singularity_RHS(epsilon,xs,ys,pxy,ub,ub_g1,ub_g2).*sxy;
 
     for i = 1:3
         bt(:,i) = bt(:,i) + weight(p)*phi(p,i)*fp;
