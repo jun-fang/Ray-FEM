@@ -1,1 +1,0 @@
-function [] = newton_method

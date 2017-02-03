@@ -1,4 +1,4 @@
-function [u,A,b,rel_L2_err] = Standard_FEM_IBC(node,elem,omega,pde,fquadorder,solver,plt)
+function [u,A,b,rel_L2_err] = Standard_FEM_IBC(node,elem,omega,pde,fquadorder,solver,plt,xs,ys)
 %% Standard FEM for solving Helmholtz equation with Impedance Boundary Condition(IBC): 
 %         -\Delta u - (omega/c)^2 u = f               in D
 %         \partial u / \partial n + i omega/c u = g   on \partial D 
@@ -26,6 +26,8 @@ function [u,A,b,rel_L2_err] = Standard_FEM_IBC(node,elem,omega,pde,fquadorder,so
 % 
 %   plt: 1 plot the solution; 0 not plot
 %
+%   xs,ys: source location if it is point source problem
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
 % OUTPUT:
@@ -42,6 +44,7 @@ function [u,A,b,rel_L2_err] = Standard_FEM_IBC(node,elem,omega,pde,fquadorder,so
 N = size(node,1);       % number of grid points
 NT = size(elem,1);      % number of triangle elements
 Ndof = N;               % degree of freedom 
+a = max(node(:,1));
 
 
 %% Numerical Quadrature
@@ -69,7 +72,7 @@ for p = 1:nQuad
     pxy = lambda(p,1)*node(elem(:,1),:) ...
         + lambda(p,2)*node(elem(:,2),:) ...
         + lambda(p,3)*node(elem(:,3),:);
-    fp = pde.f(pxy);
+    fp = pde.f(pxy,xs,ys);
     k2 = (omega./pde.speed(pxy)).^2;
     
     for i = 1:3         
@@ -124,7 +127,7 @@ ge = zeros(size(bdEdge,1),2);
 for pp = 1:nQuadgN
     ppxy = lambdagN(pp,1)*node(bdEdge(:,1),:) ...
         + lambdagN(pp,2)*node(bdEdge(:,2),:);
-    gp = pde.g_IBC(ppxy);
+    gp = pde.g_IBC(ppxy,xs,ys, omega, a);
     kp = omega./pde.speed(ppxy);
     for i = 1:2
         ge(:,i) = ge(:,i) + weightgN(pp)*phigN(pp,i)*gp;
@@ -173,7 +176,7 @@ end
 %% Plot the solution
 if plt
     figure(10);
-    uex = pde.ex_u(node);
+    uex = pde.u_ex(node,xs,ys, omega);
     FJ_showresult(node,elem,real(uex));
     title('Exact Solution');
     
@@ -184,8 +187,8 @@ end
 
 
 %% get relative L2 error
-err = getL2error(node,elem,@pde.ex_u,u);
-err0 = getL2error(node,elem,@pde.ex_u,0*u);
+err = getL2error(node,elem,@(p) pde.u_ex(p,xs,ys, omega),u);
+err0 = getL2error(node,elem,@(p) pde.u_ex(p,xs,ys, omega),0*u);
 rel_L2_err = err/err0;
 
 % uex = pde.ex_u(node);
