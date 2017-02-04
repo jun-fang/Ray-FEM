@@ -1,356 +1,174 @@
 %% Convergence test for homogenenous case with exact ray information
 
+% add path
 clear;
 addpath(genpath('../../ifem/'));
 addpath('../Methods/');
-addpath('../Cutoff_Functions/')
+addpath('../NMLA/');
+addpath('../Helmholtz_data/');
 addpath('../Plots_Prints/');
 
+% set up
+pde = Helmholtz_data_one_point_source;    % pde data
+xs = 2; ys = 2;       % source location
+Nray = 1;
+fquadorder = 3;    % the order of numerical quadrature
+solver = 'DIR';      % the type of solver for the resulting linear system
+plt = 0;                   % plot the solution or not
+sec_opt = 0;           % not using second order correction of NMLA
 
-%% Set up
-xs = 0; ys = 0;                     % source location 
-epsilon = 50/(80*pi);               % cut-off parameter   
-speed = @(p) ones(size(p(:,1)));    % wave speed
+test_num = 5;             % we test test_num examples
+NPW = 6;                   % number of points per wavelength
 
-wpml = 0.1;                         % width of PML  
-sigmaMax = 25/wpml;                 % absorption of PML  
-fquadorder = 3;                     % numerical quadrature order 
-a = 1/2;                            % computational domain [-a,a]^2
+% frequency
+high_omega = [80 160 240 320 400 480 640]*pi;
+low_omega = sqrt(high_omega);
 
-nt = 4;                             % number of tests
-errors = zeros(1,nt);                  % record errors
-omegas = pi*[120,160,240,320];      % omega's
-NPW = 4;                            % grid number per wavelength
+% error
+low_l2_rayerr = 0*high_omega;      % L_2 ray error of low-freq waves
+high_l2_rayerr = 0*high_omega;     % L_2 ray error of high-freq waves
+
+rel_l2_err_numray = 0*high_omega;   % relative L_2 error of the numerical Ray-FEM solution
+rel_l2_err_exray = 0*high_omega;   % relative L_2 error of the exact Ray-FEM solution
+
+
+
+% wavelength
+high_wl = 2*pi./high_omega;
+low_wl = 2*pi./low_omega;
+
+% mesh size
+fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
+ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
+
+
+%% Generate the domain sizes
+sd = 1/2;
+Rest = 2;          
+
+high_r = NMLA_radius(high_omega,Rest);
+md = sd + high_r;
+md = ceil(md*10)/10;      % middle domain size 
+
+low_r = NMLA_radius(low_omega,Rest);
+ld = md + low_r;
+ld = ceil(ld*10)/10;      % large domain size
 
 
 %% Tests
-for ii = 1:nt
-    
-    omega = omegas(ii);
-    wl = 2*pi/omega;
-    h = 1/round(1/(wl/NPW));
-    [node,elem] = squaremesh([-a,a,-a,a],h);
-    fprintf('Case %d: omega/pi = %d, NPW = %d, 1/h = %d\n', ii, round(omega/pi), NPW, round(1/h));
-    
-    %% Exact ray information
-    x = node(:,1);  y = node(:,2);
-    rr = sqrt((x-xs).^2 + (y-ys).^2);
-    ray = atan2(y-ys, x-xs);
-    ray = exp(1i*ray).*(rr>10*eps);
-    
-    %% Assemble and solve the system Au = b
-    option = 'homogeneous';
-    A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
-    b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-    u = direct_solver(node,elem,A,b,omega,ray,speed);
-       
-    %% Get the exact solution
-    ub = 1i/4*besselh(0,1,omega*rr);
-    cf = cutoff(epsilon,2*epsilon,node,xs,ys);
-    uex = (1-cf).*ub;
-    uex(rr<epsilon) = 0;
-    
-    %% Compute relative L2 error 
-    du = u - uex;
-    idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
-        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
-    du(idx) = 0;  uex(idx) = 0;
-    errors(ii) = norm(du)/norm(uex);
-    toc;
-end
-
-
-%% plot
-figure(22);
-show_convergence_rate(omegas(1:nt),errors,'omega','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%% Test One Point Source Problem (outside domain): Iterative Idea
-% uexact = sqrt(k)*besselh(0,1,k*sqrt((x-2)^2 + (y-2)^2))
-clear;
-fileID = fopen('result1_iter.txt','a');
-
-
-%% Load source data
-pde = Helmholtz_data1;
-fprintf(fileID,'\n\n One point source problem (outside domain): \n\n');
-fprintf(fileID,'u_ex = sqrt(k)*besselh(0,1,k*sqrt((x-2)^2 + (y-2)^2)) \n\n');
-xs = 2; ys = 2;            % point source location
-
-
-%% Set up
-plt = 0;                   % show solution or not
-fquadorder = 9;            % numerical quadrature order
-solver = 'DIR';            % linear system solver
-Nray = 1;                  % one ray direction
-sec_opt = 0;               % NMLA second order correction or not
-
-rec_N = 6;                 % we test rec_N examples
-
-% record h and omega
-rec_omega = zeros(1,rec_N);
-rec_h = rec_omega;
-
-% record the error and condition number of Standard FEM
-rec_S_err = rec_omega;
-rec_S_cond = rec_omega;
-
-% record the L2 error of the numerical angle estimation
-rec_ang_err1 = rec_omega;
-rec_ang_err2 = rec_omega;
-
-% record the error and condition number of Numerical Ray-based FEM
-rec_NR_err1 = rec_omega;
-rec_NR_err2 = rec_omega;
-rec_NR_cond1 = rec_omega;
-rec_NR_cond2 = rec_omega;
-
-% record the error and condition number of Exact Ray-based FEM
-rec_ER_err = rec_omega;
-rec_ER_cond = rec_omega;
-
-% record the interpolation error with exact ray information
-rec_int_err = rec_omega;
-
-global omega;
-global a;
-% lg_a,md_a,sm_a have to be chosen to match the mesh size h and ch
-% (for example md_a/ch = integer), and the real radius in NMLA as well
-% (r1+md_a < lg_a, r2 + sm_a < md_a)
-lg_a = 5/4;
-md_a = 3/4;
-sm_a = 1/2;
-Rest = 1;
-NPW = 6;
-
-% cp_omega = [20 40 80 160]*2*pi;
-cp_omega = [20 40 60 80 120 160 200 260 320 400]*pi;
 tstart = tic;
-for rec_i = 1: rec_N
-    high_omega = cp_omega(rec_i);
-    low_omega = sqrt(high_omega);
-    h = 1/(NPW*round(high_omega/(2*pi)));
-    ch = 1/(2*NPW*round(low_omega/(2*pi)));
-    
-    if (high_omega >= 100*pi) && (high_omega < 160*pi)
-        lg_a = 1;
-        md_a = 2/3;
-        sm_a = 1/2;
-    elseif high_omega >= 160*pi
-        lg_a = 7/8;
-        md_a = 5/8;
-        sm_a = 1/2;
-    end
-    
+for ti = 1: test_num
+    omega = high_omega(ti);
+    h = fh(ti);  h_c = ch(ti);
     fprintf(['-'*ones(1,80) '\n']);
-    fprintf(['-'*ones(1,80) '\n']);
-    fprintf('\ncase %d: \nomega/(2*pi) = %d,   1/h = %d   1/ch = %d,  NPW = %d \n\n',...
-        rec_i, round(high_omega/(2*pi)), 1/h, 1/ch, NPW);
-    rec_omega(rec_i) = high_omega;
-    rec_h(rec_i) = h;
+    fprintf('\nCase %d: \nomega/(2*pi) = %d,   1/h = %d   1/h_c = %d,  NPW = %d ',...
+        ti, round(omega/(2*pi)), 1/h, 1/h_c, NPW);
     
     
     %% Step 1: Solve the Hemholtz equation with the same source but with a relative low frequency sqrt(\omega) by Standard FEM, mesh size \omega*h = constant
     fprintf(['\n' '-'*ones(1,80) '\n']);
-    fprintf('Numerical Ray-based FEM: \n\n');
-    fprintf('Step1 \n');
+    fprintf('Step1: S-FEM, low frequency \n');
     tic;
-    omega = low_omega;
-    a = lg_a;
+    omega = low_omega(ti);              % low frequency
+    a = ld(ti);                         % large domain 
     [lnode,lelem] = squaremesh([-a,a,-a,a],h);
-    [u_std,~,~,~] = Standard_FEM_IBC(lnode,lelem,omega,pde,fquadorder,solver,plt);
+    u_std = Standard_FEM_IBC(lnode,lelem,omega,pde,fquadorder,solver,plt,xs,ys);
     toc;
     
     
     %% Step 2: Use NMLA to find ray directions d_c with low frequency sqrt(\omega)
-    fprintf(['\n' '-'*ones(1,80) '\n']);
-    fprintf('\nStep2 \n');
+    fprintf([ '-'*ones(1,80) '\n']);
+    fprintf('Step2: NMLA, low frequency \n');
     
-    lN = size(lnode,1);
-    ln = round(sqrt(lN));
-    n = ln;
+    % compute numerical derivatives 
+    [ux,uy] = num_derivative(u_std,h,2);
     
-    uu = reshape(u_std,n,n);
-    uux = uu;   uuy = uu;   % numerical Du
-    
-    uux(:,2:n-1) = (uu(:,3:n) - uu(:,1:n-2))/(2*h);
-    uux(:,n) = 2*uux(:,n-1) - uux(:,n-2);
-    uux(:,1) = 2*uux(:,2) - uux(:,3);
-    ux = uux(:);
-    
-    uuy(2:n-1,:) = (uu(3:n,:) - uu(1:n-2,:))/(2*h);
-    uuy(n,:) = 2*uuy(n-1,:) - uuy(n-2,:);
-    uuy(1,:) = 2*uuy(2,:) - uuy(3,:);
-    uy = uuy(:);
-    
-    a = md_a;
+    a = md(ti);
     [mnode,melem] = squaremesh([-a,a,-a,a],h);
-    mN = size(mnode,1);
-    mn = round(sqrt(mN));
     
-    [cnode,celem] = squaremesh([-a,a,-a,a],ch);
-    cN = size(cnode,1);
-    cnumray = zeros(cN,Nray);
-    cr = zeros(cN,Nray);
+    [cnode,celem] = squaremesh([-a,a,-a,a],h_c);
+    cN = size(cnode,1);    
+    cnumray_angle = zeros(cN,Nray);
     
-    fprintf('NMLA time: \n');
+    % NMLA
     tic;
     for i = 1:cN
         x0 = cnode(i,1);  y0 = cnode(i,2);
+        r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = pde.speed(cnode(i,:));
-        [cnumray(i)] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,pde,1/5,Nray,'num',sec_opt,plt);
+        [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
     end
+    cnumray = exp(1i*cnumray_angle);
     numray1 = interpolation(cnode,celem,mnode,cnumray);
     toc;
     
-    exray = ex_ray_angle(mnode,xs,ys);
-    diffang1 = numray1 - exray;
-    rec_ang_err1(rec_i) = h*norm(diffang1,2)/(h*norm(exray,2));
-    numray = exp(1i*numray1);
+    % compute the ray errors
+    exray = pde.ray(mnode,xs,ys);
+    rayerr1 = numray1 - exray;
+    low_l2_rayerr(ti) = norm(rayerr1)*h/(norm(exray)*h);
     
     
     %% Step 3: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_c
-    fprintf(['\n' '-'*ones(1,80) '\n']);
-    fprintf('\nStep3 \n');
+    fprintf(['-'*ones(1,80) '\n']);
+    fprintf('Step3: Ray-FEM, high frequency \n');
+   
     tic;
-    omega = high_omega;
-    [uh1,A,~,~,rel_L2_err] = Ray_FEM_IBC_1(mnode,melem,omega,pde,numray,fquadorder,plt);
+    omega = high_omega(ti);
+    ray = numray1;
+    uh1= Ray_FEM_IBC(mnode,melem,omega,pde,ray,fquadorder,plt,xs,ys);
     toc;
-    rec_NR_err1(rec_i) = rel_L2_err;
-    %     rec_NR_cond1(rec_i) = condest(A);
+    
     
     
     %% Step 4: NMLA to find original ray directions d_o with wavenumber k
-    fprintf(['\n' '-'*ones(1,80) '\n']);
-    fprintf('\nStep4 \n');
+    fprintf(['-'*ones(1,80) '\n']);
+    fprintf('Step4: NMLA, high frequency \n');
     
-    a = sm_a;
+    % compute numerical derivatives
+    [ux,uy] = num_derivative(uh1,h,2);
+    
+    a = sd;
     [node,elem] = squaremesh([-a,a,-a,a],h);
     
-    [cnode,celem] = squaremesh([-a,a,-a,a],ch);
+    [cnode,celem] = squaremesh([-a,a,-a,a],h_c);
     cN = size(cnode,1);
-    cnumray = zeros(cN,Nray);
+    cnumray_angle = zeros(cN,Nray);
     
-    n = mn;
-    uu = reshape(uh1,n,n);
-    uux = uu;   uuy = uu;   % numerical Du
     
-    uux(:,2:n-1) = (uu(:,3:n) - uu(:,1:n-2))/(2*h);
-    uux(:,n) = 2*uux(:,n-1) - uux(:,n-2);
-    uux(:,1) = 2*uux(:,2) - uux(:,3);
-    ux = uux(:);
-    
-    uuy(2:n-1,:) = (uu(3:n,:) - uu(1:n-2,:))/(2*h);
-    uuy(n,:) = 2*uuy(n-1,:) - uuy(n-2,:);
-    uuy(1,:) = 2*uuy(2,:) - uuy(3,:);
-    uy = uuy(:);
-    
-    fprintf('NMLA time: \n');
+    % NMLA
     tic;
     for i = 1:cN
         x0 = cnode(i,1);  y0 = cnode(i,2);
+        r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = pde.speed(cnode(i,:));
-        [cnumray(i,:)] = NMLA_2D_2nd(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,pde,1/5,Nray,'num',sec_opt,plt);
+        [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
     end
+    cnumray = exp(1i*cnumray_angle);
     numray2 = interpolation(cnode,celem,node,cnumray);
     toc;
     
-    exray = ex_ray_angle(node,xs,ys);
-    diffang2 = numray2 - exray;
-    rec_ang_err2(rec_i) = h*norm(diffang2,2)/(h*norm(exray,2));
-    numray = exp(1i*numray2);
+    % compute the ray errors
+    exray = pde.ray(node,xs,ys);
+    rayerr2 = numray2 - exray;
+    high_l2_rayerr(ti) = norm(rayerr2)*h/(norm(exray)*h);    
     
     
     %% Step 5: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_o
-    fprintf(['\n' '-'*ones(1,80) '\n']);
-    fprintf('\nStep5 \n');
+    fprintf(['-'*ones(1,80) '\n']);
+    fprintf('Step5: Ray-FEM, high frequency \n');
     tic;
-    omega = high_omega;
-    [uh2,A,~,~,rel_L2_err] = Ray_FEM_IBC_1(node,elem,omega,pde,numray,fquadorder,plt);
+    
+    % Ray-FEM solution
+    omega = high_omega(ti);
+    ray = numray2;
+    [uh2,~,~,~,rel_l2_err]= Ray_FEM_IBC(node,elem,omega,pde,ray,fquadorder,plt,xs,ys);
+    rel_l2_err_numray(ti) = rel_l2_err;
+    
+    %% Ray-FEM with exact ray
+    ray = pde.ray(node,xs,ys);
+    [uh,~,~,~,rel_l2_err]= Ray_FEM_IBC(node,elem,omega,pde,ray,fquadorder,plt,xs,ys);
+    rel_l2_err_exray(ti) = rel_l2_err;
     toc;
-    rec_NR_err2(rec_i) = rel_L2_err;
-    %     rec_NR_cond2(rec_i) = condest(A);
-    
-    
-    %% Standard FEM
-    if (0)
-        fprintf('\nStandard FEM: \n');
-        [~,A,~,rel_L2_err] = Standard_FEM_IBC(node,elem,omega,pde,fquadorder,solver,plt);
-        rec_S_err(rec_i) = rel_L2_err;
-        rec_S_cond(rec_i) = condest(A);
-    end
-    
-    
-    %% Exact Ray-based FEM:
-    if (0)
-        fprintf('\nExact Ray-based FEM: \n');
-        tic;
-        ray = pde.ray(node);
-        [~,A,~,~,rel_L2_err] = Ray_FEM_IBC_1(node,elem,omega,pde,ray,fquadorder,plt);
-        toc;
-        rec_ER_err(rec_i) = rel_L2_err;
-        %         rec_ER_cond(rec_i) = condest(A);
-        
-        coeff = pde.int_coe(node);
-        c = pde.speed(node);
-        [rec_int_err(rec_i)] = Ray_FEM_L2_Error(coeff,node,elem,omega,c,pde.ex_u,ray,fquadorder);
-    end
-    
     
 end
 
@@ -359,78 +177,43 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 
 
+%% plots
+figure(11);
+subplot(1,2,1);
+show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega','low rel l2');
+subplot(1,2,2);
+show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega','high rel l2');
+
+figure(12);
+subplot(1,2,1);
+show_convergence_rate(high_omega(1:test_num),rel_l2_err_numray(1:test_num),'omega','NR-FEM rel l2');
+subplot(1,2,2);
+show_convergence_rate(high_omega(1:test_num),rel_l2_err_exray(1:test_num),'omega','ER-FEM rel l2');
 
 
+%% print results
+fprintf( ['\n' '-'*ones(1,80) '\n']);
+fprintf( 'omega:                   ');
+fprintf( '&  %.2e  ',high_omega );
+fprintf( '\nomega/2pi:               ');
+fprintf( '&  %.2e  ',high_omega/(2*pi) );
+fprintf( '\n\nGrid size h:             ');
+fprintf( '&  %.2e  ',fh);
+fprintf( '\n1/h:                     ');
+fprintf( '&  %.2e  ',1./fh);
 
-%% record and print results
-rec = [rec_omega;rec_h;rec_S_err;rec_S_cond;...
-    rec_ang_err1;rec_ang_err2;rec_NR_err1;rec_NR_err2;rec_NR_cond1;rec_NR_cond2;...
-    rec_ER_cond;rec_ER_err;rec_int_err];
+fprintf( ['\n' '-'*ones(1,80) '\n']);
+fprintf( '\nLow rel l2 ray error:    ');
+fprintf( '&  %1.2d  ',low_l2_rayerr);
+fprintf( '\n\nHigh rel l2 ray error:   ');
+fprintf( '&  %1.2d  ',high_l2_rayerr);
 
-save('result1.mat','rec_omega','rec_h','rec_S_err','rec_S_cond','rec_ang_err1',...
-    'rec_ang_err2','rec_NR_err1','rec_NR_err2','rec_NR_cond1','rec_NR_cond2',...
-    'rec_ER_cond','rec_ER_err','rec_int_err');
-
-
-fprintf( fileID,['\n' '-'*ones(1,80) '\n']);
-fprintf( fileID,'omega:                  ');
-fprintf( fileID,'&  %.2e  ',rec_omega );
-fprintf( fileID,'\nomega/2pi:              ');
-fprintf( fileID,'&  %.2e  ',rec_omega/(2*pi) );
-fprintf( fileID,'\n\nGrid size h:            ');
-fprintf( fileID,'&  %.2e  ',rec_h);
-fprintf( fileID,'\n1/h:                    ');
-fprintf( fileID,'&  %.2e  ',1./rec_h);
-
-fprintf( fileID,['\n' '-'*ones(1,80) '\n']);
-fprintf( fileID,'\nNumerical Ray-based FEM:\n\n');
-fprintf( fileID,'Angle L2 error 1:       ');
-fprintf( fileID,'&  %1.2d  ',rec_ang_err1);
-fprintf( fileID,'\n\nAngle L2 error 2:       ');
-fprintf( fileID,'&  %1.2d  ',rec_ang_err2);
-fprintf( fileID,'\n\nRelative L2 error 1:    ');
-fprintf( fileID,'&  %1.2d  ',rec_NR_err1);
-fprintf( fileID,'\n\nRelative L2 error 2:    ');
-fprintf( fileID,'&  %1.2d  ',rec_NR_err2);
-fprintf( fileID,'\n\nCondition number 1:     ');
-fprintf( fileID,'&  %1.2d  ',rec_NR_cond1);
-fprintf( fileID,'\n\nCondition number 2:     ');
-fprintf( fileID,'&  %1.2d  ',rec_NR_cond2);
-
-fprintf( fileID,['\n' '-'*ones(1,80) '\n']);
-fprintf( fileID,'\nExact Ray-based FEM:\n\n');
-fprintf( fileID,'Condition number:       ');
-fprintf( fileID,'&  %1.2d  ',rec_ER_cond);
-fprintf( fileID,'\n\nRelative L2 error:      ');
-fprintf( fileID,'&  %1.2d  ',rec_ER_err);
-
-fprintf( fileID,['\n\n' '-'*ones(1,80) '\n']);
-fprintf( fileID,'Interpolation error:    ');
-fprintf( fileID,'&  %1.2d  ',rec_int_err);
-
-fprintf( fileID,['\n' '-'*ones(1,80) '\n']);
-fprintf( fileID,'\nStandard FEM:\n\n');
-fprintf( fileID,'Condition number:       ');
-fprintf( fileID,'&  %1.2d  ',rec_S_cond);
-fprintf( fileID,'\n\nRelative L2 error:      ');
-fprintf( fileID,'&  %1.2d  ',rec_S_err);
-
+fprintf( '\n\nNR-FEM rel l2 error:    ');
+fprintf( '&  %1.2d  ',rel_l2_err_numray);
+fprintf( '\n\nER-FEM rel l2 error:     ');
+fprintf( '&  %1.2d  ',rel_l2_err_exray);
 
 
 fprintf( ['\n' '-'*ones(1,80) '\n']);
-fprintf( '\nNumerical Ray-based FEM:\n\n');
-fprintf( 'Angle L2 error 1:       ');
-fprintf( '&  %1.2d  ',rec_ang_err1);
-fprintf( '\n\nAngle L2 error 2:       ');
-fprintf( '&  %1.2d  ',rec_ang_err2);
-fprintf( '\n\nRelative L2 error 1:    ');
-fprintf( '&  %1.2d  ',rec_NR_err1);
-fprintf( '\n\nRelative L2 error 2:    ');
-fprintf( '&  %1.2d  ',rec_NR_err2);
-fprintf( ['\n' '-'*ones(1,80) '\n']);
 
-fprintf( ['\n' '-'*ones(1,80) '\n']);
-fprintf( '\nExact Ray-based FEM:');
-fprintf( '\n\nRelative L2 error:      ');
-fprintf( '&  %1.2d  ',rec_ER_err);
-fprintf( ['\n' '-'*ones(1,80) '\n']);
+
