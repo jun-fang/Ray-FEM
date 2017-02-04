@@ -1,4 +1,4 @@
-function u = direct_solver(node,elem,A,b,omega,ray,speed)
+function u = singularity_direct_solver(node,elem,A,b,omega,ray,speed)
 %% Direct solver of linear system Au = b with PML: u = A\b
 
 % Boundary conditions

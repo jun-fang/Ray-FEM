@@ -157,7 +157,7 @@ for ti = 1: test_num
     option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(mnode,melem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(mnode,melem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-    uh = direct_solver(mnode,melem,A,b,omega,ray,speed);
+    uh = singularity_direct_solver(mnode,melem,A,b,omega,ray,speed);
     
     % singularity part
     x = mnode(:,1); y = mnode(:,2);
@@ -229,7 +229,7 @@ for ti = 1: test_num
     option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-    u = direct_solver(node,elem,A,b,omega,ray,speed);
+    u = singularity_direct_solver(node,elem,A,b,omega,ray,speed);
     toc;
     
     % Excat solution 
