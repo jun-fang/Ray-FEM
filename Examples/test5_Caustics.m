@@ -1,4 +1,4 @@
-%% One point source inside heterogeneous medium domain:
+%% One point source inside heterogeneous medium domain: Caustics
 
 % add path
 clear;
@@ -9,8 +9,8 @@ addpath('../Helmholtz_data/');
 addpath('../Plots_Prints/');
 
 % set up
-xs = 1/10;   ys = 1/10;           % point source location
-speed = @(x) (3 - 2.5*exp( -((x(:,1)+1/8).^2 + (x(:,2)-0.1).^2)/0.8^2 )) ;    % medium speed
+xs = -0.2;   ys = -0.3;             % point source location
+speed = @(x) ( 1+ 0.5*sin(2*pi*x(:,1)));
 cmin = 1/2;                      % minmum speed in the computational domain
 
 Nray = 1;
@@ -264,6 +264,7 @@ ray_field(ray,node,20,1/10);
 subplot(1,2,2);
 showsolution(node,elem,real(uh),2);
 colorbar;
+
 
 
 
