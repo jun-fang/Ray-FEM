@@ -1,4 +1,4 @@
-%% Test for point source inside homogeneous medium domain to show phase error
+%% One point source inside heterogeneous medium domain:
 
 % add path
 clear;
@@ -9,31 +9,31 @@ addpath('../Helmholtz_data/');
 addpath('../Plots_Prints/');
 
 % set up
-xs = -0.4; ys = -0.4;       % source location
-speed = @(p) ones(size(p(:,1)));
+xs = 1/10;   ys = 1/10;           % point source location
+speed = @(x) (3 - 2.5*exp( -((x(:,1)+1/8).^2 + (x(:,2)-0.1).^2)/0.8^2 )) ;    % medium speed
+cmin = 1/2;                      % minmum speed in the computational domain
+
 Nray = 1;
 fquadorder = 3;    % the order of numerical quadrature
 solver = 'DIR';      % the type of solver for the resulting linear system
 plt = 0;                   % plot the solution or not
 sec_opt = 0;           % not using second order correction of NMLA
-
-test_num = 1;             % we test test_num examples
-NPWs = [6 8 10];                   % number of points per wavelength
+NPWs = 10;                   % number of points per wavelength
+test_num = 1;
 
 % frequency
-high_omega = 250*pi;
+high_omega = 80*pi;
 low_omega = sqrt(high_omega);
-
 
 % wavelength
 high_wl = 2*pi./high_omega;
 low_wl = 2*pi./low_omega;
 
 % source neighborhood size
-r = 16*high_wl;
+r = 8*high_wl;
 
 % width of PML
-high_wpml = 4*high_wl(1)*ones(size(high_omega)); 
+high_wpml = 4*high_wl(1)*ones(size(high_omega));
 ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
 low_wpml = ch.*ceil(low_wl(1)./ch);
 
@@ -46,6 +46,7 @@ high_r = NMLA_radius(high_omega,Rest);
 md = sd + high_r + high_wpml;
 md = ceil(md*10)/10;      % middle domain size
 
+% Rest = sqrt(2)*md;
 low_r = NMLA_radius(low_omega,Rest);
 ld = md + low_r + low_wpml;
 ld = ceil(ld*10)/10;      % large domain size
@@ -121,7 +122,6 @@ for ti = 1: test_num
     xx = mnode(:,1) - xs;   yy = mnode(:,2) - ys;
     rr = sqrt(xx.*xx + yy.*yy);
     numray1(rr<=r) = exray(rr<=r);
-    rayerr1 = numray1 - exray;
     
     
     %% Step 3: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_c
@@ -163,7 +163,7 @@ for ti = 1: test_num
     u = v.*exp(1i*kk(:).*temp);
     u = reshape(u,N,Nray);
     uh1 = sum(u,2);
-
+    
     toc;
     
     
@@ -205,7 +205,6 @@ for ti = 1: test_num
     xx = node(:,1) - xs;   yy = node(:,2) - ys;
     rr = sqrt(xx.*xx + yy.*yy);
     numray2(rr<=r) = exray(rr<=r);
-    rayerr2 = numray2 - exray;
     
     
     %% Step 5: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_o
@@ -223,6 +222,7 @@ for ti = 1: test_num
     source = @(p) nodal_basis(xs,ys,h,p);
     b = assemble_RHS_RayFEM(node,elem,omega,wpml,sigmaMax,source,speed,ray,fquadorder);
     b = b/(h*h); %normalize b
+
     
     % Boundaries
     [~,~,isBdNode] = findboundary(elem);
@@ -251,14 +251,6 @@ for ti = 1: test_num
     toc;
     
     
-    %% SFEM
-    A = assemble_Helmholtz_matrix_SFEM(node,elem,omega,wpml,sigmaMax,speed,fquadorder);
-    b = assemble_RHS_SFEM(node,elem, @(x)nodal_basis(xs,ys,h,x),fquadorder);
-    b = b/(h*h/2);
-    [~,~,isBdNode] = findboundary(elem);
-    u_std = zeros(N,1);
-    u_std(freeNode) = A(freeNode,freeNode)\b(freeNode);
-    
 end
 
 totaltime = toc(tstart);
@@ -266,13 +258,12 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 
 %% map to polar
-figure(30);
-r1 = 0.811;
-r2 = 0.811 + 2.1*high_wl;
-theta1 = pi/4 - pi/8;
-theta2 = pi/4 + pi/8;
-subplot(2,1,1);
-mapto_polar(node,elem,omega,speed,v,ray,xs,ys,r1,r2,theta1,theta2);
+figure(40);
+subplot(1,2,1);
+ray_field(ray,node,10,1/10);
+subplot(1,2,2);
+showsolution(node,elem,real(uh),2);
+colorbar;
 
-subplot(2,1,2);
-mapto_polar(node,elem,omega,speed,u_std,0*ray,xs,ys,r1,r2,theta1,theta2);
+
+
