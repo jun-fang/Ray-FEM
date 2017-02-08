@@ -201,7 +201,7 @@ for ti = 1: test_num
     b = assemble_RHS_RayFEM(node,elem,omega,wpml,sigmaMax,source,speed,ray,fquadorder);
     b = b/(h*h); %normalize b
     
-    uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);   
+    [uh, v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);   
     toc;
     
     
@@ -210,6 +210,7 @@ for ti = 1: test_num
     b = assemble_RHS_SFEM(node,elem, @(x)nodal_basis(xs,ys,h,x),fquadorder);
     b = b/(h*h/2);
     [~,~,isBdNode] = findboundary(elem);
+    N = size(node,1); freeNode = find(~isBdNode); 
     u_std = zeros(N,1);
     u_std(freeNode) = A(freeNode,freeNode)\b(freeNode);
     

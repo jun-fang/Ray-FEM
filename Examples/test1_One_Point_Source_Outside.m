@@ -72,7 +72,7 @@ for ti = 1: test_num
     omega = low_omega(ti);              % low frequency
     a = ld(ti);                         % large domain 
     [lnode,lelem] = squaremesh([-a,a,-a,a],h);
-    u_std = Standard_FEM_IBC(lnode,lelem,omega,pde,fquadorder,solver,plt,xs,ys);
+    u_std = SFEM_IBC(lnode,lelem,omega,pde,fquadorder,solver,plt,xs,ys);
     toc;
     
     
@@ -115,7 +115,7 @@ for ti = 1: test_num
     tic;
     omega = high_omega(ti);
     ray = numray1;
-    uh1= Ray_FEM_IBC(mnode,melem,omega,pde,ray,fquadorder,plt,xs,ys);
+    uh1= RayFEM_IBC(mnode,melem,omega,pde,ray,fquadorder,plt,xs,ys);
     toc;
     
     
@@ -161,12 +161,12 @@ for ti = 1: test_num
     % Ray-FEM solution
     omega = high_omega(ti);
     ray = numray2;
-    [uh2,~,~,~,rel_l2_err]= Ray_FEM_IBC(node,elem,omega,pde,ray,fquadorder,plt,xs,ys);
+    [uh2,~,~,~,rel_l2_err]= RayFEM_IBC(node,elem,omega,pde,ray,fquadorder,plt,xs,ys);
     rel_l2_err_numray(ti) = rel_l2_err;
     
     %% Ray-FEM with exact ray
     ray = pde.ray(node,xs,ys);
-    [uh,~,~,~,rel_l2_err]= Ray_FEM_IBC(node,elem,omega,pde,ray,fquadorder,plt,xs,ys);
+    [uh,~,~,~,rel_l2_err]= RayFEM_IBC(node,elem,omega,pde,ray,fquadorder,plt,xs,ys);
     rel_l2_err_exray(ti) = rel_l2_err;
     toc;
     

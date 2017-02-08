@@ -27,7 +27,7 @@ for ti = 1:nt
     h = h/2; hs(ti) = h;
     [node, elem] = squaremesh([-a,a,-a,a], h);
     
-    [~,~,~,rel_L2_err] = Standard_FEM_IBC(node,elem,omega,pde,fquadorder,solver,plt,xs,ys);
+    [~,~,~,rel_L2_err] = SFEM_IBC(node,elem,omega,pde,fquadorder,solver,plt,xs,ys);
     errors(ti) = rel_L2_err;
 end
 
