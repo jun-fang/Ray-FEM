@@ -18,7 +18,7 @@ fquadorder = 3;    % the order of numerical quadrature
 solver = 'DIR';      % the type of solver for the resulting linear system
 plt = 0;                   % plot the solution or not
 sec_opt = 0;           % not using second order correction of NMLA
-NPWs = 10;                   % number of points per wavelength
+NPWs = 10;           % number of points per wavelength
 test_num = 1;
 
 % frequency
@@ -46,7 +46,6 @@ high_r = NMLA_radius(high_omega,Rest);
 md = sd + high_r + high_wpml;
 md = ceil(md*10)/10;      % middle domain size
 
-% Rest = sqrt(2)*md;
 low_r = NMLA_radius(low_omega,Rest);
 ld = md + low_r + low_wpml;
 ld = ceil(ld*10)/10;      % large domain size
@@ -75,9 +74,11 @@ for ti = 1: test_num
     wpml = low_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     [lnode,lelem] = squaremesh([-a,a,-a,a],h);
+    
     A = assemble_Helmholtz_matrix_SFEM(lnode,lelem,omega,wpml,sigmaMax,speed,fquadorder);
     b = assemble_RHS_SFEM(lnode,lelem, @(x)nodal_basis(xs,ys,h,x),fquadorder);
     b = b/(h*h/2);
+    
     [~,~,isBdNode] = findboundary(lelem);
     freeNode = find(~isBdNode);
     lN = size(lnode,1);        u_std = zeros(lN,1);
@@ -95,12 +96,11 @@ for ti = 1: test_num
     a = md(ti);
     [mnode,melem] = squaremesh([-a,a,-a,a],h);
     
+    tic;
+    % one ray direction
     [cnode,celem] = squaremesh([-a,a,-a,a],h_c);
     cN = size(cnode,1);
     cnumray = zeros(cN,Nray);
-    
-    % NMLA
-    tic;
     for i = 1:cN
         x0 = cnode(i,1);  y0 = cnode(i,2);
         d0 = sqrt((x0-xs)^2 + (y0-ys)^2);
@@ -113,15 +113,21 @@ for ti = 1: test_num
             cnumray(i) = ex_ray([x0,y0],xs,ys,1);
         end
     end
-    
     numray1 = interpolation(cnode,celem,mnode,cnumray);
-    toc;
     
-    % compute the ray errors
-    exray = ex_ray(mnode,xs,ys,1);
-    xx = mnode(:,1) - xs;   yy = mnode(:,2) - ys;
-    rr = sqrt(xx.*xx + yy.*yy);
-    numray1(rr<=r) = exray(rr<=r);
+    % multiple ray directions
+    N = size(mnode,1);  numray = cell(N,1);
+    for i = 1:N
+        x0 = mnode(i,1);  y0 = mnode(i,2);
+        c0 = speed(mnode(i,:));
+        if (x0+y0) > 0.5 && (y0+0.1) > x0
+            ray_ang = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,[],1/3,0,'num',sec_opt,plt);
+            numray{i} = exp(1i*ray_ang);
+        else
+            numray{i} = numray1(i);
+        end
+    end
+    toc;
     
     
     %% Step 3: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_c
@@ -132,38 +138,15 @@ for ti = 1: test_num
     omega = high_omega(ti);
     wpml = high_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
-    ray = numray1;
+    ray = numray;
     
-    % build linear system
+    % Ray FEM
     A = assemble_Helmholtz_matrix_RayFEM(mnode,melem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     source = @(p) nodal_basis(xs,ys,h,p);
     b = assemble_RHS_RayFEM(mnode,melem,omega,wpml,sigmaMax,source,speed,ray,fquadorder);
     b = b/(h*h); %normalize b
     
-    % Boundaries
-    [~,~,isBdNode] = findboundary(melem);
-    rep_isBdNode = repmat(isBdNode,1,Nray);
-    isBdNode = rep_isBdNode(:);
-    freeNode = find(~isBdNode);
-    
-    
-    % Solve the linear system Au = b
-    N = size(ray,1);    Ndof = size(ray(:),1);
-    v = zeros(Ndof,1);
-    v(freeNode) = A(freeNode,freeNode)\b(freeNode);
-    
-    
-    % Construct solution
-    grad = ray(:);
-    grad = [real(grad),imag(grad)];
-    repnode = repmat(mnode,Nray,1);
-    temp = grad(:,1).*repnode(:,1) + grad(:,2).*repnode(:,2);
-    
-    kk = omega./speed(repnode);
-    u = v.*exp(1i*kk(:).*temp);
-    u = reshape(u,N,Nray);
-    uh1 = sum(u,2);
-    
+    uh1 = RayFEM_direct_solver(mnode,melem,A,b,omega,ray,speed);
     toc;
     
     
@@ -178,13 +161,12 @@ for ti = 1: test_num
     a = sd;
     [node,elem] = squaremesh([-a,a,-a,a],h);
     
+    tic;
+    % one ray direction
     [cnode,celem] = squaremesh([-a,a,-a,a],h_c);
     cN = size(cnode,1);
     cnumray = zeros(cN,Nray);
-    
-    
-    % NMLA
-    tic;
+
     for i = 1:cN
         x0 = cnode(i,1);  y0 = cnode(i,2);
         d0 = sqrt((x0-xs)^2 + (y0-ys)^2);
@@ -198,13 +180,20 @@ for ti = 1: test_num
         end
     end
     numray2 = interpolation(cnode,celem,node,cnumray);
-    toc;
     
-    % compute the ray errors
-    exray = ex_ray(node,xs,ys,1);
-    xx = node(:,1) - xs;   yy = node(:,2) - ys;
-    rr = sqrt(xx.*xx + yy.*yy);
-    numray2(rr<=r) = exray(rr<=r);
+    % multiple ray directions
+    N = size(node,1);  numray = cell(N,1);
+    for i = 1:N
+        x0 = node(i,1);  y0 = node(i,2);
+        c0 = speed(node(i,:));
+        if (x0+y0+0.1 > 0) && (y0-x0-0.5) > 0
+            ray_ang = NMLA(x0,y0,c0,omega,Rest,mnode,melem,u_std,ux,uy,[],1/3,0,'num',sec_opt,plt);
+            numray{i} = exp(1i*ray_ang);
+        else
+            numray{i} = numray2(i);
+        end
+    end
+    toc;
     
     
     %% Step 5: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_o
@@ -215,39 +204,14 @@ for ti = 1: test_num
     omega = high_omega(ti);
     wpml = high_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
-    ray = numray2;
+    ray = numray;
     
-    % build linear system
+    % Ray FEM
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     source = @(p) nodal_basis(xs,ys,h,p);
     b = assemble_RHS_RayFEM(node,elem,omega,wpml,sigmaMax,source,speed,ray,fquadorder);
     b = b/(h*h); %normalize b
-
-    
-    % Boundaries
-    [~,~,isBdNode] = findboundary(elem);
-    rep_isBdNode = repmat(isBdNode,1,Nray);
-    isBdNode = rep_isBdNode(:);
-    freeNode = find(~isBdNode);
-    
-    
-    % Solve the linear system Au = b
-    N = size(ray,1);    Ndof = size(ray(:),1);
-    v = zeros(Ndof,1);
-    v(freeNode) = A(freeNode,freeNode)\b(freeNode);
-    
-    
-    % Construct solution
-    grad = ray(:);
-    grad = [real(grad),imag(grad)];
-    repnode = repmat(node,Nray,1);
-    temp = grad(:,1).*repnode(:,1) + grad(:,2).*repnode(:,2);
-    
-    kk = omega./speed(repnode);
-    u = v.*exp(1i*kk(:).*temp);
-    u = reshape(u,N,Nray);
-    uh = sum(u,2);
-    
+    uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);    
     toc;
     
     
@@ -257,7 +221,7 @@ totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 
-%% map to polar
+%% plot
 figure(40);
 subplot(1,2,1);
 ray_field(ray,node,20,1/10);

@@ -1,4 +1,4 @@
-%% Test for point source inside homogeneous medium domain to show phase error
+%% Phase error test for point source inside homogeneous medium domain 
 
 % add path
 clear;
@@ -140,30 +140,7 @@ for ti = 1: test_num
     b = assemble_RHS_RayFEM(mnode,melem,omega,wpml,sigmaMax,source,speed,ray,fquadorder);
     b = b/(h*h); %normalize b
     
-    % Boundaries
-    [~,~,isBdNode] = findboundary(melem);
-    rep_isBdNode = repmat(isBdNode,1,Nray);
-    isBdNode = rep_isBdNode(:);
-    freeNode = find(~isBdNode);
-    
-    
-    % Solve the linear system Au = b
-    N = size(ray,1);    Ndof = size(ray(:),1);
-    v = zeros(Ndof,1);
-    v(freeNode) = A(freeNode,freeNode)\b(freeNode);
-    
-    
-    % Construct solution
-    grad = ray(:);
-    grad = [real(grad),imag(grad)];
-    repnode = repmat(mnode,Nray,1);
-    temp = grad(:,1).*repnode(:,1) + grad(:,2).*repnode(:,2);
-    
-    kk = omega./speed(repnode);
-    u = v.*exp(1i*kk(:).*temp);
-    u = reshape(u,N,Nray);
-    uh1 = sum(u,2);
-
+    uh1 = RayFEM_direct_solver(mnode,melem,A,b,omega,ray,speed);
     toc;
     
     
@@ -224,30 +201,7 @@ for ti = 1: test_num
     b = assemble_RHS_RayFEM(node,elem,omega,wpml,sigmaMax,source,speed,ray,fquadorder);
     b = b/(h*h); %normalize b
     
-    % Boundaries
-    [~,~,isBdNode] = findboundary(elem);
-    rep_isBdNode = repmat(isBdNode,1,Nray);
-    isBdNode = rep_isBdNode(:);
-    freeNode = find(~isBdNode);
-    
-    
-    % Solve the linear system Au = b
-    N = size(ray,1);    Ndof = size(ray(:),1);
-    v = zeros(Ndof,1);
-    v(freeNode) = A(freeNode,freeNode)\b(freeNode);
-    
-    
-    % Construct solution
-    grad = ray(:);
-    grad = [real(grad),imag(grad)];
-    repnode = repmat(node,Nray,1);
-    temp = grad(:,1).*repnode(:,1) + grad(:,2).*repnode(:,2);
-    
-    kk = omega./speed(repnode);
-    u = v.*exp(1i*kk(:).*temp);
-    u = reshape(u,N,Nray);
-    uh = sum(u,2);
-    
+    uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);   
     toc;
     
     
