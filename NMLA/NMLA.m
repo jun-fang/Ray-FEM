@@ -1,4 +1,4 @@
-function [angs,r] = NMLA(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,data,opt,plt)
+function [angs, r, Bs] = NMLA(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,data,opt,plt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NMLA 2nd order correction: finding ray directions at observation point (x0,y0) in 2D case
 %  See details in 'Numerical MicroLocal Analysis Revisited' by Jean-David
@@ -133,7 +133,7 @@ if Nray == 1                 %% given one ray direction
     locs = ii;
     angs = ang(locs);
     Bs = mm;
-elseif Nray                  %% given multiple ray directions
+elseif Nray > 1                 %% given multiple ray directions
     [~, high_idx] = sort(-pks);
     idx = high_idx(1:Nray);
     locs = locs(idx);
@@ -141,9 +141,18 @@ elseif Nray                  %% given multiple ray directions
     [locs,idx] = sort(locs);
     Bs = Bs(idx);
     angs = ang(locs);
-else                         %% number of ray directions is not given
+elseif Nray == 0                        %% number of ray directions is not given
     angs = ang(locs);
     Bs = pks;
+    if length(angs)>3   %% one can manually set how many rays at most
+        [~, high_idx] = sort(-pks);
+        idx = high_idx(1:3);
+        locs = locs(idx);
+        Bs = pks(idx);
+        [locs,idx] = sort(locs);
+        Bs = Bs(idx);
+        angs = ang(locs);
+    end
 end
 
 

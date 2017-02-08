@@ -1,6 +1,0 @@
-
-
-Four point sources problem: 
-
-  (-2,-2),(2,2),(-2,2),(2,-2) 
-

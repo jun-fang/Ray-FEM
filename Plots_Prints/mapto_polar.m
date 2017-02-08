@@ -7,7 +7,7 @@ yy = r.*sin(theta) + ys;
 xynode = [xx(:),yy(:)];
 
 if nargin == 12
-    uu = ray_solution(node,elem,omega,speed,v,ray,xynode);
+    uu = RayFEM_solution(node,elem,omega,speed,v,ray,xynode);
 else
     xmin = min(node(:,1)); xmax = max(node(:,1));
     ymin = min(node(:,2)); ymax = max(node(:,2));
