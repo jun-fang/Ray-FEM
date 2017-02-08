@@ -1,4 +1,4 @@
-function [u,A,v,b,rel_L2_err,err] = Ray_FEM_IBC(node,elem,omega,pde,ray,fquadorder,plt,xs,ys)
+function [u,A,v,b,rel_L2_err,err] = RayFEM_IBC(node,elem,omega,pde,ray,fquadorder,plt,xs,ys)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Ray-based FEM for solving the Helmholtz equation with Impedance Boundary Condition(IBC):
 %         -\Delta u - (omega/c)^2 u = f               in D

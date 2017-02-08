@@ -1,4 +1,4 @@
-function uray = ray_solution(node,elem,omega,speed,v,ray,xy)
+function uray = RayFEM_solution(node,elem,omega,speed,v,ray,xy)
 %% Ray-FEM solution at any nodes xy
 
 Nray = size(ray,2);

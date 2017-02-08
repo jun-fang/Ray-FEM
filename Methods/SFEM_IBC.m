@@ -1,4 +1,4 @@
-function [u,A,b,rel_L2_err] = Standard_FEM_IBC(node,elem,omega,pde,fquadorder,solver,plt,xs,ys)
+function [u,A,b,rel_L2_err] = SFEM_IBC(node,elem,omega,pde,fquadorder,solver,plt,xs,ys)
 %% Standard FEM for solving Helmholtz equation with Impedance Boundary Condition(IBC): 
 %         -\Delta u - (omega/c)^2 u = f               in D
 %         \partial u / \partial n + i omega/c u = g   on \partial D 
