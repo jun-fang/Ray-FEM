@@ -96,7 +96,7 @@ end
 
 if (strcmp(data,'ex'))        %% use the exact data
     xynode = [X',Y'];
-    Field = pde.ex_u(xynode);
+    Field = pde.u_ex(xynode);
     DU = pde.Du(xynode);
     DUx = DU(:,1);
     DUy = DU(:,2);
