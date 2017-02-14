@@ -10,25 +10,37 @@ addpath('../Plots_Prints/');
 
 
 %% Load source/wavespeed data
-xs = -0.3; ys = -0.3;                     % point source location
-sigma = 0.15;
-nu = @(x,y)  0.1*exp( -1/(2*sigma^2)*((x-0.3).^2 + (y-0.3).^2) ).*( sqrt((x - 0.3).^2 + (y - 0.3).^2) <0.4 );
-speed = @(p) 1./sqrt(1 + nu( p(:,1), p(:,2) ));    % wave speed
+xs = -0.4; ys = -0.4;                     % point source location
 
+% alpha > beta ??
+window = @(y,alpha, beta) 1*(abs(y) <= beta) + (abs(y) > beta).*(abs(y) < alpha)...
+    .*exp(2*exp( -(alpha- beta)./(abs(abs(y)-beta) + eps) )./ ( abs((abs(y)-beta)./(alpha- beta) -1) + eps ) ) ;
+
+
+
+sigma = 0.15;
+
+xHet = 0.1;   yHet = 0.1;
+nu = @(x,y) 0.5*exp( -1/(2*sigma^2)*((x-xHet).^2 + (y-yHet).^2) )...
+    .*window(sqrt((x-xHet).^2 + (y-yHet).^2), 0.3,0.38  );
+
+%nu = @(x,y)  0.1*exp( -1/(2*sigma^2)*((x-0.3).^2 + (y-0.3).^2) ).*( sqrt((x - 0.3).^2 + (y - 0.3).^2) <0.4 );
+speed = @(p) 1./sqrt(1 + nu( p(:,1), p(:,2) ));    % wave speed
+% speed = @(p) ones(size(p(:,1)));
 
 %% Set up
 plt = 0;                   % show solution or not
 fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
-epsilon = 50/(80*pi);               % cut-off parameter
+epsilon = 50/(100*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
 test_num = 1;              % we test test_num examples
 
 % frequency
-high_omega = [120 160 240 320 480 640]*pi;
+high_omega = [80 160 240 320 480 640]*pi;
 low_omega = 2*sqrt(high_omega);
 
 % error
@@ -50,8 +62,7 @@ low_wl = 2*pi./low_omega;
 % mesh size
 fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
 ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
-% ch = 1./(NPW*round(1./sqrt(fh)/10)*10);
-% ch = fh.*ceil(ch./fh);
+
 
 % width of PML
 high_wpml = 4*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
