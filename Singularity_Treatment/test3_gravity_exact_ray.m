@@ -59,7 +59,7 @@ for ii = 1:nt
     option = {'gravity', alpha, E};
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-    u = singularity_direct_solver(node,elem,A,b,omega,ray,speed);
+    u = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     
     
     % get the exact solution

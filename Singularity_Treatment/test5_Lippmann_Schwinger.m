@@ -12,19 +12,12 @@ addpath('../Plots_Prints/');
 %% Load source/wavespeed data
 xs = -0.4; ys = -0.4;                     % point source location
 
-% alpha > beta ??
-window = @(y,alpha, beta) 1*(abs(y) <= beta) + (abs(y) > beta).*(abs(y) < alpha)...
-    .*exp(2*exp( -(alpha- beta)./(abs(abs(y)-beta) + eps) )./ ( abs((abs(y)-beta)./(alpha- beta) -1) + eps ) ) ;
-
-
-
 sigma = 0.15;
-
 xHet = 0.1;   yHet = 0.1;
-nu = @(x,y) 0.5*exp( -1/(2*sigma^2)*((x-xHet).^2 + (y-yHet).^2) )...
-    .*window(sqrt((x-xHet).^2 + (y-yHet).^2), 0.3,0.38  );
 
-%nu = @(x,y)  0.1*exp( -1/(2*sigma^2)*((x-0.3).^2 + (y-0.3).^2) ).*( sqrt((x - 0.3).^2 + (y - 0.3).^2) <0.4 );
+nu = @(x,y) 0.5*exp( -1/(2*sigma^2)*((x-xHet).^2 + (y-yHet).^2) )...
+    .*Lippmann_Schwinger_window(sqrt((x-xHet).^2 + (y-yHet).^2), 0.3,0.38  );
+
 speed = @(p) 1./sqrt(1 + nu( p(:,1), p(:,2) ));    % wave speed
 % speed = @(p) ones(size(p(:,1)));
 
@@ -40,7 +33,7 @@ NPW = 4;                   % number of points per wavelength
 test_num = 1;              % we test test_num examples
 
 % frequency
-high_omega = [80 160 240 320 480 640]*pi;
+high_omega = [120 160 240 320 480 640]*pi;
 low_omega = 2*sqrt(high_omega);
 
 % error
@@ -141,19 +134,6 @@ for ti = 1: test_num
     numray1 = interpolation(cnode,celem,mnode,cnumray);
     toc;
     
-    %     % compute the ray errors
-    %      [dx, dy] = eikonal_cgss(S02, g0, node0, mnode);
-    %     dr2 = dx.^2 + dy.^2;
-    %     ray_angle = atan2(dy,dx);
-    %     exray = exp(1i*ray_angle).*(dr2>10*eps);
-    %
-    %     mr = sqrt((mnode(:,1)-xs).^2 + (mnode(:,2)-ys).^2);
-    %     numray1 = numray1.*(mr>epsilon) + exray.*(mr<=epsilon);
-    %     rayerr1 = numray1 - exray;
-    %     low_max_rayerr(ti) = norm(rayerr1,inf);
-    %     low_l2_rayerr(ti) = norm(rayerr1)*h/(norm(exray)*h);
-    %     ray = numray1;
-    
     
     %% Step 3: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_c
     fprintf(['-'*ones(1,80) '\n']);
@@ -168,7 +148,7 @@ for ti = 1: test_num
     option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(mnode,melem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(mnode,melem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-    uh = singularity_direct_solver(mnode,melem,A,b,omega,ray,speed);
+    uh = RayFEM_direct_solver(mnode,melem,A,b,omega,ray,speed);
     
     % singularity part
     x = mnode(:,1); y = mnode(:,2);
@@ -212,19 +192,6 @@ for ti = 1: test_num
     numray2 = interpolation(cnode,celem,node,cnumray);
     toc;
     
-    %     % compute the ray errors
-    %     [dx, dy] = eikonal_cgss(S02, g0, node0, node);
-    %     dr2 = dx.^2 + dy.^2;
-    %     ray_angle = atan2(dy,dx);
-    %     exray = exp(1i*ray_angle).*(dr2>10*eps);
-    %     sr = sqrt((node(:,1)-xs).^2 + (node(:,2)-ys).^2);
-    %     numray2 = numray2.*(sr>epsilon) + exray.*(sr<=epsilon);
-    %     rayerr2 = numray2 - exray;
-    %     high_max_rayerr(ti) = norm(rayerr2,inf);
-    %     high_l2_rayerr(ti) = norm(rayerr2)*h/(norm(exray)*h);
-    %     numray = numray2;
-    %
-    
     
     %% Step 5: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_o
     fprintf([ '-'*ones(1,80) '\n']);
@@ -240,28 +207,42 @@ for ti = 1: test_num
     option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-    u = singularity_direct_solver(node,elem,A,b,omega,ray,speed);
+    [~,v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     toc;
     
-    % Excat solution 
-    x = node(:,1); y = node(:,2);
+    switch round(omega/(2*pi))
+        case 60
+            load('../Solutions_Lippmann_Schwinger/point_source_60.mat')
+        case 80
+            load('../Solutions_Lippmann_Schwinger/point_source_80.mat')
+        case 120
+            load('../Solutions_Lippmann_Schwinger/point_source_120.mat')
+        case 240
+            load('../Solutions_Lippmann_Schwinger/point_source_240.mat')
+    end
+
+    rh = 1/2000;
+    [rnode,relem] = squaremesh([-a,a,-a,a],rh);
+    uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
+    
+    % Reference solution 
+    x = rnode(:,1); y = rnode(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     
-    ub = 1i/4*besselh(0,1,omega*rr);
-    cf = cutoff(epsilon,2*epsilon,node,xs,ys);
-    uex = (1-cf).*ub;
-    uex(rr<epsilon) = 0;
+    cf = cutoff(epsilon,2*epsilon,rnode,xs,ys);
+    ur = (1-cf).*u;
+    ur(rr<2*epsilon) = 0;
    
     % Errors
-    du = u - uex;
+    du = uh - ur;
     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
         .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
-    du(idx) = 0;  uex(idx) = 0;
+    du(idx) = 0;  ur(idx) = 0;
     
     max_err(ti) = norm(du,inf);
-    rel_max_err(ti) = norm(du,inf)/norm(uex,inf);
+    rel_max_err(ti) = norm(du,inf)/norm(ur,inf);
     l2_err(ti) = norm(du)*h;
-    rel_l2_err(ti) = norm(du)/norm(uex);
+    rel_l2_err(ti) = norm(du)/norm(ur);
     
 end
 
