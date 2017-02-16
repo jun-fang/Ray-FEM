@@ -13,10 +13,10 @@ addpath('../Plots_Prints/');
 xs = -0.4; ys = -0.4;                     % point source location
 
 sigma = 0.15;
-xHet = 0.1;   yHet = 0.1;
+xHet = 0.2;   yHet = 0.2;
 
-nu = @(x,y) 0.5*exp( -1/(2*sigma^2)*((x-xHet).^2 + (y-yHet).^2) )...
-    .*Lippmann_Schwinger_window(sqrt((x-xHet).^2 + (y-yHet).^2), 0.3,0.38  );
+nu = @(x,y) 0.9*exp( -1/(2*sigma^2)*((x-xHet).^2 + (y-yHet).^2) )...
+    .*Lippmann_Schwinger_window(sqrt((x-xHet).^2 + (y-yHet).^2), 0.28,0.2  );
 
 speed = @(p) 1./sqrt(1 + nu( p(:,1), p(:,2) ));    % wave speed
 % speed = @(p) ones(size(p(:,1)));
@@ -26,11 +26,11 @@ plt = 0;                   % show solution or not
 fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
-epsilon = 50/(100*pi);               % cut-off parameter
+epsilon = 50/(80*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 1;              % we test test_num examples
+test_num = 3;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640]*pi;
@@ -64,7 +64,7 @@ low_wpml = ch.*ceil(low_wl(1)./ch);
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = 2*epsilon;           % estimate of the distance to the source point
+Rest = 1;           % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega,Rest);
 md = sd + high_r + high_wpml;
@@ -131,7 +131,7 @@ for ti = 1: test_num
         end
     end
     cnumray = exp(1i*cnumray_angle);
-    numray1 = interpolation(cnode,celem,mnode,cnumray);
+    ray = interpolation(cnode,celem,mnode,cnumray);
     toc;
     
     
@@ -142,7 +142,6 @@ for ti = 1: test_num
     omega = high_omega(ti);
     wpml = high_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
-    ray = numray1;
     
     % smooth part
     option = 'homogeneous';
@@ -189,7 +188,7 @@ for ti = 1: test_num
         end
     end
     cnumray = exp(1i*cnumray_angle);
-    numray2 = interpolation(cnode,celem,node,cnumray);
+    ray = interpolation(cnode,celem,node,cnumray);
     toc;
     
     
@@ -202,7 +201,6 @@ for ti = 1: test_num
     omega = high_omega(ti);
     wpml = high_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
-    ray = numray2;
     
     option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
@@ -210,19 +208,22 @@ for ti = 1: test_num
     [~,v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     toc;
     
+    clear lnode lelem mnode melem cnode celem cnumray cnumray_angle;
+    clear A b x y rr cf u_std ub uh uh1 ux uy freeNode isBdNode;
+    
     switch round(omega/(2*pi))
         case 60
-            load('../Solutions_Lippmann_Schwinger/point_source_60.mat')
+            load('../Solutions_Lippmann_Schwinger/point_source_k_60_2pi.mat')
         case 80
-            load('../Solutions_Lippmann_Schwinger/point_source_80.mat')
+            load('../Solutions_Lippmann_Schwinger/point_source_k_80_2pi.mat')
         case 120
-            load('../Solutions_Lippmann_Schwinger/point_source_120.mat')
+            load('../Solutions_Lippmann_Schwinger/point_source_k_120_2pi.mat')
         case 240
-            load('../Solutions_Lippmann_Schwinger/point_source_240.mat')
+            load('../Solutions_Lippmann_Schwinger/point_source_k_160_2pi.mat')
     end
 
-    rh = 1/2000;
-    [rnode,relem] = squaremesh([-a,a,-a,a],rh);
+    rh = 1/4000;
+    [rnode,~] = squaremesh([-a,a,-a,a],rh); rn = round(sqrt(size(rnode,1)));
     uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
     
     % Reference solution 
@@ -231,7 +232,7 @@ for ti = 1: test_num
     
     cf = cutoff(epsilon,2*epsilon,rnode,xs,ys);
     ur = (1-cf).*u;
-    ur(rr<2*epsilon) = 0;
+    ur(rr<epsilon) = 0;
    
     % Errors
     du = uh - ur;
@@ -244,6 +245,28 @@ for ti = 1: test_num
     l2_err(ti) = norm(du)*h;
     rel_l2_err(ti) = norm(du)/norm(ur);
     
+    clear node elem rnode x y rr cf idx v u ray;
+    
+%     sh = 1/400;
+%     [snode,selem] = squaremesh([-a,a,-a,a],sh); 
+%     sn = round(sqrt(size(snode,1))); idx = 1:sn; idx = 10*(idx-1) + 1;
+%     su = reshape(du,rn,rn); su = su(idx,idx);
+%     figure(8); 
+%     subplot(1,2,1);
+%     showsolution(snode,selem,real(su(:))); colorbar;
+%     title('Ray-FEM solution error')
+%     subplot(1,2,2);
+%     showsolution(snode,selem,real(su(:)),2); colorbar;
+%     title('Ray-FEM solution error')
+%     
+%     figure(9);
+%     subplot(1,2,1);
+%     showsolution(snode,selem,speed(snode)); colorbar;
+%     title('Wave speed')
+%     subplot(1,2,2);
+%     showsolution(snode,selem,speed(snode),2); colorbar;
+%     title('Wave speed')
+    
 end
 
 totaltime = toc(tstart);
@@ -252,15 +275,15 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 
 %% plots
-figure(1);
-subplot(2,2,1);
-show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num),'omega','low max');
-subplot(2,2,2);
-show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega','low l2');
-subplot(2,2,3);
-show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num),'omega','high max');
-subplot(2,2,4);
-show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega','high l2');
+% figure(1);
+% subplot(2,2,1);
+% show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num),'omega','low max');
+% subplot(2,2,2);
+% show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega','low l2');
+% subplot(2,2,3);
+% show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num),'omega','high max');
+% subplot(2,2,4);
+% show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega','high l2');
 
 figure(2);
 subplot(2,2,1);
@@ -271,6 +294,13 @@ subplot(2,2,3);
 show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num),'omega','Rel max ');
 subplot(2,2,4);
 show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 ');
+
+figure(3);
+subplot(1,2,1);
+show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
+subplot(1,2,2);
+show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');
+
 
 
 %% print results
