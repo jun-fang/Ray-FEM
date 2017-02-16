@@ -30,18 +30,13 @@ epsilon = 50/(80*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 3;              % we test test_num examples
+test_num = 5;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640]*pi;
 low_omega = 2*sqrt(high_omega);
 
 % error
-low_max_rayerr = 0*high_omega;     % L_inf ray error of low-freq waves
-low_l2_rayerr = 0*high_omega;      % L_2 ray error of low-freq waves
-high_max_rayerr = 0*high_omega;    % L_inf ray error of high-freq waves
-high_l2_rayerr = 0*high_omega;     % L_2 ray error of high-freq waves
-
 max_err = 0*high_omega;            % L_inf error of the numerical solution
 rel_max_err = 0*high_omega;        % relative L_inf error of the numerical solution
 l2_err = 0*high_omega;             % L_2 error of the numerical solution
@@ -58,13 +53,13 @@ ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
 
 
 % width of PML
-high_wpml = 4*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
-low_wpml = ch.*ceil(low_wl(1)./ch);
+high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
+low_wpml = 2*ch.*ceil(low_wl(1)./ch);
 
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = 1;           % estimate of the distance to the source point
+Rest = 1.5;           % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega,Rest);
 md = sd + high_r + high_wpml;
@@ -218,8 +213,10 @@ for ti = 1: test_num
             load('../Solutions_Lippmann_Schwinger/point_source_k_80_2pi.mat')
         case 120
             load('../Solutions_Lippmann_Schwinger/point_source_k_120_2pi.mat')
-        case 240
+        case 160
             load('../Solutions_Lippmann_Schwinger/point_source_k_160_2pi.mat')
+        case 240
+            load('../Solutions_Lippmann_Schwinger/point_source_k_240_2pi.mat')
     end
 
     rh = 1/4000;
@@ -275,25 +272,15 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 
 %% plots
-% figure(1);
+% figure(2);
 % subplot(2,2,1);
-% show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num),'omega','low max');
+% show_convergence_rate(high_omega(1:test_num),max_err(1:test_num),'omega','max err');
 % subplot(2,2,2);
-% show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega','low l2');
+% show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
 % subplot(2,2,3);
-% show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num),'omega','high max');
+% show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num),'omega','Rel max ');
 % subplot(2,2,4);
-% show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega','high l2');
-
-figure(2);
-subplot(2,2,1);
-show_convergence_rate(high_omega(1:test_num),max_err(1:test_num),'omega','max err');
-subplot(2,2,2);
-show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
-subplot(2,2,3);
-show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num),'omega','Rel max ');
-subplot(2,2,4);
-show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 ');
+% show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 ');
 
 figure(3);
 subplot(1,2,1);
@@ -315,14 +302,7 @@ fprintf( '\n1/h:                     ');
 fprintf( '&  %.2e  ',1./fh);
 
 fprintf( ['\n' '-'*ones(1,80) '\n']);
-fprintf( 'Low max ray error:       ');
-fprintf( '&  %1.2d  ',low_max_rayerr);
-fprintf( '\n\nLow rel l2 ray error:    ');
-fprintf( '&  %1.2d  ',low_l2_rayerr);
-fprintf( '\n\nHigh max ray error:      ');
-fprintf( '&  %1.2d  ',high_max_rayerr);
-fprintf( '\n\nHigh rel l2 ray error:   ');
-fprintf( '&  %1.2d  ',high_l2_rayerr);
+
 fprintf( '\n\nMax error:               ');
 fprintf( '&  %1.2d  ',max_err);
 fprintf( '\n\nRelative max error:      ');
