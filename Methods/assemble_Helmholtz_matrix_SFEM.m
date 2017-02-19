@@ -115,6 +115,7 @@ for p = 1:nQuad
       
     % local wavenumber
     k2  = (omega./speed(pxy)).^2;
+
     % building the PML profiles
     sx  = s_x(pxy);
     sy  = s_y(pxy);
