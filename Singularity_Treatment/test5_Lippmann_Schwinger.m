@@ -30,7 +30,7 @@ epsilon = 50/(80*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 5;              % we test test_num examples
+test_num = 2;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640]*pi;
@@ -206,44 +206,52 @@ for ti = 1: test_num
     clear lnode lelem mnode melem cnode celem cnumray cnumray_angle;
     clear A b x y rr cf u_std ub uh uh1 ux uy freeNode isBdNode;
     
-    switch round(omega/(2*pi))
-        case 60
-            load('../Solutions_Lippmann_Schwinger/point_source_k_60_2pi.mat')
-        case 80
-            load('../Solutions_Lippmann_Schwinger/point_source_k_80_2pi.mat')
-        case 120
-            load('../Solutions_Lippmann_Schwinger/point_source_k_120_2pi.mat')
-        case 160
-            load('../Solutions_Lippmann_Schwinger/point_source_k_160_2pi.mat')
-        case 240
-            load('../Solutions_Lippmann_Schwinger/point_source_k_240_2pi.mat')
-    end
-
-    rh = 1/4000;
-    [rnode,~] = squaremesh([-a,a,-a,a],rh); rn = round(sqrt(size(rnode,1)));
-    uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
     
-    % Reference solution 
-    x = rnode(:,1); y = rnode(:,2);
-    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    %% Compute errors
+%     fprintf([ '-'*ones(1,80) '\n']);
+%     fprintf('Compute errors\n');
+%     tic;
+%     switch round(omega/(2*pi))
+%         case 60
+%             load('../Solutions_Lippmann_Schwinger/point_source_k_60_2pi.mat')
+%         case 80
+%             load('../Solutions_Lippmann_Schwinger/point_source_k_80_2pi.mat')
+%         case 120
+%             load('../Solutions_Lippmann_Schwinger/point_source_k_120_2pi.mat')
+%         case 160
+%             load('../Solutions_Lippmann_Schwinger/point_source_k_160_2pi.mat')
+%         case 240
+%             load('../Solutions_Lippmann_Schwinger/point_source_k_240_2pi.mat')
+%     end
+% 
+%     rh = 1/4000;
+%     [rnode,~] = squaremesh([-a,a,-a,a],rh); rn = round(sqrt(size(rnode,1)));
+%     uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
+%     
+%     % Reference solution 
+%     x = rnode(:,1); y = rnode(:,2);
+%     rr = sqrt((x-xs).^2 + (y-ys).^2);
+%     
+%     cf = cutoff(epsilon,2*epsilon,rnode,xs,ys);
+%     ur = (1-cf).*u;
+%     ur(rr<epsilon) = 0;
+%    
+%     % Errors
+%     du = uh - ur;
+%     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+%         .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
+%     du(idx) = 0;  ur(idx) = 0;
+%     
+%     max_err(ti) = norm(du,inf);
+%     rel_max_err(ti) = norm(du,inf)/norm(ur,inf);
+%     l2_err(ti) = norm(du)*h;
+%     rel_l2_err(ti) = norm(du)/norm(ur);
+%     toc;
+%     
+%     clear node elem rnode x y rr cf idx u;
     
-    cf = cutoff(epsilon,2*epsilon,rnode,xs,ys);
-    ur = (1-cf).*u;
-    ur(rr<epsilon) = 0;
-   
-    % Errors
-    du = uh - ur;
-    idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
-        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
-    du(idx) = 0;  ur(idx) = 0;
     
-    max_err(ti) = norm(du,inf);
-    rel_max_err(ti) = norm(du,inf)/norm(ur,inf);
-    l2_err(ti) = norm(du)*h;
-    rel_l2_err(ti) = norm(du)/norm(ur);
-    
-    clear node elem rnode x y rr cf idx v u ray;
-    
+    %% Plots
 %     sh = 1/400;
 %     [snode,selem] = squaremesh([-a,a,-a,a],sh); 
 %     sn = round(sqrt(size(snode,1))); idx = 1:sn; idx = 10*(idx-1) + 1;
@@ -316,4 +324,12 @@ fprintf( '&  %1.2d  ',rel_l2_err);
 fprintf( ['\n' '-'*ones(1,80) '\n']);
 
 
-
+% --------------------------------------------------------------------------------
+% Max error:               &  5.35e-03  &  2.81e-03  &  3.09e-03  &  2.31e-03  &  1.83e-03  &  00  
+% 
+% Relative max error:      &  2.86e-01  &  1.61e-01  &  2.24e-01  &  1.99e-01  &  1.98e-01  &  00  
+% 
+% L2 error:                &  1.96e-03  &  1.09e-03  &  4.69e-04  &  2.53e-04  &  1.13e-04  &  00  
+% 
+% Relative L2 error:       &  1.31e-02  &  1.12e-02  &  8.83e-03  &  7.33e-03  &  6.02e-03  &  00  
+% --------------------------------------------------------------------------------
