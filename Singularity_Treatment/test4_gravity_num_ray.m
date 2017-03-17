@@ -30,7 +30,7 @@ sec_opt = 0;               % NMLA second order correction or not
 epsilon = 50/(80*pi);               % cut-off parameter
 
 
-NPW = 4;                   % number of points per wavelength
+NPW = 6;                   % number of points per wavelength
 test_num = 4;              % we test test_num examples
 
 % frequency
@@ -61,7 +61,11 @@ ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
 
 % width of PML
 high_wpml = 4*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
-low_wpml = ch.*ceil(low_wl(1)./ch);
+low_wpml = 0.18*ones(size(high_omega));
+
+% low_wpml = ch.*ceil(low_wl(1)./ch);
+% high_wpml = 0.1*ones(size(high_omega));
+% low_wpml = 0.2*ones(size(high_omega));
 
 
 %% Generate the domain sizes
@@ -135,6 +139,7 @@ for ti = 1: test_num
     end
     cnumray = exp(1i*cnumray_angle);
     numray1 = interpolation(cnode,celem,mnode,cnumray);
+    numray1 = numray1./abs(numray1);
     toc;
     
     % compute the ray errors
@@ -200,6 +205,8 @@ for ti = 1: test_num
     end
     cnumray = exp(1i*cnumray_angle);
     numray2 = interpolation(cnode,celem,node,cnumray);
+    numray2 = numray2./abs(numray2);
+
     toc;
     
     % compute the ray errors
