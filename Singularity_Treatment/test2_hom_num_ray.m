@@ -20,7 +20,7 @@ Nray = 1;                  % one ray direction at each grid node
 sec_opt = 0;               % NMLA second order correction or not
 
 NPW = 4;                   % number of points per wavelength
-test_num = 7;              % we test test_num examples
+test_num = 4;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 200 240 320 400 480 640]*pi;
@@ -49,13 +49,14 @@ ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
 % ch = fh.*ceil(ch./fh);
 
 % width of PML
-high_wpml = 4*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
-low_wpml = ch.*ceil(low_wl(1)./ch);
+high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
+low_wpml = 0.35*ones(size(high_omega));
+% low_wpml = ch.*ceil(low_wl(1)./ch);
 
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = epsilon;           % estimate of the distance to the source point
+Rest = 2*epsilon;           % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega,Rest);
 md = sd + high_r + high_wpml;
@@ -65,7 +66,6 @@ md = ceil(md*10)/10;      % middle domain size
 low_r = NMLA_radius(low_omega,Rest);
 ld = md + low_r + low_wpml;
 ld = ceil(ld*10)/10;      % large domain size
-% ld = ones(size(ld));
 
 
 %% Tests
@@ -117,7 +117,8 @@ for ti = 1: test_num
         x0 = cnode(i,1);  y0 = cnode(i,2);
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
-        if r0>epsilon
+        if r0 > (2*epsilon - 2*h)
+            Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) = ex_ray([x0,y0],xs,ys,0);
@@ -125,12 +126,13 @@ for ti = 1: test_num
     end
     cnumray = exp(1i*cnumray_angle);
     numray1 = interpolation(cnode,celem,mnode,cnumray);
+    numray1 = numray1./abs(numray1);
     toc;
     
     % compute the ray errors
     exray = ex_ray(mnode,xs,ys,1);
     mr = sqrt((mnode(:,1)-xs).^2 + (mnode(:,2)-ys).^2);
-    numray1 = numray1.*(mr>epsilon) + exray.*(mr<=epsilon);
+    numray1 = numray1.*(mr>2*epsilon) + exray.*(mr<=2*epsilon);
     rayerr1 = numray1 - exray;
     low_max_rayerr(ti) = norm(rayerr1,inf);
     low_l2_rayerr(ti) = norm(rayerr1)*h/(norm(exray)*h);
@@ -185,7 +187,8 @@ for ti = 1: test_num
         x0 = cnode(i,1);  y0 = cnode(i,2);
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
-        if r0>epsilon
+        if r0 > (2*epsilon - 2*h)
+            Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) = ex_ray([x0,y0],xs,ys,0);
@@ -193,6 +196,7 @@ for ti = 1: test_num
     end
     cnumray = exp(1i*cnumray_angle);
     numray2 = interpolation(cnode,celem,node,cnumray);
+    numray2 = numray2./abs(numray2);
     toc;
     
     % compute the ray errors

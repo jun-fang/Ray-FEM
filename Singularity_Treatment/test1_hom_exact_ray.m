@@ -17,10 +17,10 @@ sigmaMax = 25/wpml;                 % absorption of PML
 fquadorder = 3;                     % numerical quadrature order 
 a = 1/2;                            % computational domain [-a,a]^2
 
-nt = 4;                             % number of tests
-errors = zeros(1,nt);                  % record errors
-omegas = pi*[120,160,240,320];      % omega's
 NPW = 4;                            % grid number per wavelength
+omegas = pi*[120,160,240,320];      % omega's
+nt = length(omegas);                % number of tests
+rel_l2_err = zeros(1,nt);           % record relative l2 errors
 
 
 %% Tests
@@ -30,8 +30,10 @@ for ii = 1:nt
     wl = 2*pi/omega;
     h = 1/round(1/(wl/NPW));
     [node,elem] = squaremesh([-a,a,-a,a],h);
+    fprintf(['-'*ones(1,80) '\n']);
     fprintf('Case %d: omega/pi = %d, NPW = %d, 1/h = %d\n', ii, round(omega/pi), NPW, round(1/h));
     
+    tic;
     %% Exact ray information
     x = node(:,1);  y = node(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
@@ -55,14 +57,18 @@ for ii = 1:nt
     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
         .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
     du(idx) = 0;  uex(idx) = 0;
-    errors(ii) = norm(du)/norm(uex);
+    rel_l2_err(ii) = norm(du)/norm(uex);
     toc;
 end
+
+%% save output 
+nameFile = strcat('resutls_1_HomExRay_NPW_', num2str(NPW), '.mat');
+save(nameFile, 'rel_l2_err', 'NPW', 'omegas');
 
 
 %% plot
 figure(22);
-show_convergence_rate(omegas(1:nt),errors,'omega','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
+show_convergence_rate(omegas(1:nt), rel_l2_err,'omega','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
 
 
 
