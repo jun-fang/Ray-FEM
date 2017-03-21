@@ -30,10 +30,10 @@ epsilon = 50/(80*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 3;              % we test test_num examples
+test_num = 2;              % we test test_num examples
 
 % frequency
-high_omega = [160 240 320 480]*pi;
+high_omega = [120 160 240 320 480]*pi;
 low_omega = 2*sqrt(high_omega);
 
 % error
@@ -61,15 +61,19 @@ low_wpml = 0.35*ones(size(high_omega));
 
 
 %% Generate the domain sizes
-sd = 1/2;
-Rest = 1; %2*epsilon;           % estimate of the distance to the source point
+dd = 1/2;
+Rest = 1.25; %2*epsilon;           % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega,Rest);
+low_r = NMLA_radius(low_omega,Rest);
+
+sd = dd + high_r + high_wpml;
+sd = ceil(sd*10)/10;      % middle domain size
+
 md = sd + high_r + high_wpml;
 md = ceil(md*10)/10;      % middle domain size
 
 % Rest = sqrt(2)*md;
-low_r = NMLA_radius(low_omega,Rest);
 ld = md + low_r + low_wpml;
 ld = ceil(ld*10)/10;      % large domain size
 
@@ -174,8 +178,8 @@ for ti = 1: test_num
     % compute numerical derivatives
     [ux,uy] = num_derivative(uh1,h,2);
     
-    a = sd;
-    [node,elem] = squaremesh([-a,a,-a,a],h);
+    a = sd(ti);
+    [snode,selem] = squaremesh([-a,a,-a,a],h);
     [cnode,celem] = squaremesh([-a,a,-a,a],h_c);
     cN = size(cnode,1);
     cnumray_angle = zeros(cN,Nray);
@@ -193,12 +197,12 @@ for ti = 1: test_num
         end
     end
     cnumray = exp(1i*cnumray_angle);
-    ray = interpolation(cnode,celem,node,cnumray);
+    ray = interpolation(cnode,celem,snode,cnumray);
     ray = ray./abs(ray);
     
     % analytical ray directions in the support of the cut-off dunction
-    exray = ex_ray(node,xs,ys,1);
-    x = node(:,1); y = node(:,2);
+    exray = ex_ray(snode,xs,ys,1);
+    x = snode(:,1); y = snode(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     ray(rr <= 2*epsilon) = exray(rr <= 2*epsilon);
 %     figure(2); ray_field(ray,node,8,1/10);
@@ -216,10 +220,71 @@ for ti = 1: test_num
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     
     option = 'homogeneous';
+    A = assemble_Helmholtz_matrix_RayFEM(snode,selem,omega,wpml,sigmaMax,speed,ray,fquadorder);
+    b = assemble_RHS_RayFEM_with_ST(snode,selem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
+    uh2 = RayFEM_direct_solver(snode,selem,A,b,omega,ray,speed);
+    toc;
+    
+    
+    %% Step 6: One more iteration --> NMLA to find original ray directions d_o with wavenumber k
+    fprintf(['-'*ones(1,80) '\n']);
+    fprintf('Step6: iteration, NMLA, high frequency \n');
+    tic;
+    
+    % compute numerical derivatives
+    [ux,uy] = num_derivative(uh2,h,2);
+    
+    a = dd;
+    [node,elem] = squaremesh([-a,a,-a,a],h);
+    [cnode,celem] = squaremesh([-a,a,-a,a],h_c);
+    cN = size(cnode,1);
+    cnumray_angle = zeros(cN,Nray);
+     
+    % NMLA
+    for i = 1:cN
+        x0 = cnode(i,1);  y0 = cnode(i,2);
+        r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
+        c0 = speed(cnode(i,:));
+        if r0 > (2*epsilon - 2*h)
+%             Rest = r0;
+            [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,snode,selem,uh2,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
+        else
+            cnumray_angle(i) =  ex_ray([x0,y0],xs,ys,0);
+        end
+    end
+    cnumray = exp(1i*cnumray_angle);
+    ray = interpolation(cnode,celem,node,cnumray);
+    ray = ray./abs(ray);
+    
+    % analytical ray directions in the support of the cut-off dunction
+    exray = ex_ray(node,xs,ys,1);
+    x = node(:,1); y = node(:,2);
+    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    ray(rr <= 2*epsilon) = exray(rr <= 2*epsilon);
+%     figure(2); ray_field(ray,node,8,1/10);
+    toc;
+    
+    
+    %% Step 7: One more iteration --> Solve the original Helmholtz equation by Ray-based FEM with ray directions d_o
+    fprintf([ '-'*ones(1,80) '\n']);
+    fprintf('Step7: iteration, Ray-FEM, high frequency \n');
+    tic;
+    
+    % Assembling
+    omega = high_omega(ti);
+    wpml = high_wpml(ti);                % width of PML
+    sigmaMax = 25/wpml;                 % Maximun absorbtion
+    
+    option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
     [~,v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     toc;
+    
+    
+    
+    
+    
     
     clear lnode lelem mnode melem cnode celem cnumray cnumray_angle;
     clear A b x y rr exray cf u_std ub uh uh1 ux uy freeNode isBdNode;

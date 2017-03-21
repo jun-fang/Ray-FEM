@@ -23,17 +23,17 @@ speed = @(p) 1./sqrt(1 + nu( p(:,1), p(:,2) ));    % wave speed
 
 %% Set up
 plt = 0;                   % show solution or not
-fquadorder = 6;            % numerical quadrature order
+fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 epsilon = 50/(80*pi);               % cut-off parameter
 
 
-NPW = 4;                   % number of points per wavelength
+NPW = 6;                   % number of points per wavelength
 test_num = 3;              % we test test_num examples
 
 % frequency
-high_omega = [160 240 320 480]*pi;
+high_omega = [120 160 240 320 480]*pi;
 low_omega = 2*sqrt(high_omega);
 
 % error
@@ -62,7 +62,7 @@ low_wpml = 0.35*ones(size(high_omega));
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = 1; %2*epsilon;           % estimate of the distance to the source point
+Rest = 1.25; %2*epsilon;           % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega,Rest);
 md = sd + high_r + high_wpml;
