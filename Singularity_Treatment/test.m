@@ -1,3 +1,6 @@
 test5_Lippmann_Schwinger;
 
 test5_Lippmann_Schwinger_NPW_6;
+
+test5_Lippmann_Schwinger_NPW_8;
+

@@ -20,11 +20,11 @@ Nray = 1;                  % one ray direction at each grid node
 sec_opt = 0;               % NMLA second order correction or not
 
 NPW = 4;                   % number of points per wavelength
-test_num = 4;              % we test test_num examples
+test_num = 5;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 200 240 320 400 480 640]*pi;
-low_omega = 2*sqrt(high_omega);
+low_omega = sqrt(high_omega); 
 
 % error
 low_max_rayerr = 0*high_omega;     % L_inf ray error of low-freq waves
@@ -44,26 +44,27 @@ low_wl = 2*pi./low_omega;
 
 % mesh size
 fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
-ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
+ch = 1./(10*round(low_omega/(2*pi)));        % coarse mesh size
 % ch = 1./(NPW*round(1./sqrt(fh)/10)*10);
 % ch = fh.*ceil(ch./fh);
 
 % width of PML
-high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
+high_wpml = 0.15*ones(size(high_omega));
 low_wpml = 0.35*ones(size(high_omega));
+% high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
 % low_wpml = ch.*ceil(low_wl(1)./ch);
 
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = 2*epsilon;           % estimate of the distance to the source point
+Rest = 0.75;           % estimate of the distance to the source point
 
-high_r = NMLA_radius(high_omega,Rest);
+high_r = NMLA_radius(high_omega(1),Rest);
 md = sd + high_r + high_wpml;
 md = ceil(md*10)/10;      % middle domain size 
 
 % Rest = sqrt(2)*md;
-low_r = NMLA_radius(low_omega,Rest);
+low_r = NMLA_radius(low_omega(1),Rest);
 ld = md + low_r + low_wpml;
 ld = ceil(ld*10)/10;      % large domain size
 
@@ -132,7 +133,7 @@ for ti = 1: test_num
     % compute the ray errors
     exray = ex_ray(mnode,xs,ys,1);
     mr = sqrt((mnode(:,1)-xs).^2 + (mnode(:,2)-ys).^2);
-    numray1 = numray1.*(mr>2*epsilon) + exray.*(mr<=2*epsilon);
+    numray1 = numray1.*(mr > 2*epsilon) + exray.*(mr <= 2*epsilon);
     rayerr1 = numray1 - exray;
     low_max_rayerr(ti) = norm(rayerr1,inf);
     low_l2_rayerr(ti) = norm(rayerr1)*h/(norm(exray)*h);
@@ -202,7 +203,7 @@ for ti = 1: test_num
     % compute the ray errors
     exray = ex_ray(node,xs,ys,1);
     sr = sqrt((node(:,1)-xs).^2 + (node(:,2)-ys).^2);
-    numray2 = numray2.*(sr>epsilon) + exray.*(sr<=epsilon);
+    numray2 = numray2.*(sr > 2*epsilon) + exray.*(sr <= 2*epsilon);
     rayerr2 = numray2 - exray;
     high_max_rayerr(ti) = norm(rayerr2,inf);
     high_l2_rayerr(ti) = norm(rayerr2)*h/(norm(exray)*h);    
@@ -232,12 +233,12 @@ for ti = 1: test_num
     ub = 1i/4*besselh(0,1,omega*rr);
     cf = cutoff(epsilon,2*epsilon,node,xs,ys);
     uex = (1-cf).*ub;
-    uex(rr<epsilon) = 0;
+    uex(rr <= epsilon) = 0;
    
     % Errors
     du = u - uex;
-    idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
-        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
+    idx = find( ~( (x <= max(x)-wpml).*(x >= min(x)+wpml)...
+        .*(y <= max(y)-wpml).*(y >= min(y)+wpml) ) ); % index on PML
     du(idx) = 0;  uex(idx) = 0;
     
     max_err(ti) = norm(du,inf);
@@ -249,6 +250,12 @@ end
 
 totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
+
+
+
+%% save output 
+nameFile = strcat('resutls_2_HomNumRay_NPW_', num2str(NPW), '.mat');
+save(nameFile, 'rel_l2_err', 'NPW', 'high_omega');
 
 
 
