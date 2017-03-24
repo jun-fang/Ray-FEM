@@ -29,8 +29,8 @@ sec_opt = 0;               % NMLA second order correction or not
 epsilon = 50/(80*pi);               % cut-off parameter
 
 
-NPW = 6;                   % number of points per wavelength
-test_num = 4;              % we test test_num examples
+NPW = 8;                   % number of points per wavelength
+test_num = 3;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480]*pi;
@@ -51,7 +51,8 @@ low_wl = 2*pi./low_omega;
 
 % mesh size
 fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
-ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
+% ch = 4*fh;
+ch = 1./(10*round(low_omega/(pi)));        % coarse mesh size
 
 % width of PML
 high_wpml = 0.15*ones(size(high_omega));

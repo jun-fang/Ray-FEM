@@ -30,10 +30,10 @@ epsilon = 50/(80*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 3;              % we test test_num examples
+test_num = 5;              % we test test_num examples
 
 % frequency
-high_omega = [160 240 320 480]*pi;
+high_omega = [120 160 240 320 480]*pi;
 low_omega = 2*sqrt(high_omega);
 
 % error
