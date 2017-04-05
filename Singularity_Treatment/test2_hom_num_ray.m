@@ -1,6 +1,8 @@
 %% Convergence test for homogenenous case with numerical rays
+function [] = test2_hom_num_ray(NPW, test_num)
 
-clear;
+
+% clear;
 addpath(genpath('../../ifem/'));
 addpath('../Methods/');
 addpath('../NMLA/');
@@ -19,11 +21,11 @@ fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction at each grid node
 sec_opt = 0;               % NMLA second order correction or not
 
-NPW = 4;                   % number of points per wavelength
-test_num = 5;              % we test test_num examples
+% NPW = 4;                   % number of points per wavelength
+% test_num = 6;              % we test test_num examples
 
 % frequency
-high_omega = [120 160 200 240 320 400 480 640]*pi;
+high_omega = [120 160 200 240 320 480 640]*pi;
 low_omega = sqrt(high_omega); 
 
 % error

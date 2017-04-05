@@ -16,7 +16,7 @@ uint = zeros(rxy,cu);        % output
 N = size(node,1);            % number of nodes
 NT = size(elem,1);           % number of elements
 n = round(sqrt(N));          % number of grid points in each dimension
-h = node(2,2) - node(1,2);   % grid width 
+h = 1/round(1/(node(2,2) - node(1,2)));   % grid width 
 each_area = h^2/2;           % area of each triangle
 
 xyn = xy;                    % record the index of x,y coordinates
