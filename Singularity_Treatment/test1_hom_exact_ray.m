@@ -17,21 +17,21 @@ sigmaMax = 25/wpml;                 % absorption of PML
 fquadorder = 3;                     % numerical quadrature order 
 a = 1/2;                            % computational domain [-a,a]^2
 
-NPW = 4;                            % grid number per wavelength
-omegas = pi*[120,160,240,320];      % omega's
+NPW = 8;                            % grid number per wavelength
+omegas = pi*[120 160 240 320 480 640];      % omega's
 nt = length(omegas);                % number of tests
 rel_l2_err = zeros(1,nt);           % record relative l2 errors
 
 
 %% Tests
-for ii = 1:nt
+for ni = 1:nt
     
-    omega = omegas(ii);
+    omega = omegas(ni);
     wl = 2*pi/omega;
     h = 1/round(1/(wl/NPW));
     [node,elem] = squaremesh([-a,a,-a,a],h);
     fprintf(['-'*ones(1,80) '\n']);
-    fprintf('Case %d: omega/pi = %d, NPW = %d, 1/h = %d\n', ii, round(omega/pi), NPW, round(1/h));
+    fprintf('Case %d: omega/pi = %d, NPW = %d, 1/h = %d\n', ni, round(omega/pi), NPW, round(1/h));
     
     tic;
     %% Exact ray information
@@ -57,7 +57,7 @@ for ii = 1:nt
     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
         .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
     du(idx) = 0;  uex(idx) = 0;
-    rel_l2_err(ii) = norm(du)/norm(uex);
+    rel_l2_err(ni) = norm(du)/norm(uex);
     toc;
 end
 

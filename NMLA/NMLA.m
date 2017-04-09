@@ -66,7 +66,8 @@ r = NMLA_radius(omega,Rest);
 kr = r*omega/c0;                      %% k*r
 L = round(kr + (kr)^(1/3) -2.5);      %% truncation level to obtain needed precision
 L = max(1,L) ;
-M = 2*(4*L)+1;                        %% number of samples on the observation circle
+M = 2*(8*L)+1;                        %% number of samples on the observation circle
+% M = 2*round(kr + 9.4*(kr)^(1/3)) + 6; 
 
 
 %% Angle discretizaion on the circle

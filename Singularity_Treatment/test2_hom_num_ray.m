@@ -25,7 +25,7 @@ sec_opt = 0;               % NMLA second order correction or not
 % test_num = 6;              % we test test_num examples
 
 % frequency
-high_omega = [120 160 200 240 320 480 640]*pi;
+high_omega = [120 160 200 240 320 480 640 800 960]*pi;
 low_omega = sqrt(high_omega); 
 
 % error
@@ -39,14 +39,14 @@ rel_max_err = 0*high_omega;        % relative L_inf error of the numerical solut
 l2_err = 0*high_omega;             % L_2 error of the numerical solution
 rel_l2_err = 0*high_omega;         % relative L_2 error of the numerical solution
 
-
 % wavelength
 high_wl = 2*pi./high_omega;
 low_wl = 2*pi./low_omega;
 
 % mesh size
 fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
-ch = 1./(10*round(low_omega/(2*pi)));        % coarse mesh size
+ch = 2*fh;
+% ch = 1./(10*round(low_omega/(2*pi)));        % coarse mesh size
 % ch = 1./(NPW*round(1./sqrt(fh)/10)*10);
 % ch = fh.*ceil(ch./fh);
 
@@ -90,13 +90,23 @@ for ti = 1: test_num
     wpml = low_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     [lnode,lelem] = squaremesh([-a,a,-a,a],h);
+    
+    % smooth part
     A = assemble_Helmholtz_matrix_SFEM(lnode,lelem,omega,wpml,sigmaMax,speed,fquadorder);
-    b = assemble_RHS_SFEM(lnode,lelem, @(x)nodal_basis(xs,ys,h,x),fquadorder);
-    b = b/(h*h/2);
+    b = assemble_RHS_SFEM_with_ST(lnode,lelem,xs,ys,omega,wpml,sigmaMax,epsilon,fquadorder);
     [~,~,isBdNode] = findboundary(lelem);
     freeNode = find(~isBdNode);
     lN = size(lnode,1);        u_std = zeros(lN,1);
     u_std(freeNode) = A(freeNode,freeNode)\b(freeNode);
+    
+    % singular part
+    x = lnode(:,1); y = lnode(:,2);
+    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    ub = 1i/4*besselh(0,1,omega*rr);
+    cf = cutoff(epsilon,2*epsilon,lnode,xs,ys);
+    
+    % low frequency solution: smooth + singularity
+    u_low = u_std + ub.*cf;
     toc;
     
     
@@ -105,7 +115,7 @@ for ti = 1: test_num
     fprintf('Step2: NMLA, low frequency \n');
     
     % compute numerical derivatives 
-    [ux,uy] = num_derivative(u_std,h,2);
+    [ux,uy] = num_derivative(u_low,h,2);
     
     a = md(ti);
     [mnode,melem] = squaremesh([-a,a,-a,a],h);
@@ -120,9 +130,9 @@ for ti = 1: test_num
         x0 = cnode(i,1);  y0 = cnode(i,2);
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
-        if r0 > (2*epsilon - 2*h)
+        if r0 > (2*epsilon - 2*h_c)
             Rest = r0;
-            [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
+            [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_low,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) = ex_ray([x0,y0],xs,ys,0);
         end
@@ -138,7 +148,7 @@ for ti = 1: test_num
     numray1 = numray1.*(mr > 2*epsilon) + exray.*(mr <= 2*epsilon);
     rayerr1 = numray1 - exray;
     low_max_rayerr(ti) = norm(rayerr1,inf);
-    low_l2_rayerr(ti) = norm(rayerr1)*h/(norm(exray)*h);
+    low_l2_rayerr(ti) = norm(rayerr1)*h/(norm(exray.*(mr > 2*epsilon))*h);
     
     
     %% Step 3: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_c
@@ -190,7 +200,7 @@ for ti = 1: test_num
         x0 = cnode(i,1);  y0 = cnode(i,2);
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
-        if r0 > (2*epsilon - 2*h)
+        if r0 > (2*epsilon - 2*h_c)
             Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
@@ -208,7 +218,7 @@ for ti = 1: test_num
     numray2 = numray2.*(sr > 2*epsilon) + exray.*(sr <= 2*epsilon);
     rayerr2 = numray2 - exray;
     high_max_rayerr(ti) = norm(rayerr2,inf);
-    high_l2_rayerr(ti) = norm(rayerr2)*h/(norm(exray)*h);    
+    high_l2_rayerr(ti) = norm(rayerr2)*h/(norm(exray.*(sr > 2*epsilon))*h);    
     
     
     %% Step 5: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_o
