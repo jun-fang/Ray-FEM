@@ -26,7 +26,7 @@ sec_opt = 0;               % NMLA second order correction or not
 
 % frequency
 high_omega = [120 160 200 240 320 480 640 800 960]*pi;
-low_omega = sqrt(high_omega); 
+low_omega = 2*sqrt(high_omega); 
 
 % error
 low_max_rayerr = 0*high_omega;     % L_inf ray error of low-freq waves
@@ -54,7 +54,7 @@ ch = 1./(10*round(sqrt(2./fh)/10));
 
 % width of PML
 high_wpml = 0.075*ones(size(high_omega));
-low_wpml = 0.25*ones(size(high_omega));
+low_wpml = 0.2*ones(size(high_omega));
 % high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
 % low_wpml = ch.*ceil(low_wl(1)./ch);
 

@@ -7,6 +7,7 @@ addpath('../Methods/');
 addpath('../NMLA/');
 addpath('../Cutoff_Functions/')
 addpath('../Plots_Prints/');
+% addpath('/home/jun/Documents/MATLAB/Solutions_Lippmann_Schwinger');
 
 
 %% Load source/wavespeed data
@@ -19,21 +20,21 @@ nu = @(x,y) 0.2*exp( -1/(2*sigma^2)*((x-xHet).^2 + (y-yHet).^2) )...
     .*Lippmann_Schwinger_window(sqrt((x-xHet).^2 + (y-yHet).^2), 0.28,0.2  );
 
 speed = @(p) 1./sqrt(1 + nu( p(:,1), p(:,2) ));    % wave speed
-
+speed_min = 1/sqrt(1.2);
 
 %% Set up
 plt = 0;                   % show solution or not
-fquadorder = 6;            % numerical quadrature order
+fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 epsilon = 50/(80*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 5;              % we test test_num examples
+test_num = 2;              % we test test_num examples
 
 % frequency
-high_omega = [120 160 240 320 480]*pi;
+high_omega = [120 160 240 320 480 640 800 960]*pi;
 low_omega = 2*sqrt(high_omega);
 
 % error
@@ -46,30 +47,33 @@ ref_l2 = 0*high_omega;             % reference l2 norm
 rays = cell(test_num,1);
 
 % wavelength
-high_wl = 2*pi./high_omega;
-low_wl = 2*pi./low_omega;
+high_wl = 2*pi*speed_min./high_omega;
+low_wl = 2*pi*speed_min./low_omega;
 
 % mesh size
-fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
-ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
+fh = 1./(10*round(NPW*high_omega/(2*pi*speed_min)/10));      % fine mesh size
+ch = 1./(20*round(sqrt(4./fh)/20));                    % coarse mesh size
+
+% ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
 
 % width of PML
-high_wpml = 0.15*ones(size(high_omega));
-low_wpml = 0.35*ones(size(high_omega));
+high_wpml = 0.065*ones(size(high_omega));
+low_wpml = 0.17*ones(size(high_omega));
 % high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
 % low_wpml = 2*ch.*ceil(low_wl(1)./ch);
 
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = 1; %2*epsilon;           % estimate of the distance to the source point
+Rest = 0.75;
+% Rest = sqrt((sd-xs)^2 + (sd-ys)^2);           % estimate of the distance to the source point
 
-high_r = NMLA_radius(high_omega,Rest);
+high_r = NMLA_radius(high_omega(1),Rest);
 md = sd + high_r + high_wpml;
 md = ceil(md*10)/10;      % middle domain size
 
-% Rest = sqrt(2)*md;
-low_r = NMLA_radius(low_omega,Rest);
+% Rest = sqrt((md(1)-xs)^2 + (md(1)-ys)^2);           % estimate of the distance to the source point
+low_r = NMLA_radius(low_omega(1),Rest);
 ld = md + low_r + low_wpml;
 ld = ceil(ld*10)/10;      % large domain size
 
@@ -93,13 +97,23 @@ for ti = 1: test_num
     wpml = low_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     [lnode,lelem] = squaremesh([-a,a,-a,a],h);
+     
+    % smooth part
     A = assemble_Helmholtz_matrix_SFEM(lnode,lelem,omega,wpml,sigmaMax,speed,fquadorder);
-    b = assemble_RHS_SFEM(lnode,lelem, @(x)nodal_basis(xs,ys,h,x),fquadorder);
-    b = b/(h*h/2);
+    b = assemble_RHS_SFEM_with_ST(lnode,lelem,xs,ys,omega,wpml,sigmaMax,epsilon,fquadorder);
     [~,~,isBdNode] = findboundary(lelem);
     freeNode = find(~isBdNode);
     lN = size(lnode,1);        u_std = zeros(lN,1);
     u_std(freeNode) = A(freeNode,freeNode)\b(freeNode);
+    
+    % singular part
+    x = lnode(:,1); y = lnode(:,2);
+    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    ub = 1i/4*besselh(0,1,omega*rr);
+    cf = cutoff(epsilon,2*epsilon,lnode,xs,ys);
+    
+    % low frequency solution: smooth + singularity
+    u_low = u_std + ub.*cf;
     toc;
     
     
@@ -109,7 +123,7 @@ for ti = 1: test_num
     tic;
     
     % compute numerical derivatives
-    [ux,uy] = num_derivative(u_std,h,2);
+    [ux,uy] = num_derivative(u_low,h,2);
     
     a = md(ti);
     [mnode,melem] = squaremesh([-a,a,-a,a],h);
@@ -122,9 +136,9 @@ for ti = 1: test_num
         x0 = cnode(i,1);  y0 = cnode(i,2);
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
-        if r0 > (2*epsilon - 2*h)
+        if r0 > (2*epsilon - 3*h_c)
 %             Rest = r0;
-            [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
+            [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_low,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) =  ex_ray([x0,y0],xs,ys,0);
         end
@@ -138,7 +152,7 @@ for ti = 1: test_num
     x = mnode(:,1); y = mnode(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     ray(rr <= 2*epsilon) = exray(rr <= 2*epsilon);
-%     figure(1); ray_field(ray,mnode,8,1/10);
+%     figure(1); ray_field(ray,mnode,10,1/10);
     toc;
     
     
@@ -185,7 +199,7 @@ for ti = 1: test_num
         x0 = cnode(i,1);  y0 = cnode(i,2);
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
-        if r0 > (2*epsilon - 2*h)
+        if r0 > (2*epsilon - 3*h_c)
 %             Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
@@ -201,7 +215,7 @@ for ti = 1: test_num
     x = node(:,1); y = node(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     ray(rr <= 2*epsilon) = exray(rr <= 2*epsilon);
-%     figure(2); ray_field(ray,node,8,1/10);
+%     figure(2); ray_field(ray,node,10,1/10);
     toc;
     
     
@@ -210,6 +224,7 @@ for ti = 1: test_num
     fprintf('Step5: Ray-FEM, high frequency \n');
     tic;
     
+%     ray = exray;
     % Assembling
     omega = high_omega(ti);
     wpml = high_wpml(ti);                % width of PML
@@ -218,11 +233,12 @@ for ti = 1: test_num
     option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-    [~,v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
+    uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
+%     [~,v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     toc;
     
     clear lnode lelem mnode melem cnode celem cnumray cnumray_angle;
-    clear A b x y rr exray cf u_std ub uh uh1 ux uy freeNode isBdNode;
+    clear A b x y rr exray cf u_std ub uh1 ux uy freeNode isBdNode;
     
     
     %% Compute errors
@@ -247,16 +263,19 @@ for ti = 1: test_num
     end
 
     rh = 1/5000;
-    [rnode,~] = squaremesh([-a,a,-a,a],rh); rn = round(sqrt(size(rnode,1)));
-    uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
+    [rnode,relem] = squaremesh([-a,a,-a,a],rh); rn = round(sqrt(size(rnode,1)));
+    ur = interpolation(rnode,relem,node,u);
+%     uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
+    clear rnode relem;
     
     % Reference solution 
+    rnode = node;
     x = rnode(:,1); y = rnode(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     
     cf = cutoff(epsilon,2*epsilon,rnode,xs,ys);
-    ur = (1-cf).*u;
-    ur(rr<epsilon) = 0;
+    ur = (1-cf).*ur;
+    ur(rr<=epsilon) = 0;
    
     % Errors
     du = uh - ur;
@@ -266,14 +285,14 @@ for ti = 1: test_num
     
     max_err(ti) = norm(du,inf);
     rel_max_err(ti) = norm(du,inf)/norm(ur,inf);
-    l2_err(ti) = norm(du)*rh;
-    ref_l2(ti) = norm(ur)*rh;
+    l2_err(ti) = norm(du)*h;
+    ref_l2(ti) = norm(ur)*h;
     rel_l2_err(ti) = l2_err(ti)/ref_l2(ti);
         
     toc;
     
 %     rays{ti} = ray;
-    clear node elem rnode x y rr cf idx u;
+%     clear node elem rnode x y rr cf idx u;
     
     
 end
@@ -288,6 +307,22 @@ save(nameFile, 'ref_l2', 'l2_err' , 'rel_l2_err', 'high_omega');
 
 
 %% plots
+
+
+figure(8);
+subplot(2,2,1);
+showsolution(node,elem,real(du(:))); colorbar;
+title('Ray-FEM solution error')
+subplot(2,2,2);
+showsolution(node,elem,real(du(:)),2); colorbar;
+title('Ray-FEM solution error')
+subplot(2,2,3);
+showsolution(node,elem,real(uh(:))); colorbar;
+title('Ray-FEM solution error')
+subplot(2,2,4);
+showsolution(node,elem,real(uh(:)),2); colorbar;
+title('Ray-FEM solution error')
+
 
 figure(3);
 % reference L2 norm
@@ -345,23 +380,31 @@ fprintf( ['\n' '-'*ones(1,80) '\n']);
 % --------------------------------------------------------------------------------
 
 
-    %% Plots
-%     sh = 1/400;
+%     % Plots
+%     sh = 1/500;
 %     [snode,selem] = squaremesh([-a,a,-a,a],sh); 
+%     sr = sqrt((snode(:,1)-xs).^2 + (snode(:,2)-ys).^2);
 %     sn = round(sqrt(size(snode,1))); idx = 1:sn; idx = 10*(idx-1) + 1;
-%     su = reshape(du,rn,rn); su = su(idx,idx);
+%     su1 = reshape(du,rn,rn); su1 = su1(idx,idx);
+%     su2 = reshape(ur,rn,rn); su2 = su2(idx,idx);
 %     figure(8); 
-%     subplot(1,2,1);
-%     showsolution(snode,selem,real(su(:))); colorbar;
+%     subplot(2,2,1);
+%     showsolution(snode,selem,real(su1(:))); colorbar;
 %     title('Ray-FEM solution error')
-%     subplot(1,2,2);
-%     showsolution(snode,selem,real(su(:)),2); colorbar;
+%     subplot(2,2,2);
+%     showsolution(snode,selem,real(su1(:)),2); colorbar;
 %     title('Ray-FEM solution error')
-%     
+%     subplot(2,2,3);
+%     showsolution(snode,selem,real(su2(:))); colorbar;
+%     title('Ray-FEM solution error')
+%     subplot(2,2,4);
+%     showsolution(snode,selem,real(su2(:)),2); colorbar;
+%     title('Ray-FEM solution error')
+    
 %     figure(9);
 %     subplot(1,2,1);
-%     showsolution(snode,selem,speed(snode)); colorbar;
+%     showsolution(snode,selem,speed(snode).*(sr>=2*epsilon)); colorbar;
 %     title('Wave speed')
 %     subplot(1,2,2);
-%     showsolution(snode,selem,speed(snode),2); colorbar;
+%     showsolution(snode,selem,speed(snode).*(sr>=2*epsilon),2); colorbar;
 %     title('Wave speed')
