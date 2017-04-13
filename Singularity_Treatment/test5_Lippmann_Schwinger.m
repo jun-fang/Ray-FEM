@@ -7,31 +7,32 @@ addpath('../Methods/');
 addpath('../NMLA/');
 addpath('../Cutoff_Functions/')
 addpath('../Plots_Prints/');
-addpath('/home/jun/Documents/MATLAB/Solutions_Lippmann_Schwinger');
+% addpath('/home/jun/Documents/MATLAB/Solutions_Lippmann_Schwinger');
 
 
 %% Load source/wavespeed data
-xs = -0.4; ys = -0.4;                     % point source location
+xs = -0.2; ys = -0.2;                     % point source location
 
 sigma = 0.15;
 xHet = 0.2;   yHet = 0.2;
 
 nu = @(x,y) 0.2*exp( -1/(2*sigma^2)*((x-xHet).^2 + (y-yHet).^2) )...
-    .*Lippmann_Schwinger_window(sqrt((x-xHet).^2 + (y-yHet).^2), 0.28,0.2  );
+    .*Lippmann_Schwinger_window(sqrt((x-xHet).^2 + (y-yHet).^2), 0.22,0.16  );
 
 speed = @(p) 1./sqrt(1 + nu( p(:,1), p(:,2) ));    % wave speed
 speed_min = 1/sqrt(1.2);
+
 
 %% Set up
 plt = 0;                   % show solution or not
 fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
-epsilon = 30/(80*pi);               % cut-off parameter
+epsilon = 1/(2*pi);        % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 4;              % we test test_num examples
+test_num = 3;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640 800 960]*pi;
@@ -52,20 +53,16 @@ low_wl = 2*pi*speed_min./low_omega;
 
 % mesh size
 fh = 1./(10*round(NPW*high_omega/(2*pi*speed_min)/10));      % fine mesh size
-ch = 1./(20*round(sqrt(4./fh)/20));                    % coarse mesh size
-
-% ch = 1./(20*round(low_omega/(4*pi)));        % coarse mesh size
+ch = 1./(10*round(sqrt(2./fh)/10));                    % coarse mesh size
 
 % width of PML
 high_wpml = 0.065*ones(size(high_omega));
-low_wpml = 0.17*ones(size(high_omega));
-% high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
-% low_wpml = 2*ch.*ceil(low_wl(1)./ch);
+low_wpml = 0.18*ones(size(high_omega));
 
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = 0.75;
+Rest = 0.5618;
 % Rest = sqrt((sd-xs)^2 + (sd-ys)^2);           % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega(1),Rest);
@@ -279,10 +276,10 @@ for ti = 1: test_num
    
     % Errors
     du = uh - ur;
-%     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
-%         .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
-    idx = find( ~( (x<=0.4).*(x>= -0.2)...
-        .*(y<= 0.4).*(y>= -0.2) ) ); % index on PML
+    idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
+%     idx = find( ~( (x<=0.4).*(x>= -0.2)...
+%         .*(y<= 0.4).*(y>= -0.2) ) ); % index on PML
     du(idx) = 0;  ur(idx) = 0;
     
     max_err(ti) = norm(du,inf);
@@ -305,37 +302,38 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 %% saving output 
 nameFile = strcat('resutls_5_LipSch_NPW_', num2str(NPW), '.mat');
-save(nameFile, 'ref_l2', 'l2_err' , 'rel_l2_err', 'high_omega');
+save(nameFile, 'ref_l2', 'l2_err' , 'rel_l2_err', 'high_omega', 'test_num');
 
 
 %% plots
 
 
-figure(8);
-subplot(2,2,1);
-showsolution(node,elem,real(du(:))); colorbar;
-title('Ray-FEM solution error')
-subplot(2,2,2);
-showsolution(node,elem,real(du(:)),2); colorbar;
-title('Ray-FEM solution error')
-subplot(2,2,3);
-showsolution(node,elem,real(uh(:))); colorbar;
-title('Ray-FEM solution error')
-subplot(2,2,4);
-showsolution(node,elem,real(uh(:)),2); colorbar;
-title('Ray-FEM solution error')
+% figure(8);
+% subplot(2,2,1);
+% showsolution(node,elem,real(du(:))); colorbar;
+% title('LipSch Ray-FEM error')
+% subplot(2,2,2);
+% showsolution(node,elem,real(du(:)),2); colorbar;
+% title('LipSch Ray-FEM error')
+
+% subplot(2,2,3);
+% showsolution(node,elem,real(uh(:))); colorbar;
+% title('Ray-FEM solution error')
+% subplot(2,2,4);
+% showsolution(node,elem,real(uh(:)),2); colorbar;
+% title('Ray-FEM solution error')
 
 
-figure(3);
-% reference L2 norm
-subplot(1,3,1);
-show_convergence_rate(high_omega(1:test_num),ref_l2(1:test_num),'omega','Ref L2');
-% Ray-FEM solution L2 error
-subplot(1,3,2);
-show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
-% Ray-FEM solution relative L2 error
-subplot(1,3,3);
-show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');
+% figure(3);
+% % reference L2 norm
+% subplot(1,3,1);
+% show_convergence_rate(high_omega(1:test_num),ref_l2(1:test_num),'omega','Ref L2');
+% % Ray-FEM solution L2 error
+% subplot(1,3,2);
+% show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
+% % Ray-FEM solution relative L2 error
+% subplot(1,3,3);
+% show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');
 
 
 

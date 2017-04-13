@@ -11,8 +11,8 @@ addpath('../Plots_Prints/');
 
 
 xs = 0; ys = 0;                     % source location
-epsilon = 50/(80*pi);               % cut-off parameter
-omega0 = 400*pi;
+epsilon = 1/(2*pi);               % cut-off parameter
+omega0 = 600*pi;
 E0 = omega0^2;                   % E0 should be large enough to make sure the medium is smooth enough
 speed = @(p) omega0./sqrt( E0 + p(:,2) );    % wave speed
 
@@ -28,7 +28,7 @@ fquadorder = 3;                     % numerical quadrature order
 a = 1/2;                            % computational domain [-a,a]^2
 
 
-nt = 4;                             % number of tests
+nt = 3;                             % number of tests
 errors = zeros(1,nt);
 rhss = zeros(1,nt);
 omegas = pi*[120,160,240,320];      % omega's
@@ -50,6 +50,7 @@ for ii = 1:nt
     dr2 = dx.^2 + dy.^2;
     ray_angle = atan2(dy,dx);
     ray = exp(1i*ray_angle).*(dr2>10*eps);
+    figure(1); ray_field(ray,node,10,1/10);
     
     % Gravity parameters
     alpha = (omega/omega0)^2;
@@ -88,7 +89,7 @@ end
 
 %% plot
 figure(33);
-hold off
+% hold off
 show_convergence_rate(omegas(1:nt),errors,'omega','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
 
 

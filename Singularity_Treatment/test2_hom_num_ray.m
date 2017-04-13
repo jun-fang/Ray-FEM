@@ -274,25 +274,25 @@ save(nameFile, 'rel_l2_err', 'NPW', 'high_omega', 'test_num');
 
 
 %% plots
-figure(1);
-subplot(2,2,1);
-show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num),'omega','low max');
-subplot(2,2,2);
-show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega','low l2');
-subplot(2,2,3);
-show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num),'omega','high max');
-subplot(2,2,4);
-show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega','high l2');
-
-figure(2);
-subplot(2,2,1);
-show_convergence_rate(high_omega(1:test_num),max_err(1:test_num),'omega','max err');
-subplot(2,2,2);
-show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
-subplot(2,2,3);
-show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num),'omega','Rel max ');
-subplot(2,2,4);
-show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 ');
+% figure(1);
+% subplot(2,2,1);
+% show_convergence_rate(high_omega(1:test_num),low_max_rayerr(1:test_num),'omega','low max');
+% subplot(2,2,2);
+% show_convergence_rate(high_omega(1:test_num),low_l2_rayerr(1:test_num),'omega','low l2');
+% subplot(2,2,3);
+% show_convergence_rate(high_omega(1:test_num),high_max_rayerr(1:test_num),'omega','high max');
+% subplot(2,2,4);
+% show_convergence_rate(high_omega(1:test_num),high_l2_rayerr(1:test_num),'omega','high l2');
+% 
+% figure(2);
+% subplot(2,2,1);
+% show_convergence_rate(high_omega(1:test_num),max_err(1:test_num),'omega','max err');
+% subplot(2,2,2);
+% show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
+% subplot(2,2,3);
+% show_convergence_rate(high_omega(1:test_num),rel_max_err(1:test_num),'omega','Rel max ');
+% subplot(2,2,4);
+% show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 ');
 
 
 %% print results
