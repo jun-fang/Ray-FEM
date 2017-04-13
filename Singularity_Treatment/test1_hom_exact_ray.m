@@ -8,8 +8,9 @@ addpath('../Plots_Prints/');
 
 
 %% Set up
+% xs = -0.2; ys = -0.2;                     % source location 
 xs = 0; ys = 0;                     % source location 
-epsilon = 50/(80*pi);               % cut-off parameter   
+epsilon = 1/(2*pi);               % cut-off parameter   
 speed = @(p) ones(size(p(:,1)));    % wave speed
 
 wpml = 0.1;                         % width of PML  
@@ -17,9 +18,9 @@ sigmaMax = 25/wpml;                 % absorption of PML
 fquadorder = 3;                     % numerical quadrature order 
 a = 1/2;                            % computational domain [-a,a]^2
 
-NPW = 8;                            % grid number per wavelength
+NPW = 4;                            % grid number per wavelength
 omegas = pi*[120 160 240 320 480 640];      % omega's
-nt = length(omegas);                % number of tests
+nt = 5; length(omegas);                % number of tests
 rel_l2_err = zeros(1,nt);           % record relative l2 errors
 
 
@@ -63,7 +64,7 @@ end
 
 %% save output 
 nameFile = strcat('resutls_1_HomExRay_NPW_', num2str(NPW), '.mat');
-save(nameFile, 'rel_l2_err', 'NPW', 'omegas');
+save(nameFile, 'rel_l2_err', 'NPW', 'omegas', 'test_num');
 
 
 %% plot

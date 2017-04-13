@@ -7,7 +7,7 @@ addpath('../Methods/');
 addpath('../NMLA/');
 addpath('../Cutoff_Functions/')
 addpath('../Plots_Prints/');
-% addpath('/home/jun/Documents/MATLAB/Solutions_Lippmann_Schwinger');
+addpath('/home/jun/Documents/MATLAB/Solutions_Lippmann_Schwinger');
 
 
 %% Load source/wavespeed data
@@ -27,11 +27,11 @@ plt = 0;                   % show solution or not
 fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
-epsilon = 50/(80*pi);               % cut-off parameter
+epsilon = 30/(80*pi);               % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 2;              % we test test_num examples
+test_num = 4;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640 800 960]*pi;
@@ -279,8 +279,10 @@ for ti = 1: test_num
    
     % Errors
     du = uh - ur;
-    idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
-        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
+%     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+%         .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
+    idx = find( ~( (x<=0.4).*(x>= -0.2)...
+        .*(y<= 0.4).*(y>= -0.2) ) ); % index on PML
     du(idx) = 0;  ur(idx) = 0;
     
     max_err(ti) = norm(du,inf);

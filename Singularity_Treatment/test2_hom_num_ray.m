@@ -11,7 +11,7 @@ addpath('../Plots_Prints/');
 
 %% Load source data
 xs = 0; ys = 0;                     % point source location
-epsilon = 50/(80*pi);                % cut-off parameter   
+epsilon = 1/(2*pi);                % cut-off parameter   
 speed = @(x) ones(size(x,1),1);      % medium speed
 
 
@@ -53,15 +53,15 @@ ch = 1./(10*round(sqrt(2./fh)/10));
 % ch = fh.*ceil(ch./fh);
 
 % width of PML
-high_wpml = 0.075*ones(size(high_omega));
-low_wpml = 0.2*ones(size(high_omega));
+high_wpml = 0.07*ones(size(high_omega));
+low_wpml = 0.19*ones(size(high_omega));
 % high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
 % low_wpml = ch.*ceil(low_wl(1)./ch);
 
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = 0.35;           % estimate of the distance to the source point
+Rest = 0.4654; 2*epsilon;           % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega(1),Rest);
 md = sd + high_r + high_wpml;
@@ -269,7 +269,7 @@ fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 %% save output 
 nameFile = strcat('resutls_2_HomNumRay_NPW_', num2str(NPW), '.mat');
-save(nameFile, 'rel_l2_err', 'NPW', 'high_omega');
+save(nameFile, 'rel_l2_err', 'NPW', 'high_omega', 'test_num');
 
 
 
