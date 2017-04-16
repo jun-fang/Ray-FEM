@@ -242,21 +242,21 @@ for ti = 1: test_num
     fprintf([ '-'*ones(1,80) '\n']);
     fprintf('Compute errors\n');
     tic;
-    switch round(omega/(2*pi))
-        case 60
-            load('/Solutions_Lippmann_Schwinger/point_source_k_60_2pi.mat')
-        case 80
-            load('/Solutions_Lippmann_Schwinger/point_source_k_80_2pi.mat')
+    switch round(omega/(pi))
         case 120
-            load('/Solutions_Lippmann_Schwinger/point_source_k_120_2pi.mat')
+            load('/Solutions_Lippmann_Schwinger/point_source_k_120_jun_new_version.mat')
         case 160
-            load('/Solutions_Lippmann_Schwinger/point_source_k_160_2pi.mat')
+            load('/Solutions_Lippmann_Schwinger/point_source_k_160_jun_new_version.mat')
         case 240
-            load('/Solutions_Lippmann_Schwinger/point_source_k_240_2pi.mat')
+            load('/Solutions_Lippmann_Schwinger/point_source_k_240_jun_new_version.mat')
         case 320
-            load('/Solutions_Lippmann_Schwinger/point_source_k_320_2pi.mat')
+            load('/Solutions_Lippmann_Schwinger/point_source_k_320_jun_new_version.mat')
         case 480
-            load('/Solutions_Lippmann_Schwinger/point_source_k_480_2pi.mat')
+            load('/Solutions_Lippmann_Schwinger/point_source_k_480_jun_new_version.mat')
+        case 640
+            load('/Solutions_Lippmann_Schwinger/point_source_k_640_jun_new_version.mat')
+        case 960
+            load('/Solutions_Lippmann_Schwinger/point_source_k_960_jun_new_version.mat')
     end
 
     rh = 1/5000;

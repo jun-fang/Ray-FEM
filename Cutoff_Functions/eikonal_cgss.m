@@ -24,8 +24,8 @@ dSdx = g0(1)./S;  dSdy = g0(2)./S;
 
 %% branch one: T1 = |S + S0| ( S^2 + S0^2 + SS0 ) / (3|g0|)
 T1 = (S.^3 + 2*S0*S2 + 2*S02*S + S0^3) / (3*norm(g0));
-dT1dx = (3*S2 + 4*S0*S + 2*S02).*dSdx / (3*norm(g0));
-dT1dy = (3*S2 + 4*S0*S + 2*S02).*dSdy / (3*norm(g0));
+dT1dx = ((3*S2 + 4*S0*S).*dSdx + 2*S02) / (3*norm(g0));
+dT1dy = ((3*S2 + 4*S0*S).*dSdy + 2*S02) / (3*norm(g0));
 
 
 %% branch two: T2 = \frac{2|\x-\x_0| ( S^2 + S0^2 - SS0 )}{3 (S + S0)}

@@ -13,7 +13,8 @@ if ~iscell(ray)
     
     freeNode = find(~isBdNode);
     Nray = size(ray,2);
-    v = zeros(N,1);
+    freeNode = repmat(freeNode, Nray, 1);
+    v = zeros(N*Nray,1);
     v(freeNode) = A(freeNode,freeNode)\b(freeNode);
     
     % construct solution
@@ -22,7 +23,7 @@ if ~iscell(ray)
     repnode = repmat(node,Nray,1);
     temp = grad(:,1).*repnode(:,1) + grad(:,2).*repnode(:,2);
     
-    kk = repmat(k,1,Nray);
+    kk = repmat(k,Nray,1);
     u = v.*exp(1i*kk(:).*temp);
     u = reshape(u,N,Nray);
     u = sum(u,2);

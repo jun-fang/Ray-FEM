@@ -128,6 +128,21 @@ for ti = 1: test_num
     
     % NMLA
     tic;
+% mesh size
+fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
+ch = 1./(10*round(sqrt(2./fh)/10));
+
+% ch = 2*fh;
+% ch = 1./(10*round(low_omega/(2*pi)));        % coarse mesh size
+% ch = 1./(NPW*round(1./sqrt(fh)/10)*10);
+% ch = fh.*ceil(ch./fh);
+
+% width of PML
+high_wpml = 0.07*ones(size(high_omega));
+low_wpml = 0.19*ones(size(high_omega));
+% high_wpml = 8*high_wl(1)*ones(size(high_omega)); %fh.*ceil(high_wl./fh);
+% low_wpml = ch.*ceil(low_wl(1)./ch);
+
     for i = 1:cN
         x0 = cnode(i,1);  y0 = cnode(i,2);
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
