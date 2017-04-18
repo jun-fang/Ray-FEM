@@ -1,11 +1,11 @@
-function [ray, T] = eikonal_cgss(S02, g0, node0, node)
+function [ray, T, dT1dx, dT1dy, dT2dx, dT2dy] = eikonal_cgss(S02, g0, node0, node)
 %% The analytical solution of eikonal equation with 
 % constant gradient of slowness squared(CGSS)
 % 
 %         S^2 = |\nabla T|^2 = S0^2 + 2*g0 \cdot (\x - \x0)
 % 
-% two branch of solutions: |S +/- S0| ( S^2 + S0^2 +/- SS0 ) / (3|g0|)
-%                                          or \frac{2|\x-\x_0| ( S^2 + S0^2 +/- SS0 )}{3|S -/+ S0|}
+% two branch of solutions: |S +/- S0| ( S^2 + S0^2 -/+ SS0 ) / (3|g0|)
+%                                          or \frac{2|\x-\x_0| ( S^2 + S0^2 -/+ SS0 )}{3|S -/+ S0|}
 % 
 % S02: 1x1
 % g0: 1x2
@@ -22,23 +22,20 @@ S = sqrt(S2); S0 = sqrt(S02);
 dSdx = g0(1)./S;  dSdy = g0(2)./S;
 
 
-%% branch one: T1 = |S + S0| ( S^2 + S0^2 + SS0 ) / (3|g0|)
-T1 = (S.^3 + 2*S0*S2 + 2*S02*S + S0^3) / (3*norm(g0));
-dT1dx = ((3*S2 + 4*S0*S).*dSdx + 2*S02) / (3*norm(g0));
-dT1dy = ((3*S2 + 4*S0*S).*dSdy + 2*S02) / (3*norm(g0));
+%% branch one: T1 = (S^3 + s0^3) / (3|g0|)
+gr = sqrt(g0(1)^2 + g0(2)^2);
+T1 = (S.^3 + S0^3) / (3*gr);
+dT1dx = S2.*dSdx / gr;
+dT1dy = S2.*dSdy / gr;
 
 
-%% branch two: T2 = \frac{2|\x-\x_0| ( S^2 + S0^2 - SS0 )}{3 (S + S0)}
-N = 2*r.*(S2 + S02 - S.*S0);
-D = 3*( S + S0);  D2 = D.*D;
-T2 = N./D;
+%% branch two: T2 =2/3 * |\x-\x_0| ( S + S0^2 / (S + S0) )
+F =  S + S02./ (S + S0);
+T2 = 2/3*r.*F;
 
-dNdx = 2*(drdx.*(S2 + S02 - S.*S0) + r.*(2*S - S0).*dSdx);
-dNdy = 2*(drdy.*(S2 + S02 - S.*S0) + r.*(2*S - S0).*dSdy);
-dDdx = 3*dSdx;  dDdy = 3*dSdy;
-
-dT2dx = (dNdx.*D - N.*dDdx)./ D2;
-dT2dy = (dNdy.*D - N.*dDdy)./ D2;
+dF = 1 - S02./ (S+S0).^2;
+dT2dx = 2/3*( drdx.*F + r.*dF.*dSdx );
+dT2dy = 2/3*( drdy.*F + r.*dF.*dSdy );
 
 
 %% two braches:
@@ -51,34 +48,9 @@ ray = [ray1, ray2];
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% positive sign
+% gradient check
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% %% forward pass:
-% sumS = S + S0;
-% recpsum = S02./sumS;
-% temp = S + recpsum;
-% T = 2/3*r.*temp;    % T = 2/3*r.*( S + S02./( S + S0 ));
-% 
-% %% backpropagation/chain rule to compute the gradient/ray direction
-% dTdr = 2/3*temp;    % dT/dr
-% dTdtemp = 2/3*r;    % dT/dtemp
-% dS = 1*dTdtemp;
-% drecpsim = 1*dTdtemp;
-% dsumS = -S02./(sumS.^2).*drecpsim;
-% dS = dS + 1*dsumS;
-% 
-% dTdx = drdx.*dTdr;
-% dTdy = drdy.*dTdr;
-% 
-% dTdx = dTdx + dSdx.*dS;
-% dTdy = dTdy + dSdy.*dS;
-% 
-% dTdx(r < 10*eps) = 0;
-% dTdy(r < 10*eps) = 0;
-
-
-% %% gradient check
+%  
 % S02 = 1;
 % g0 = [1, 2];
 % node0 = [-0.32, -0.111];
