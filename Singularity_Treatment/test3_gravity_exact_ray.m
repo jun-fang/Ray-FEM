@@ -8,11 +8,11 @@ addpath('../Methods/');
 addpath('../NMLA/');
 addpath('../Cutoff_Functions/')
 addpath('../Plots_Prints/');
-
+    
 
 xs = 0; ys = 0;                     % source location
 epsilon = 1/(2*pi);               % cut-off parameter
-omega0 = 0.8;
+omega0 = 2; 0.8;
 E0 = omega0^2;                   % E0 should be large enough to make sure the medium is smooth enough
 speed = @(p) omega0./sqrt( E0 + p(:,2) );    % wave speed
 
@@ -22,37 +22,60 @@ S02 = ( 1/speed(node0) )^2;
 g0 = [0, 1/(2*omega0*omega0)];
 
 
-wpml = 0.18;                         % width of PML
+wpml = 0.1;                         % width of PML
 sigmaMax = 25/wpml;                 % absorption of PML
-fquadorder = 3;                     % numerical quadrature order
+fquadorder = 6;                     % numerical quadrature order
 a = 1/2;                            % computational domain [-a,a]^2
 
 omegas = pi*[120,160,240,320];      % omega's
 errors = 0*omegas;
-rhss = 0*omegas;
+hs = 0*omegas;
 ref_l2_norm = 0*omegas;
 num_l2_norm = 0*omegas;
 
 
 NPW = 4;                            % grid number per wavelength
-nt = 2;                             % number of tests
+nt = 3;                             % number of tests
 
+omega = omegas(1);
+wl = 2*pi/omega;
+h = 2/round(1/(wl/NPW));
 
 for ii = 1:nt
     tic;
     
     % omega and mesh
-    omega = omegas(ii);
-    wl = 2*pi/omega;
-    h = 1/round(1/(wl/NPW));
+%     omega = omegas(ii);
+%     omega = omegas(1);
+%     wl = 2*pi/omega;
+%     h = 1/round(1/(wl/NPW));
+    h = 1/round(1.5/h);
+    hs(ii) = h;
     [node,elem] = squaremesh([-a,a,-a,a],h);
     fprintf('\nCase %d: omega/pi = %d,  NPW = %d,  1/h = %d\n', ii, round(omega/pi), NPW, 1/h);
     
     % Exact ray information
-    ray = eikonal_cgss(S02, g0, node0, node);
+    exray = eikonal_cgss(S02, g0, node0, node);
+    ray = exray;
+    ray = ray(:,2);
+%     figure(11); ray_field(ray(:,1),node,10,1/10);
+%     N = size(exray,1);
+%     ray = cell(N, 1);
+%     tic;
+%     for n = 1:N
+%         if abs(exray(n,2) - exray(n,1)) > 0.5
+%             ray{n} = exray(n,:);
+%         else
+%             ray{n} = exray(n,2);
+%         end
+%     end
+%     toc;
+%     figure(11); ray_field(ray,node,10,1/10);
+    
 %     ray = ray(:,2);
-    ray(:,2) = ray(:,2).*(abs(ray(:,2) - ray(:,1)) > 0.2 );
-    figure(1); ray_field(ray(:,2),node,10,1/10);
+%     ray(:,1) = ray(:,1).*(abs(ray(:,2) - ray(:,1)) > 0.25 ) ...
+%         - ray(:,1).*(abs(ray(:,2) - ray(:,1)) <= 0.25 );
+%     figure(11); ray_field(ray(:,1),node,10,1/10);
     
     % Gravity parameters: need to modify
     alpha = (omega/omega0)^2;
@@ -83,21 +106,30 @@ for ii = 1:nt
     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
         .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
     du(idx) = 0;  uex(idx) = 0;
-    errors(ii) = norm(du)/norm(uex);
+    errors(ii) = norm(du)/norm(uex)
     ref_l2_norm(ii) = norm(uex)*h;
     num_l2_norm(ii) = norm(du+uex)*h;
     toc;
 end
 
 
-%% plot
-figure(33);
-% hold off
-subplot(1,3,1);
-show_convergence_rate(omegas(1:nt),ref_l2_norm(1:nt),'omega','||u||_{L^2(\Omega)}');
-subplot(1,3,2);
-show_convergence_rate(omegas(1:nt),num_l2_norm(1:nt),'omega','||u_h||_{L^2(\Omega)}');
-subplot(1,3,3);
-show_convergence_rate(omegas(1:nt),errors(1:nt),'omega','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
+% %% plot
+% figure(33);
+% % hold off
+% subplot(1,3,1);
+% show_convergence_rate(omegas(1:nt),ref_l2_norm(1:nt),'omega','||u||_{L^2(\Omega)}');
+% subplot(1,3,2);
+% show_convergence_rate(omegas(1:nt),num_l2_norm(1:nt),'omega','||u_h||_{L^2(\Omega)}');
+% subplot(1,3,3);
+% show_convergence_rate(omegas(1:nt),errors(1:nt),'omega','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
 
+
+% print results
+fprintf( ['\n' '-'*ones(1,80) '\n']);
+fprintf( 'omegas/pi:                       ');
+fprintf( '&  %.2e  ',round(omegas/pi) );
+fprintf( '\n1/h:                                  ');
+fprintf( '&  %.2e  ',round(1./hs));
+fprintf( '\nRay-FEM rel l2 err:       ');
+fprintf( '&  %.2e  ',errors );
 
