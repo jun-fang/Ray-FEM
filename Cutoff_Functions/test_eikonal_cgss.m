@@ -4,6 +4,35 @@
 % compare the results with example 2 in S. Luo and J. Qian's paper:
 % http://users.math.msu.edu/users/qian/papers/LuoQianJCP2011.pdf
 
+
+%% gradient check
+% S02 = 1;
+% g0 = [1, 2];
+% node0 = [0.32, -0.0851];
+% h = 1e-6;
+% node = [0.5,0.5];
+% [ray, T, dT1dx, dT1dy, dT2dx, dT2dy] = eikonal_cgss(S02, g0, node0, node);
+% 
+% node1 = [0.5+h,0.5];
+% node2 = [0.5-h,0.5];
+% [~, T1] = eikonal_cgss(S02, g0, node0, node1);
+% [~, T2] = eikonal_cgss(S02, g0, node0, node2);
+% 
+% (T1(:,1) - T2(:,1))/(2*h) - dT1dx
+% (T1(:,2) - T2(:,2))/(2*h) - dT2dx
+% 
+% 
+% node3 = [0.5,0.5+h];
+% node4 = [0.5,0.5-h];
+% [~, T3] = eikonal_cgss(S02, g0, node0, node3);
+% [~,T4] = eikonal_cgss(S02, g0, node0, node4);
+% 
+% (T3(:,1) - T4(:,1))/(2*h) - dT1dy
+% (T3(:,2) - T4(:,2))/(2*h) - dT2dy
+% 
+
+
+%% jianliang's paper
 S02 = 4; g0 = [0, -3]; node0 = [0.25, 0];
 h = 1/400;
 [node, ~] = squaremesh([0, 0.5, -0.25, 0.5], h);
@@ -42,4 +71,47 @@ contour(X,Y,Z, 50); colorbar;
 figure(16);
 Z = reshape(dT2dy, size(X));
 contour(X,Y,Z, 50); colorbar;
+
+
+
+
+
+
+
+
+%% verify the eikonal equation
+% % S02 = 4; g0 = [0, 1/1]; 
+node0 = [0, 0];
+omega0 = 4; 0.8;
+E0 = omega0^2;                   % E0 should be large enough to make sure the medium is smooth enough
+speed = @(p) omega0./sqrt( E0 + p(:,2) );    % wave speed
+
+
+S02 = ( 1/speed(node0) )^2;
+g0 = [0, 1/(2*omega0*omega0)];
+% g0 = [0.1, 0.2];
+
+h = 1/80;
+
+[node, elem] = squaremesh([-0.5, 0.5, -0.5, 0.5], h);
+[ray, T, dT1dx, dT1dy, dT2dx, dT2dy] = eikonal_cgss(S02, g0, node0, node);
+
+figure(17); 
+ray_field(ray,node,10,1/10);
+
+x = node(:,1); y = node(:,2);
+x0 = node0(1,1); y0 = node0(1,2);
+S2 = S02 + 2* ( g0(1)*(x-x0) + g0(2)*(y-y0) );
+
+dT1 = dT1dx.^2 +  dT1dy.^2;   df1 = dT1 - S2;
+dT2 = dT2dx.^2 +  dT2dy.^2;   df2 = dT2 - S2;
+sum (dT1 - S2)
+sum (dT2 - S2)
+
+
+
+% 
+% 
+
+
 
