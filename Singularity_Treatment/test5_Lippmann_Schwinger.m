@@ -32,7 +32,7 @@ epsilon = 1/(2*pi);        % cut-off parameter
 
 
 NPW = 4;                   % number of points per wavelength
-test_num = 4;              % we test test_num examples
+test_num = 5;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640 800 960]*pi;
@@ -54,24 +54,22 @@ low_wl = 2*pi*speed_min./low_omega;
 
 % mesh size
 fh = 1./(10*round(NPW*high_omega/(2*pi*speed_min)/10));      % fine mesh size
-ch = 1./(10*round(sqrt(2./fh)/10));                    % coarse mesh size
+ch = 1./(10*round(sqrt(4./fh)/10));                    % coarse mesh size
 
 % width of PML
-high_wpml = 0.065*ones(size(high_omega));
-low_wpml = 0.18*ones(size(high_omega));
+high_wpml = 0.07*ones(size(high_omega));
+low_wpml = 0.19*ones(size(high_omega));
 
 
 %% Generate the domain sizes
 sd = 1/2;
-% Rest = 0.35;
-Rest = 0.4654; 0.5618;
-% Rest = sqrt((sd-xs)^2 + (sd-ys)^2);           % estimate of the distance to the source point
+Rest = 0.4;
+% Rest = 0.4654; 0.5618;     % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega(1),Rest);
 md = sd + high_r + high_wpml;
 md = ceil(md*10)/10;      % middle domain size
 
-% Rest = sqrt((md(1)-xs)^2 + (md(1)-ys)^2);           % estimate of the distance to the source point
 low_r = NMLA_radius(low_omega(1),Rest);
 ld = md + low_r + low_wpml;
 ld = ceil(ld*10)/10;      % large domain size
@@ -136,7 +134,6 @@ for ti = 1: test_num
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
         if r0 > (2*epsilon - 3*h_c)
-%             Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_low,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) =  ex_ray([x0,y0],xs,ys,0);
@@ -151,7 +148,6 @@ for ti = 1: test_num
     x = mnode(:,1); y = mnode(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     ray(rr <= 2*epsilon) = exray(rr <= 2*epsilon);
-%     ray((x < xs) & (y < ys)) = exray((x < xs) & (y < ys));
 %     figure(1); ray_field(ray,mnode,10,1/10);
     toc;
     
@@ -200,7 +196,6 @@ for ti = 1: test_num
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
         if r0 > (2*epsilon - 3*h_c)
-%             Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) =  ex_ray([x0,y0],xs,ys,0);
@@ -215,7 +210,6 @@ for ti = 1: test_num
     x = node(:,1); y = node(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     ray(rr <= 2*epsilon) = exray(rr <= 2*epsilon);
-%     ray((x < xs) & (y < ys)) = exray((x < xs) & (y < ys));
 %     figure(2); ray_field(ray,node,10,1/10);
     toc;
     
@@ -225,7 +219,6 @@ for ti = 1: test_num
     fprintf('Step5: Ray-FEM, high frequency \n');
     tic;
     
-%     ray = exray;
     % Assembling
     omega = high_omega(ti);
     wpml = high_wpml(ti);                % width of PML
@@ -234,7 +227,6 @@ for ti = 1: test_num
     option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-%     uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     [~,v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     toc;
     
@@ -265,12 +257,9 @@ for ti = 1: test_num
 
     rh = 1/5000;
     [rnode,~] = squaremesh([-a,a,-a,a],rh); rn = round(sqrt(size(rnode,1)));
-%     ur = interpolation(rnode,relem,node,u);
     uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
-%     clear rnode relem;
     
     % Reference solution 
-%     rnode = node;
     x = rnode(:,1); y = rnode(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     
@@ -280,10 +269,8 @@ for ti = 1: test_num
    
     % Errors
     du = uh - ur;
-    idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
-        .*(y<= max(y)-wpml).*(y>= min(y)+wpml) ) ); % index on PML
-%     idx = find( ~( (x<=0.4).*(x>= -0.2)...
-%         .*(y<= 0.4).*(y>= -0.2) ) ); % index on PML
+    idx = find( ~( (x <= max(x)-wpml).*(x >= min(x)+wpml)...
+        .*(y <= max(y)-wpml).*(y >= min(y)+wpml) ) ); % index on PML
     du(idx) = 0;  ur(idx) = 0;
     
     max_err(ti) = norm(du,inf);
