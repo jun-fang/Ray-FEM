@@ -1,8 +1,6 @@
 %% Convergence test for homogenenous case with numerical rays
-function [] = test5_hom_num_ray(NPW, test_num)
 
-
-% clear;
+clear;
 addpath(genpath('../../ifem/'));
 addpath('../Methods/');
 addpath('../NMLA/');
@@ -23,11 +21,12 @@ fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction at each grid node
 sec_opt = 0;               % NMLA second order correction or not
 
-% NPW = 4;                   % number of points per wavelength
-% test_num = 6;              % we test test_num examples
+NPW = 4;                   % number of points per wavelength
+test_num = 4;              % we test test_num examples
 
 % frequency
-high_omega = [120 160 200 240 320 480 640 800 960]*pi;
+high_omega = [120 160 240 320 480 640 800 960]*pi;
+% high_omega = high_omega(5:end);
 low_omega = 2*sqrt(high_omega); 
 
 % error
@@ -49,11 +48,6 @@ low_wl = 2*pi./low_omega;
 fh = 1./(NPW*round(high_omega/(2*pi)));      % fine mesh size
 ch = 1./(10*round(sqrt(2./fh)/10));
 
-% ch = 2*fh;
-% ch = 1./(10*round(low_omega/(2*pi)));        % coarse mesh size
-% ch = 1./(NPW*round(1./sqrt(fh)/10)*10);
-% ch = fh.*ceil(ch./fh);
-
 % width of PML
 high_wpml = 0.065*ones(size(high_omega));
 low_wpml = 0.18*ones(size(high_omega));
@@ -63,8 +57,7 @@ low_wpml = 0.18*ones(size(high_omega));
 
 %% Generate the domain sizes
 sd = 1/2;
-Rest = 0.4654; 2*epsilon;           % estimate of the distance to the source point
-Rest = 0.5618;
+Rest = 0.5618;            % estimate of the distance to the source point
 
 high_r = NMLA_radius(high_omega(1),Rest);
 md = sd + high_r + high_wpml;
@@ -137,7 +130,6 @@ for ti = 1: test_num
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
         if r0 > (2*epsilon - 3*h_c)
-%             Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_low,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) = ex_ray([x0,y0],xs,ys,0);
@@ -207,7 +199,6 @@ for ti = 1: test_num
         r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
         c0 = speed(cnode(i,:));
         if r0 > (2*epsilon - 3*h_c)
-%             Rest = r0;
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
             cnumray_angle(i) = ex_ray([x0,y0],xs,ys,0);
@@ -241,10 +232,17 @@ for ti = 1: test_num
     option = 'homogeneous';
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
-    u = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
+    [~,v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     toc;
     
+    
+    rh = 1/5000;
+    [rnode,~] = squaremesh([-a,a,-a,a],rh); rn = round(sqrt(size(rnode,1)));
+    uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
+    
+    
     % Excat solution 
+    node = rnode;
     x = node(:,1); y = node(:,2);
     rr = sqrt((x-xs).^2 + (y-ys).^2);
     
@@ -254,14 +252,14 @@ for ti = 1: test_num
     uex(rr <= epsilon) = 0;
    
     % Errors
-    du = u - uex;
+    du = uh - uex;
     idx = find( ~( (x <= max(x)-wpml).*(x >= min(x)+wpml)...
         .*(y <= max(y)-wpml).*(y >= min(y)+wpml) ) ); % index on PML
     du(idx) = 0;  uex(idx) = 0;
     
     max_err(ti) = norm(du,inf);
     rel_max_err(ti) = norm(du,inf)/norm(uex,inf);
-    l2_err(ti) = norm(du)*h;
+    l2_err(ti) = norm(du)*rh;
     rel_l2_err(ti) = norm(du)/norm(uex)
        
 end
