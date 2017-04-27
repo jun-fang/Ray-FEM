@@ -1,10 +1,28 @@
+%% Test
 
 NPW = 4;                   % number of points per wavelength
+test_num = 8;              % we test test_num examples
+test5_Lippmann_Schwinger(NPW, test_num);
+
+
+NPW = 6;                   % number of points per wavelength
 test_num = 6;              % we test test_num examples
+test5_Lippmann_Schwinger(NPW, test_num);
 
 
-% test5_hom_num_ray(NPW, test_num);
-% t est5_inhom_num_ray(NPW, test_num);
+NPW = 4;                   % number of points per wavelength
+test_num = 5;              % we test test_num examples
+test5_Lippmann_Schwinger(NPW, test_num);
 
 
-test5_Lippmann_Schwinger;
+
+
+%% Plot
+load('resutls_5_LipSch_NPW_4.mat');
+show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');
+
+load('resutls_5_LipSch_NPW_6.mat');
+show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');
+
+load('resutls_5_LipSch_NPW_8.mat');
+show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');

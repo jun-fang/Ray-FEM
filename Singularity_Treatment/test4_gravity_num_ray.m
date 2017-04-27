@@ -12,7 +12,7 @@ addpath('../Plots_Prints/');
 
 %% Load source/wavespeed data
 xs = 0; ys = 0;                     % point source location
-omega0 = 800*pi;
+omega0 = 10*pi;
 E0 = omega0^2;                   % E0 should be large enough to make sure the medium is smooth enough
 speed = @(p) omega0./sqrt( E0 + p(:,2) );    % wave speed
 
@@ -30,8 +30,8 @@ sec_opt = 0;               % NMLA second order correction or not
 epsilon = 50/(80*pi);               % cut-off parameter
 
 
-NPW = 6;                   % number of points per wavelength
-test_num = 4;              % we test test_num examples
+NPW = 4;                   % number of points per wavelength
+test_num = 3;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640]*pi;
@@ -133,8 +133,8 @@ for ti = 1: test_num
         if r0>2*epsilon
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_std,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
-            [dx, dy] = eikonal_cgss(S02, g0, node0, [x0,y0]);
-            cnumray_angle(i) = atan2(dy,dx);
+            ray0 = eikonal_cgss(S02, g0, node0, [x0,y0]);
+            cnumray_angle(i) = atan2(imag(ray0(2)),real(ray0(2)));
         end
     end
     cnumray = exp(1i*cnumray_angle);
@@ -143,10 +143,11 @@ for ti = 1: test_num
     toc;
     
     % compute the ray errors
-     [dx, dy] = eikonal_cgss(S02, g0, node0, mnode);
-    dr2 = dx.^2 + dy.^2;
-    ray_angle = atan2(dy,dx);
-    exray = exp(1i*ray_angle).*(dr2>10*eps);
+    rays = eikonal_cgss(S02, g0, node0, mnode);
+    exray = rays(:,2);
+%     dr2 = dx.^2 + dy.^2;
+%     ray_angle = atan2(dy,dx);
+%     exray = exp(1i*ray_angle).*(dr2>10*eps);
     
     mr = sqrt((mnode(:,1)-xs).^2 + (mnode(:,2)-ys).^2);
     numray1 = numray1.*(mr>epsilon) + exray.*(mr<=epsilon);
@@ -199,8 +200,8 @@ for ti = 1: test_num
         if r0>2*epsilon
             [cnumray_angle(i)] = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/5,Nray,'num',sec_opt,plt);
         else
-            [dx, dy] = eikonal_cgss(S02, g0, node0, [x0,y0]);
-            cnumray_angle(i) = atan2(dy,dx);
+            ray0 = eikonal_cgss(S02, g0, node0, [x0,y0]);
+            cnumray_angle(i) = atan2(imag(ray0(2)),real(ray0(2)));
         end
     end
     cnumray = exp(1i*cnumray_angle);
@@ -210,10 +211,12 @@ for ti = 1: test_num
     toc;
     
     % compute the ray errors
-    [dx, dy] = eikonal_cgss(S02, g0, node0, node);
-    dr2 = dx.^2 + dy.^2;
-    ray_angle = atan2(dy,dx);
-    exray = exp(1i*ray_angle).*(dr2>10*eps);
+    rays = eikonal_cgss(S02, g0, node0, node);
+    exray = rays(:,2);
+%     [dx, dy] = eikonal_cgss(S02, g0, node0, node);
+%     dr2 = dx.^2 + dy.^2;
+%     ray_angle = atan2(dy,dx);
+%     exray = exp(1i*ray_angle).*(dr2>10*eps);
     sr = sqrt((node(:,1)-xs).^2 + (node(:,2)-ys).^2);
     numray2 = numray2.*(sr>epsilon) + exray.*(sr<=epsilon);
     rayerr2 = numray2 - exray;
@@ -264,7 +267,7 @@ for ti = 1: test_num
     max_err(ti) = norm(du,inf);
     rel_max_err(ti) = norm(du,inf)/norm(uex,inf);
     l2_err(ti) = norm(du)*h;
-    rel_l2_err(ti) = norm(du)/norm(uex);
+    rel_l2_err(ti) = norm(du)/norm(uex)
        
 end
 

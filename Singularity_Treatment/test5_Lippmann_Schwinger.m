@@ -1,6 +1,7 @@
 %% Test for Lippmann-Schwinger equation
+function [] = test5_Lippmann_Schwinger(NPW, test_num)
 
-clear;
+% clear;
 
 addpath(genpath('../../ifem/'));
 addpath('../Methods/');
@@ -31,8 +32,8 @@ sec_opt = 0;               % NMLA second order correction or not
 epsilon = 1/(2*pi);        % cut-off parameter
 
 
-NPW = 4;                   % number of points per wavelength
-test_num = 5;              % we test test_num examples
+% NPW = 4;                   % number of points per wavelength
+% test_num = 5;              % we test test_num examples
 
 % frequency
 high_omega = [120 160 240 320 480 640 800 960]*pi;
@@ -299,32 +300,16 @@ save(nameFile, 'ref_l2', 'l2_err' , 'rel_l2_err', 'high_omega', 'test_num');
 %% plots
 
 
-% figure(8);
-% subplot(1,2,1);
-% showsolution(node,elem,real(du(:))); colorbar;
-% title('LipSch Ray-FEM error')
-% subplot(1,2,2);
-% showsolution(node,elem,real(du(:)),2); colorbar;
-% title('LipSch Ray-FEM error')
-
-% subplot(2,2,3);
-% showsolution(node,elem,real(uh(:))); colorbar;
-% title('Ray-FEM solution error')
-% subplot(2,2,4);
-% showsolution(node,elem,real(uh(:)),2); colorbar;
-% title('Ray-FEM solution error')
-
-
-figure(3);
-% reference L2 norm
-subplot(1,3,1);
-show_convergence_rate(high_omega(1:test_num),ref_l2(1:test_num),'omega','Ref L2');
-% Ray-FEM solution L2 error
-subplot(1,3,2);
-show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
-% Ray-FEM solution relative L2 error
-subplot(1,3,3);
-show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');
+% figure(3);
+% % reference L2 norm
+% subplot(1,3,1);
+% show_convergence_rate(high_omega(1:test_num),ref_l2(1:test_num),'omega','Ref L2');
+% % Ray-FEM solution L2 error
+% subplot(1,3,2);
+% show_convergence_rate(high_omega(1:test_num),l2_err(1:test_num),'omega','L2 err');
+% % Ray-FEM solution relative L2 error
+% subplot(1,3,3);
+% show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');
 
 
 
@@ -355,20 +340,7 @@ fprintf( '&  %1.2d  ',l2_err);
 fprintf( '\n\nRelative L2 error:       ');
 fprintf( '&  %1.2d  ',rel_l2_err);
 
-
-
 fprintf( ['\n' '-'*ones(1,80) '\n']);
-
-
-% --------------------------------------------------------------------------------
-% Max error:               &  5.35e-03  &  2.81e-03  &  3.09e-03  &  2.31e-03  &  1.83e-03  &  00  
-% 
-% Relative max error:      &  2.86e-01  &  1.61e-01  &  2.24e-01  &  1.99e-01  &  1.98e-01  &  00  
-% 
-% L2 error:                &  1.96e-03  &  1.09e-03  &  4.69e-04  &  2.53e-04  &  1.13e-04  &  00  
-% 
-% Relative L2 error:       &  1.31e-02  &  1.12e-02  &  8.83e-03  &  7.33e-03  &  6.02e-03  &  00  
-% --------------------------------------------------------------------------------
 
 
 %     % Plots
@@ -387,10 +359,10 @@ fprintf( ['\n' '-'*ones(1,80) '\n']);
 %     title('Ray-FEM solution error')
 %     subplot(2,2,3);
 %     showsolution(snode,selem,real(su2(:))); colorbar;
-%     title('Ray-FEM solution error')
+%     title('Refernce solution')
 %     subplot(2,2,4);
 %     showsolution(snode,selem,real(su2(:)),2); colorbar;
-%     title('Ray-FEM solution error')
+%     title('Reference solution')
     
 %     figure(9);
 %     subplot(1,2,1);
@@ -399,28 +371,3 @@ fprintf( ['\n' '-'*ones(1,80) '\n']);
 %     subplot(1,2,2);
 %     showsolution(snode,selem,speed(snode).*(sr>=2*epsilon),2); colorbar;
 %     title('Wave speed')
-
-
-
-
-% --------------------------------------------------------------------------------
-% omega:                   &  3.77e+02  &  5.03e+02  &  7.54e+02  &  1.01e+03  &  1.51e+03  &  2.01e+03  &  2.51e+03  &  3.02e+03  
-% omega/2pi:               &  6.00e+01  &  8.00e+01  &  1.20e+02  &  1.60e+02  &  2.40e+02  &  3.20e+02  &  4.00e+02  &  4.80e+02  
-% 
-% Grid size h:             &  3.85e-03  &  2.86e-03  &  1.89e-03  &  1.43e-03  &  9.52e-04  &  7.14e-04  &  5.71e-04  &  4.76e-04  
-% 1/h:                     &  2.60e+02  &  3.50e+02  &  5.30e+02  &  7.00e+02  &  1.05e+03  &  1.40e+03  &  1.75e+03  &  2.10e+03  
-% --------------------------------------------------------------------------------
-% 
-% 
-% Max error:               &  1.75e-04  &  7.86e-05  &  6.66e-05  &  5.36e-05  &  3.35e-05  &  2.71e-05  &  00  &  00  
-% 
-% Relative max error:      &  9.37e-03  &  4.86e-03  &  5.04e-03  &  4.68e-03  &  3.53e-03  &  3.16e-03  &  00  &  00  
-% --------------------------------------------------------------------------------
-% 
-% 
-% Reference L2 norm:       &  1.13e-02  &  9.78e-03  &  7.98e-03  &  6.91e-03  &  5.64e-03  &  4.89e-03  &  00  &  00  
-% 
-% L2 error:                &  2.47e-05  &  1.40e-05  &  6.41e-06  &  5.17e-06  &  3.15e-06  &  2.36e-06  &  00  &  00  
-% 
-% Relative L2 error:       &  2.19e-03  &  1.43e-03  &  8.03e-04  &  7.48e-04  &  5.58e-04  &  4.83e-04  &  00  &  00  
-% --------------------------------------------------------------------------------

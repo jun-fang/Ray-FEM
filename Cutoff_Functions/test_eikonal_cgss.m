@@ -82,7 +82,7 @@ contour(X,Y,Z, 50); colorbar;
 %% verify the eikonal equation
 % % S02 = 4; g0 = [0, 1/1]; 
 node0 = [0, 0];
-omega0 = 4; 0.8;
+omega0 = 40*pi; 0.8;
 E0 = omega0^2;                   % E0 should be large enough to make sure the medium is smooth enough
 speed = @(p) omega0./sqrt( E0 + p(:,2) );    % wave speed
 
