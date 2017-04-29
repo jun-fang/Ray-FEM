@@ -2,7 +2,8 @@ function [ux,uy] = num_derivative(u,h,order)
 %% numerical central difference schemes to compute the partial derivatives of u
 % u is a N x 1 vector
 
-N = length(u);
+nr = size(u,1);  nc = size(u,2);
+N = length(u(:));
 n = round(sqrt(N));
 u = reshape(u,n,n);
 
@@ -32,4 +33,5 @@ if order == 4   % n >= 8, convergbence order O(h^4)
     uy(1,:) = 4*uy(3,:) - uy(2,:) - uy(4,:) - uy(5,:);
 end
 
-ux = ux(:);  uy = uy(:);
+ux = reshape(ux, nr, nc);  
+uy = reshape(uy, nr, nc);

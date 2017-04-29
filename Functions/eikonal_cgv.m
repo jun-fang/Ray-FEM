@@ -26,7 +26,10 @@ dzdy = Cz*( dSdy.*r2 + 2*S.*r.*drdy);
 
 T = 1/Gr*arccosh(z,0);
 dTdx = 1/Gr*arccosh(z,1).*dzdx;
+dTdx( r < 10*eps) = 0;
 dTdy = 1/Gr*arccosh(z,1).*dzdy;
+dTdy( r < 10*eps) = 0;
+
 ray = atan2(dTdy, dTdx);  
 ray = exp(1i*ray);
 ray( r < 10*eps) = 0;
