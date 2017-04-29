@@ -36,7 +36,7 @@ epsilon = 1/(2*pi);        % cut-off parameter
 % test_num = 5;              % we test test_num examples
 
 % frequency
-high_omega = [120 160 240 320 480 640 800 960]*pi;
+high_omega = [120 160 240 320 480 640 960]*pi;
 % high_omega = high_omega(3:end);
 low_omega = 2*sqrt(high_omega);
 
@@ -252,6 +252,8 @@ for ti = 1: test_num
             load('/Solutions_Lippmann_Schwinger/point_source_k_480_jun_new_version.mat')
         case 640
             load('/Solutions_Lippmann_Schwinger/point_source_k_640_jun_new_version.mat')
+        case 800
+            load('/Solutions_Lippmann_Schwinger/point_source_k_800_jun_new_version.mat')
         case 960
             load('/Solutions_Lippmann_Schwinger/point_source_k_960_jun_new_version.mat')
     end

@@ -77,6 +77,40 @@ reparea = repmat(area,Nray,1);
 bt = zeros(NT*Nray,3);       % the right hand side
 b = zeros(Ndof,1);
 
+%% Babich pre-processing
+if  ~iscell(option) && strcmp(option, 'Babich_CGV')
+    load('Babich_CGV.mat');
+    
+    a = 1/2;
+    Bh = 1/round( 1/(Bh0/15) );
+    Bx = -a: Bh : a;  By = -a: Bh : a;
+    [BX0, BY0] = meshgrid(Bx0, By0);
+    [BX, BY] = meshgrid(Bx, By);
+    
+    
+    %% refined phase and amplitude
+    ttao = interp2(BX0,BY0,tao,BX,BY,'spline'); % refined phase
+    DD1 = interp2(BX0,BY0,D1,BX,BY,'spline'); % refined amplitude
+    DD2 = interp2(BX0,BY0,D2,BX,BY,'spline'); % refined amplitude
+    
+    
+    %% gradient of phase and amplitudes
+    taox = tao2x ./ (2*tao);   taox(71, 71) = 0;
+    taoy = tao2y ./ (2*tao);   taoy(71, 71) = 0;
+    ttaox = interp2(BX0,BY0,taox,BX,BY,'spline'); % refined phase
+    ttaoy = interp2(BX0,BY0,taoy,BX,BY,'spline'); % refined phase
+    
+    [D1x,D1y] = num_derivative(D1,Bh0,4);
+    [D2x,D2y] = num_derivative(D2,Bh0,4);
+    DD1x = interp2(BX0,BY0,D1x,BX,BY,'spline'); % refined amplitude
+    DD1y = interp2(BX0,BY0,D1y,BX,BY,'spline'); % refined amplitude
+    DD2x = interp2(BX0,BY0,D2x,BX,BY,'spline'); % refined amplitude
+    DD2y = interp2(BX0,BY0,D2y,BX,BY,'spline'); % refined amplitude
+    
+end
+
+
+%% Assembling
 for p = 1:nQuad
     % quadrature points in the x-y coordinate
     pxy = lambda(p,1)*node(elem(:,1),:) ...
@@ -106,6 +140,42 @@ for p = 1:nQuad
         [~, ub_g1, ub_g2] = lhelmfs(trg,src,alpha,E,1);
         ub = ub(:);  ub_g1 = ub_g1(:);  ub_g2 = ub_g2(:);
     end
+    
+    % Babich case
+    if  ~iscell(option) && strcmp(option, 'Babich_CGV')
+        
+        Bu = [ttao; ttaox; ttaoy; DD1; DD1x; DD1y; DD2; DD2x; DD2y];
+        Buint = interpolation2(Bx, By, Bu, pxy);
+        pha = Buint(:,1);  phax = Buint(:,2);  phay = Buint(:,3);
+        amp1 = Buint(:,4);  amp1x = Buint(:,5);  amp1y = Buint(:,6);
+        amp2 = Buint(:,7);  amp2x = Buint(:,8);  amp2y = Buint(:,9);
+        
+        c1 = 1i*(sqrt(pi)/2);
+        f1 = c1*besselh(0,1,omega*pha);
+        f1x = - c1*besselh(1,1,omega*pha)*omega.*phax;
+        f1y = - c1*besselh(1,1,omega*pha)*omega.*phay;
+        
+        G1 = f1.*amp1;
+        G1x = f1x.*amp1 + f1.*amp1x;
+        G1y = f1y.*amp1 + f1.*amp1y;
+        
+        c2 = 1i*(sqrt(pi)/2)*exp(1i*pi);
+        f2 = c2*(2*pha/omega).*besselh(1,1,omega*pha);
+        temp = c2* ( 4/omega*besselh(1,1,omega*pha) - 2*pha*besselh(2,1,omega*pha) );
+        f2x = temp.*phax;
+        f2y = temp.*phay;
+        
+        G2 = f2.*amp2;
+        G2x = f2x.*amp2 + f2.*amp2x;
+        G2y = f2y.*amp2 + f2.*amp2y;
+        
+        ub = G1 + G2;
+        ub_g1 = G1x + G2x;
+        ub_g2 = G1y + G2y;
+        
+    end
+    
+    
     
     fpxy = singularity_RHS(epsilon,xs,ys,pxy,ub,ub_g1,ub_g2);
     fp = repmat(fpxy,Nray,1).*sxy;

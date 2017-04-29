@@ -3,7 +3,7 @@
 clear;
 addpath(genpath('../../ifem/'));
 addpath('../Methods/');
-addpath('../Cutoff_Functions/')
+addpath('../Functions/')
 addpath('../Plots_Prints/');
 
 
@@ -22,7 +22,7 @@ test_num = 3;                       % number of tests
 rel_l2_err = zeros(1,test_num); 
 
 % frequency and mesh size
-omega = 120*pi;
+omega = 100*pi;
 wl = 2*pi/omega;
 h = 2/round(1/(wl/NPW));
 hs = h./[2 4 8];
