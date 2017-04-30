@@ -21,20 +21,19 @@ fquadorder = 3;                     % numerical quadrature order
 a = 1/2;                            % computational domain [-a,a]^2
 
 NPW = 4;                            % grid number per wavelength
-test_num = 7;                       % number of tests
+test_num = 4;                       % number of tests
 rel_l2_err = zeros(1,test_num); 
 
 % frequency and mesh size
 omega = 100*pi;
 wl = 2*pi/omega;
 % h = 2/round(1/(wl/NPW));
-hs = 1./[200 280 350 400 560 700 1000];
-rn = [10 7 5 4];
+hs = 1./[400 600 800 1200];
 rh = 1/2800;
 [rnode, ~] = squaremesh([-a, a, -a, a], rh);
 x = rnode(:,1);  y = rnode(:,2);
 rr = sqrt((rnode(:,1)-xs).^2 + (rnode(:,2)-ys).^2);
-load('/Users/junfang/Dropbox/test6_reference_solution.mat');
+load('C:\Users\Jun Fang\Dropbox\test6_reference_solution.mat');
 
 
 %% Babich expansion
@@ -95,18 +94,21 @@ for ni = 1:test_num
 
     
     %% Compute relative L2 error 
-    du = u - u_ref;
+    ur = u_ref;
+    du = u - ur;
     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
         .*(y<= max(y)-wpml).*(y>= min(y)+wpml).*(rr>0.1) ) ); % index on PML
-    du(idx) = 0;  u_ref(idx) = 0;
-    rel_l2_err(ni) = norm(du)/norm(u_ref);
+    du(idx) = 0;  ur(idx) = 0;
+    rel_l2_err(ni) = norm(du)/norm(ur)
     toc;
 end
 
+save('test6_CGV_ex_phase.mat', 'omega', 'hs', 'rel_l2_err');
 
 %% plot
-figure(12);
-show_convergence_rate(hs(1:test_num), rel_l2_err,'h','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
+figure(61);
+show_convergence_rate(hs(1:test_num),rel_l2_err(1:test_num),'h','Rel L2 err');
+% show_convergence_rate(hs(1:test_num), rel_l2_err,'h','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
 
 
 

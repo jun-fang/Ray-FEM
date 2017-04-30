@@ -6,7 +6,7 @@ clear;
 addpath(genpath('../../ifem/'));
 addpath('../Methods/');
 addpath('../NMLA/');
-addpath('../Cutoff_Functions/')
+addpath('../Functions/')
 addpath('../Plots_Prints/');
 % addpath('/home/jun/Documents/MATLAB/Solutions_Lippmann_Schwinger');
 
@@ -30,7 +30,7 @@ Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 epsilon = 1/(2*pi);        % cut-off parameter
 
-high_omega = 120*pi;
+high_omega = 100*pi;
 low_omega = 2*sqrt(high_omega);
 
 
@@ -42,11 +42,11 @@ high_wl = 2*pi*speed_min./high_omega;
 low_wl = 2*pi*speed_min./low_omega;
 
 % mesh size
-fh = 1/(10*round(16*high_omega/(2*pi*speed_min)/10));  % fine mesh size
-ch = 1/80;                                             % coarse mesh size
+fh = 1/800;                 % fine mesh size
+ch = 1/80;                  % coarse mesh size
 
 sd = 1/2; md = 0.6; ld = 0.9;
-Rest = 0.5618; ti = 1;
+Rest = 0.4654; ti = 1;
 
 h = fh; h_c = ch;
 tstart = tic;
