@@ -78,34 +78,54 @@ bt = zeros(NT*Nray,3);       % the right hand side
 b = zeros(Ndof,1);
 
 %% Babich pre-processing
-if  ~iscell(option) && strcmp(option, 'Babich_CGV')
+if  iscell(option) && strcmp(option{1}, 'Babich_CGV')
     load('Babich_CGV.mat');
     
     a = 1/2;
-    Bh = 1/round( 1/(Bh0/15) );
+    Bh = 1/round( 1/(Bh0/10) );
     Bx = -a: Bh : a;  By = -a: Bh : a;
     [BX0, BY0] = meshgrid(Bx0, By0);
     [BX, BY] = meshgrid(Bx, By);
     
+    %% refined amplitude
+    DD1 = interp2(BX0,BY0,D1,BX,BY,'spline');
+    DD2 = interp2(BX0,BY0,D2,BX,BY,'spline');
     
-    %% refined phase and amplitude
-    ttao = interp2(BX0,BY0,tao,BX,BY,'spline'); % refined phase
-    DD1 = interp2(BX0,BY0,D1,BX,BY,'spline'); % refined amplitude
-    DD2 = interp2(BX0,BY0,D2,BX,BY,'spline'); % refined amplitude
-    
-    
-    %% gradient of phase and amplitudes
-    taox = tao2x ./ (2*tao);   taox(71, 71) = 0;
-    taoy = tao2y ./ (2*tao);   taoy(71, 71) = 0;
-    ttaox = interp2(BX0,BY0,taox,BX,BY,'spline'); % refined phase
-    ttaoy = interp2(BX0,BY0,taoy,BX,BY,'spline'); % refined phase
-    
+    % gradient
     [D1x,D1y] = num_derivative(D1,Bh0,4);
     [D2x,D2y] = num_derivative(D2,Bh0,4);
-    DD1x = interp2(BX0,BY0,D1x,BX,BY,'spline'); % refined amplitude
-    DD1y = interp2(BX0,BY0,D1y,BX,BY,'spline'); % refined amplitude
-    DD2x = interp2(BX0,BY0,D2x,BX,BY,'spline'); % refined amplitude
-    DD2y = interp2(BX0,BY0,D2y,BX,BY,'spline'); % refined amplitude
+    DD1x = interp2(BX0,BY0,D1x,BX,BY,'spline');
+    DD1y = interp2(BX0,BY0,D1y,BX,BY,'spline');
+    DD2x = interp2(BX0,BY0,D2x,BX,BY,'spline');
+    DD2y = interp2(BX0,BY0,D2y,BX,BY,'spline');
+    
+    %% refined phase
+    if strcmp(option{2}, 'numerical_phase')
+        ttao = interp2(BX0,BY0,tao,BX,BY,'spline');
+        taox = tao2x ./ (2*tao);   taox(71, 71) = 0;
+        taoy = tao2y ./ (2*tao);   taoy(71, 71) = 0;
+        ttaox = interp2(BX0,BY0,taox,BX,BY,'spline'); % refined phase
+        ttaoy = interp2(BX0,BY0,taoy,BX,BY,'spline'); % refined phase
+    end
+    
+    %     %% refined phase and amplitude
+    %     ttao = interp2(BX0,BY0,tao,BX,BY,'spline'); % refined phase
+    %     DD1 = interp2(BX0,BY0,D1,BX,BY,'spline'); % refined amplitude
+    %     DD2 = interp2(BX0,BY0,D2,BX,BY,'spline'); % refined amplitude
+    %
+    %
+    %     %% gradient of phase and amplitudes
+    %     taox = tao2x ./ (2*tao);   taox(71, 71) = 0;
+    %     taoy = tao2y ./ (2*tao);   taoy(71, 71) = 0;
+    %     ttaox = interp2(BX0,BY0,taox,BX,BY,'spline'); % refined phase
+    %     ttaoy = interp2(BX0,BY0,taoy,BX,BY,'spline'); % refined phase
+    %
+    %     [D1x,D1y] = num_derivative(D1,Bh0,4);
+    %     [D2x,D2y] = num_derivative(D2,Bh0,4);
+    %     DD1x = interp2(BX0,BY0,D1x,BX,BY,'spline'); % refined amplitude
+    %     DD1y = interp2(BX0,BY0,D1y,BX,BY,'spline'); % refined amplitude
+    %     DD2x = interp2(BX0,BY0,D2x,BX,BY,'spline'); % refined amplitude
+    %     DD2y = interp2(BX0,BY0,D2y,BX,BY,'spline'); % refined amplitude
     
 end
 
@@ -142,13 +162,28 @@ for p = 1:nQuad
     end
     
     % Babich case
-    if  ~iscell(option) && strcmp(option, 'Babich_CGV')
+    if  iscell(option) && strcmp(option{1}, 'Babich_CGV')
         
-        Bu = [ttao; ttaox; ttaoy; DD1; DD1x; DD1y; DD2; DD2x; DD2y];
+        Bu = [DD1(:), DD1x(:), DD1y(:), DD2(:), DD2x(:), DD2y(:)];
         Buint = interpolation2(Bx, By, Bu, pxy);
-        pha = Buint(:,1);  phax = Buint(:,2);  phay = Buint(:,3);
-        amp1 = Buint(:,4);  amp1x = Buint(:,5);  amp1y = Buint(:,6);
-        amp2 = Buint(:,7);  amp2x = Buint(:,8);  amp2y = Buint(:,9);
+        amp1 = Buint(:,1);  amp1x = Buint(:,2);  amp1y = Buint(:,3);
+        amp2 = Buint(:,4);  amp2x = Buint(:,5);  amp2y = Buint(:,6);
+        
+        if strcmp(option{2}, 'numerical_phase')
+            Bu = [ttao(:), ttaox(:), ttaoy(:)];
+            Buint = interpolation2(Bx, By, Bu, pxy);
+            pha = Buint(:,1);  phax = Buint(:,2);  phay = Buint(:,3);
+        end
+        
+        if strcmp(option{2}, 'exact_phase')
+            [~, pha, phax, phay] = eikonal_cgv(1, [0.1, -0.2], [0,0], pxy);
+        end
+
+        %         Bu = [ttao; ttaox; ttaoy; DD1; DD1x; DD1y; DD2; DD2x; DD2y];
+        %         Buint = interpolation2(Bx, By, Bu, pxy);
+        %         pha = Buint(:,1);  phax = Buint(:,2);  phay = Buint(:,3);
+        %         amp1 = Buint(:,4);  amp1x = Buint(:,5);  amp1y = Buint(:,6);
+        %         amp2 = Buint(:,7);  amp2x = Buint(:,8);  amp2y = Buint(:,9);
         
         c1 = 1i*(sqrt(pi)/2);
         f1 = c1*besselh(0,1,omega*pha);
@@ -161,7 +196,7 @@ for p = 1:nQuad
         
         c2 = 1i*(sqrt(pi)/2)*exp(1i*pi);
         f2 = c2*(2*pha/omega).*besselh(1,1,omega*pha);
-        temp = c2* ( 4/omega*besselh(1,1,omega*pha) - 2*pha*besselh(2,1,omega*pha) );
+        temp = c2* ( 4/omega*besselh(1,1,omega*pha) - 2*pha.*besselh(2,1,omega*pha) );
         f2x = temp.*phax;
         f2y = temp.*phay;
         

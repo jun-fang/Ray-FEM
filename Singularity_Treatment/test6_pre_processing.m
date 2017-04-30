@@ -1,86 +1,84 @@
+%% tes6 reference solution with analytical phase
 
 clear;
 
+addpath(genpath('../../ifem/'));
+addpath('../Methods/');
+addpath('../Functions/')
+addpath('../Plots_Prints/');
+
+
+%% Set up
+xs = 0; ys = 0;                     % source location
+epsilon = 1/(2*pi);                 % cut-off parameter
+
+v0 = 1; G0 = [0.1, -0.2];
+speed = @(p) 1./( v0 + (G0(1)*p(:,1) + G0(2)*p(:,2)) );    % wave speed
+
+
+omega = 100*pi;
+wpml = 0.1;                         % width of PML
+sigmaMax = 25/wpml;                 % absorption of PML
+fquadorder = 3;                     % numerical quadrature order
+a = 1/2;                            % computational domain [-a,a]^2
+
+
+
+%% Babich expansion
+
 load('Babich_CGV.mat');
 
-a = 1/2;
-Bh = 1/round( 1/(Bh0/15) );
+CompressRatio = 20;
+Bh = 1/round( 1/(Bh0/CompressRatio) );
 Bx = -a: Bh : a;  By = -a: Bh : a;
 [BX0, BY0] = meshgrid(Bx0, By0);
 [BX, BY] = meshgrid(Bx, By);
 
 
 %% refined phase and amplitude
-ttao = interp2(BX0,BY0,tao,BX,BY,'spline'); % refined phase
+% ttao = interp2(BX0,BY0,tao,BX,BY,'spline'); % refined phase
 DD1 = interp2(BX0,BY0,D1,BX,BY,'spline'); % refined amplitude
 DD2 = interp2(BX0,BY0,D2,BX,BY,'spline'); % refined amplitude
 
 
-%% gradient of phase and amplitudes
-taox = tao2x ./ (2*tao);   taox(71, 71) = 0;
-taoy = tao2y ./ (2*tao);   taoy(71, 71) = 0;
-ttaox = interp2(BX0,BY0,taox,BX,BY,'spline'); % refined phase
-ttaoy = interp2(BX0,BY0,taoy,BX,BY,'spline'); % refined phase
+%% analytical ray and phase
+[ray, T, ~, ~] = eikonal_cgv(1, [0.1, -0.2], [0,0], [BX(:), BY(:)]);
+T = reshape(T, size(BX));
+
+%% Babich expansion
+G1 = 1i*(sqrt(pi)/2)*besselh(0,1,omega*T);
+G1 = G1.*DD1;
+
+G2 = 1i*(sqrt(pi)/2)*exp(1i*pi)*(2*T/omega);
+G2 = G2.*besselh(1,1,omega*T);
+G2 = G2.*DD2;
+
+ub = G1 + G2;
+ub = ub(:);
 
 
-[D1x,D1y] = num_derivative(D1,Bh0,4);
-[D2x,D2y] = num_derivative(D2,Bh0,4);
-DD1x = interp2(BX0,BY0,D1x,BX,BY,'spline'); % refined amplitude
-DD1y = interp2(BX0,BY0,D1y,BX,BY,'spline'); % refined amplitude
-DD2x = interp2(BX0,BY0,D2x,BX,BY,'spline'); % refined amplitude
-DD2y = interp2(BX0,BY0,D2y,BX,BY,'spline'); % refined amplitude
+clear BX BY BX0 BY0 Bx By Bx0 By0 D1 D2 DD1 DD2 G1 G2;
 
+%% reference solution
+[node, elem] = squaremesh([-a, a, -a, a], Bh);
 
-%% interpolations
-% X = BX(:);  Y = BY(:); 
-% Btao = scatteredInterpolant(BX(:), Y(:), ttao(:));
-% Btao(0.1, -0.1)
+% Assembling
+%tic;
+option ={ 'Babich_CGV', 'exact_phase'};
+tic;
+A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
+toc;
+tic;
+b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
+toc;
+tic;
+uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
+toc;
 
-% xy = [0.1, -0.021111];
-% uint = interpolation2(Bx, By, ttao, xy)
+clear A b elem;
 
-[cray, cT, cTx, cTy] = eikonal_cgv(1, [0.1, -0.2], [0,0], [BX0(:), BY0(:)]);
-norm(cT - tao(:), inf)
-norm(cTx - taox(:), inf)
-norm(cTy - taoy(:), inf)
-
-
-[ray, T, Tx, Ty] = eikonal_cgv(1, [0.1, -0.2], [0,0], [BX(:), BY(:)]);
-norm(T - ttao(:), inf)
-norm(Tx - ttaox(:), inf)
-norm(Ty - ttaoy(:), inf)
-
-
-xy = rand(5,2)/2;
-uint = interpolation2(Bx, By, ttao, xy);
-
-[ray, T, Tx, Ty] = eikonal_cgv(1, [0.1, -0.2], [0,0], xy);
-
-norm(uint -T, inf)
-
-
-
-
-
-
-
-%% Construct wave field
-% 
-% G1 = 1i*(sqrt(pi)/2)*besselh(0,1,omega*ttao); 
-% G1 = G1.*DD1;
-% 
-% G2 = 1i*(sqrt(pi)/2)*exp(1i*pi)*(2*ttao/omega);
-% G2 = G2.*besselh(1,1,omega*ttao);
-% G2 = G2.*DD2;
-% 
-% ub = G1 + G2;
-% 
-% 
-% %% Construct gradient of wave field
-
-
-
-
-
-
-
+cf = cutoff(epsilon,2*epsilon,node,xs,ys);
+u_ref = uh + ub.*cf;
+h_ref = Bh;
+%showsolution(node, elem, real(u), 2); colorbar;
+save('test6_reference_solution.mat', 'u_ref', 'h_ref');
