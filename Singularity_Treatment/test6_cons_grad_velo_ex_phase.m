@@ -33,7 +33,9 @@ rh = 1/2800;
 [rnode, ~] = squaremesh([-a, a, -a, a], rh);
 x = rnode(:,1);  y = rnode(:,2);
 rr = sqrt((rnode(:,1)-xs).^2 + (rnode(:,2)-ys).^2);
-load('C:\Users\Jun Fang\Dropbox\test6_reference_solution.mat');
+% load('C:\Users\Jun Fang\Dropbox\test6_reference_solution.mat');  % win path
+load('/Users/junfang/Dropbox/test6_reference_solution.mat');  % mac path
+
 
 
 %% Babich expansion
@@ -97,13 +99,19 @@ for ni = 1:test_num
     ur = u_ref;
     du = u - ur;
     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
-        .*(y<= max(y)-wpml).*(y>= min(y)+wpml).*(rr>0.1) ) ); % index on PML
+        .*(y<= max(y)-wpml).*(y>= min(y)+wpml).*(rr > rh/4) ) ); % index on PML
+%     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+%         .*(y<= max(y)-wpml).*(y>= min(y)+wpml).*(rr>0.1) ) ); % index on PML
     du(idx) = 0;  ur(idx) = 0;
+%     du(rr < rh/4) = 0; du(rr < rh/4) = 0;
     rel_l2_err(ni) = norm(du)/norm(ur)
     toc;
 end
 
-save('test6_CGV_ex_phase.mat', 'omega', 'hs', 'rel_l2_err');
+% save('test6_CGV_ex_phase.mat', 'omega', 'hs', 'rel_l2_err');
+save('test6_CGV_ex_phase_except_source.mat', 'omega', 'hs', 'rel_l2_err');
+
+
 
 %% plot
 figure(61);

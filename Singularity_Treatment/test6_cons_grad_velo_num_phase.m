@@ -257,7 +257,8 @@ DD2 = interp2(BX0,BY0,D2,BX,BY,'spline'); % refined amplitude
 
 
 %% Reference solution
-load('C:\Users\Jun Fang\Dropbox\test6_reference_solution.mat');
+% load('C:\Users\Jun Fang\Dropbox\test6_reference_solution.mat');  % win path
+load('/Users/junfang/Dropbox/test6_reference_solution.mat');  % mac path
 rh = 1/2800;
 [rnode,~] = squaremesh([-a,a,-a,a],rh);
 x = rnode(:,1); y = rnode(:,2);
@@ -332,7 +333,9 @@ for ti = 1: test_num
     ur = u_ref;
     du = uh - ur;
     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
-        .*(y<= max(y)-wpml).*(y>= min(y)+wpml).*(rr>0.1) ) ); % index on PML
+        .*(y<= max(y)-wpml).*(y>= min(y)+wpml).*(rr > 1/50) ) ); % index on PML
+%     idx = find( ~( (x<=max(x)-wpml).*(x>= min(x)+wpml)...
+%         .*(y<= max(y)-wpml).*(y>= min(y)+wpml).*(rr>0.1) ) ); % index on PML
     du(idx) = 0;  ur(idx) = 0;
     
     max_err(ti) = norm(du,inf);
@@ -350,7 +353,8 @@ totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 hs = fh;
-save('test6_CGV_num_phase.mat', 'omega', 'hs', 'rel_l2_err');
+% save('test6_CGV_num_phase.mat', 'omega', 'hs', 'rel_l2_err');
+save('test6_CGV_num_phase_except_source.mat', 'omega', 'hs', 'rel_l2_err');
 
 figure(62);
 show_convergence_rate(fh(1:test_num),rel_l2_err(1:test_num),'h','Rel L2 err');
