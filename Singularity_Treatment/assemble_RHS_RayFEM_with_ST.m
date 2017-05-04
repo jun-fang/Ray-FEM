@@ -85,7 +85,18 @@ if  iscell(option) && strcmp(option{1}, 'Babich')
     end
     
     if strcmp(option{2}, 'Homo')
-        load('Babich_Homo.mat');
+        switch round(omega/(pi))
+        case 100
+            load('Babich_Homo_25.mat');
+        case 160
+            load('Babich_Homo_40.mat');
+        case 240
+            load('Babich_Homo_60.mat');
+        case 400
+            load('Babich_Homo_100.mat');
+        case 600
+            load('Babich_Homo_150.mat');
+    end
     end
     
     a = 1/2;

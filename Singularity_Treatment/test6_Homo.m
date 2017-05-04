@@ -20,11 +20,11 @@ fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 
-high_omega = [120 160 240 320 480 640 960]*pi;
+high_omega = [100 160 240 400 600]*pi;
 low_omega = 2*sqrt(high_omega);
 
-NPW = 8;
-test_num = 3;
+NPW = 4;
+test_num = 5;
 
 % error
 max_err = 0*zeros(1,test_num);      % L_inf error of the numerical solution
@@ -71,7 +71,18 @@ for ti = 1: test_num
     
     
     %% load Babich expansion
-    load('Babich_Homo.mat');
+    switch round(omega/(pi))
+        case 100
+            load('Babich_Homo_25.mat');
+        case 160
+            load('Babich_Homo_40.mat');
+        case 240
+            load('Babich_Homo_60.mat');
+        case 400
+            load('Babich_Homo_100.mat');
+        case 600
+            load('Babich_Homo_150.mat');
+    end
     
     a = sd;  Bx = -a: h : a;  By = -a: h : a;
     [BX0, BY0] = meshgrid(Bx0, By0);
@@ -124,6 +135,8 @@ for ti = 1: test_num
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     
     option ={ 'Babich', 'Homo', 'numerical_phase'};
+%     option ={ 'Babich', 'Homo', 'exact_phase'};
+
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
     uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
