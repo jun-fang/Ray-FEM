@@ -12,18 +12,18 @@ xs = 0; ys = 0;                     % source location
 epsilon = 1/(2*pi);                 % cut-off parameter
 
 v0 = 1; G0 = [0.1, -0.2];
-speed = @(p) 1./( v0 + (G0(1)*p(:,1) + G0(2)*p(:,2)) );    % wave speed
-speed_min = 0.8696;
+speed = @(p) ( v0 + (G0(1)*p(:,1) + G0(2)*p(:,2)) );    % wave speed
+speed_min = 0.85;
 
 plt = 0;                   % show solution or not
 fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 
-high_omega = [120 160 240 320 480 640 960]*pi;
+high_omega = [120 160 240 320 400 500 600]*pi;
 low_omega = 2*sqrt(high_omega);
 
-NPW = 4;
+NPW = 8;
 test_num = 3;
 
 % error
@@ -71,7 +71,22 @@ for ti = 1: test_num
     
     
     %% load Babich expansion
-    load('Babich_CGV.mat');
+    switch round(omega/(pi))
+        case 120
+            load('Babich_CGV_30.mat');
+        case 160
+            load('Babich_CGV_40.mat');
+        case 240
+            load('Babich_CGV_60.mat');
+        case 320
+            load('Babich_CGV_80.mat');
+        case 400
+            load('Babich_CGV_100.mat');
+        case 500
+            load('Babich_CGV_125.mat');
+        case 600
+            load('Babich_CGV_150.mat');
+    end
     
     a = sd;  Bx = -a: h : a;  By = -a: h : a;
     [BX0, BY0] = meshgrid(Bx0, By0);
@@ -82,8 +97,9 @@ for ti = 1: test_num
     DD2 = interp2(BX0,BY0,D2,BX,BY,'spline'); % refined amplitude
     
     ttao = interp2(BX0,BY0,tao,BX,BY,'spline'); % refined phase
-    taox = tao2x ./ (2*tao);   taox(71, 71) = 0;
-    taoy = tao2y ./ (2*tao);   taoy(71, 71) = 0;
+    mid = round(size(tao,1)/2);
+    taox = tao2x ./ (2*tao);   taox(mid, mid) = 0;
+    taoy = tao2y ./ (2*tao);   taoy(mid, mid) = 0;
     ttaox = interp2(BX0,BY0,taox,BX,BY,'spline'); % refined phase
     ttaoy = interp2(BX0,BY0,taoy,BX,BY,'spline'); % refined phase
     
@@ -105,7 +121,7 @@ for ti = 1: test_num
     [lnode,lelem] = squaremesh([-a,a,-a,a],h);
     
     % smooth part
-    option = {'Babich_CGV', 'numerical_phase'};
+    option ={ 'Babich', 'CGV', 'numerical_phase', high_omega(ti)};
     A = assemble_Helmholtz_matrix_SFEM(lnode,lelem,omega,wpml,sigmaMax,speed,fquadorder);
     b = assemble_RHS_SFEM_with_ST(lnode,lelem,xs,ys,omega,wpml,sigmaMax,epsilon,fquadorder,option);
     [~,~,isBdNode] = findboundary(lelem);
@@ -184,7 +200,7 @@ for ti = 1: test_num
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     
     % smooth part
-    option ={ 'Babich_CGV', 'numerical_phase'};
+    option ={ 'Babich', 'CGV', 'numerical_phase'};
     A = assemble_Helmholtz_matrix_RayFEM(mnode,melem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(mnode,melem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
     uh = RayFEM_direct_solver(mnode,melem,A,b,omega,ray,speed);
@@ -253,7 +269,7 @@ for ti = 1: test_num
     tic;
     
     % Assembling
-    option ={ 'Babich_CGV', 'numerical_phase'};
+    option ={ 'Babich', 'CGV', 'numerical_phase'};
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
     uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);

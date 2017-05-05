@@ -12,19 +12,19 @@ xs = 0; ys = 0;                     % source location
 epsilon = 1/(2*pi);                 % cut-off parameter
 
 v0 = 1; G0 = [0.1, -0.2];
-speed = @(p) 1./( v0 + (G0(1)*p(:,1) + G0(2)*p(:,2)) );    % wave speed
-speed_min = 0.8696;
+speed = @(p) ( v0 + (G0(1)*p(:,1) + G0(2)*p(:,2)) );    % wave speed
+speed_min = 0.85;
 
 plt = 0;                   % show solution or not
 fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 
-high_omega = [120 160 240 320 480 640 960]*pi;
+high_omega = [120 160 240 320 400 500 600]*pi;
 low_omega = 2*sqrt(high_omega);
 
 NPW = 4;
-test_num = 2;
+test_num = 5;
 
 % error
 max_err = 0*zeros(1,test_num);      % L_inf error of the numerical solution
@@ -42,7 +42,7 @@ fh = 1./(10*round(NPW*high_omega/(2*pi*speed_min)/10));      % fine mesh size
 ch = 1./(10*round(sqrt(4./fh)/10));                    % coarse mesh size
 
 % width of PML
-high_wpml = 0.07*ones(size(high_omega));
+high_wpml = 0.1*ones(size(high_omega));
 low_wpml = 0.19*ones(size(high_omega));
 
 
@@ -71,7 +71,22 @@ for ti = 1: test_num
     
     
     %% load Babich expansion
-    load('Babich_CGV.mat');
+    switch round(omega/(pi))
+        case 120
+            load('Babich_CGV_30.mat');
+        case 160
+            load('Babich_CGV_40.mat');
+        case 240
+            load('Babich_CGV_60.mat');
+        case 320
+            load('Babich_CGV_80.mat');
+        case 400
+            load('Babich_CGV_100.mat');
+        case 500
+            load('Babich_CGV_125.mat');
+        case 600
+            load('Babich_CGV_150.mat');
+    end
     
     a = sd;  Bx = -a: h : a;  By = -a: h : a;
     [BX0, BY0] = meshgrid(Bx0, By0);
@@ -119,7 +134,9 @@ for ti = 1: test_num
     wpml = high_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     
-    option ={ 'Babich', 'CGV', 'exact_phase'};
+%     option ={ 'Babich', 'CGV', 'exact_phase'};
+    option ={ 'Babich', 'CGV', 'numerical_phase'};
+
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
     uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);

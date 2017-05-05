@@ -35,6 +35,7 @@ xmax = max(node(:,1));
 xmin = min(node(:,1));
 ymax = max(node(:,2));
 ymin = min(node(:,2));
+h = (xmax - xmin)/(round(sqrt(N)) - 1);
 
 
 %% PML set up
@@ -63,11 +64,46 @@ if nargin < 10
 end
 
 %% Babich pre-processing
-if  iscell(option) && strcmp(option{1}, 'Babich_CGV')
-    load('Babich_CGV.mat');
+if  iscell(option) && strcmp(option{1}, 'Babich')
+    high_omega = option{4};
+    if strcmp(option{2}, 'CGV')
+        switch round(high_omega/(pi))
+            case 120
+                load('Babich_CGV_30.mat');
+            case 160
+                load('Babich_CGV_40.mat');
+            case 240
+                load('Babich_CGV_60.mat');
+            case 320
+                load('Babich_CGV_80.mat');
+            case 400
+                load('Babich_CGV_100.mat');
+            case 500
+                load('Babich_CGV_125.mat');
+            case 600
+                load('Babich_CGV_150.mat');
+        end
+    end
+    
+    if strcmp(option{2}, 'Homo')
+        switch round(high_omega/(pi))
+            case 100
+                load('Babich_Homo_25.mat');
+            case 160
+                load('Babich_Homo_40.mat');
+            case 240
+                load('Babich_Homo_60.mat');
+            case 400
+                load('Babich_Homo_100.mat');
+            case 600
+                load('Babich_Homo_150.mat');
+        end
+    end
+   
     
     a = 1/2;
-    Bh = 1/round( 1/(Bh0/10) );
+    CompressRatio = round(Bh0/(h/2));
+    Bh = 1/round( 1/(Bh0/CompressRatio) );
     Bx = -a: Bh : a;  By = -a: Bh : a;
     [BX0, BY0] = meshgrid(Bx0, By0);
     [BX, BY] = meshgrid(Bx, By);
@@ -85,7 +121,7 @@ if  iscell(option) && strcmp(option{1}, 'Babich_CGV')
     DD2y = interp2(BX0,BY0,D2y,BX,BY,'spline');
     
     %% refined phase
-    if strcmp(option{2}, 'numerical_phase')
+    if strcmp(option{3}, 'numerical_phase')
         ttao = interp2(BX0,BY0,tao,BX,BY,'spline');
         mid = round(size(tao,1)/2);
         taox = tao2x ./ (2*tao);   taox(mid, mid) = 0;
@@ -125,21 +161,29 @@ for p = 1:nQuad
     end
     
     % Babich case
-    if  iscell(option) && strcmp(option{1}, 'Babich_CGV')
+    if  iscell(option) && strcmp(option{1}, 'Babich')
         
         Bu = [DD1(:), DD1x(:), DD1y(:), DD2(:), DD2x(:), DD2y(:)];
         Buint = interpolation2(Bx, By, Bu, pxy);
         amp1 = Buint(:,1);  amp1x = Buint(:,2);  amp1y = Buint(:,3);
         amp2 = Buint(:,4);  amp2x = Buint(:,5);  amp2y = Buint(:,6);
         
-        if strcmp(option{2}, 'numerical_phase')
+        if strcmp(option{3}, 'numerical_phase')
             Bu = [ttao(:), ttaox(:), ttaoy(:)];
             Buint = interpolation2(Bx, By, Bu, pxy);
             pha = Buint(:,1);  phax = Buint(:,2);  phay = Buint(:,3);
         end
         
-        if strcmp(option{2}, 'exact_phase')
-            [~, pha, phax, phay] = eikonal_cgv(1, [0.1, -0.2], [0,0], pxy);
+        if strcmp(option{3}, 'exact_phase')
+            if strcmp(option{2}, 'CGV')
+                [~, pha, phax, phay] = eikonal_cgv(1, [0.1, -0.2], [0,0], pxy);
+            end
+            
+            if strcmp(option{2}, 'Homo')
+                x = (pxy(:,1)-xs);  y = (pxy(:,2)-ys);
+                pha = sqrt(x.^2 + y.^2);
+                phax = x./pha;  phay = y./pha;
+            end
         end
         
         c1 = 1i*(sqrt(pi)/2);

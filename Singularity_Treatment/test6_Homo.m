@@ -134,8 +134,8 @@ for ti = 1: test_num
     wpml = high_wpml(ti);                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     
-    option ={ 'Babich', 'Homo', 'numerical_phase'};
-%     option ={ 'Babich', 'Homo', 'exact_phase'};
+%     option ={ 'Babich', 'Homo', 'numerical_phase'};
+    option ={ 'Babich', 'Homo', 'exact_phase'};
 
     A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
     b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
@@ -175,8 +175,8 @@ end
 totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
-nameFile = strcat('resutls_6_CGV_NPW_', num2str(NPW), '.mat');
-save(nameFile, 'rel_l2_err', 'NPW', 'high_omega', 'test_num');
+% nameFile = strcat('resutls_6_CGV_NPW_', num2str(NPW), '.mat');
+% save(nameFile, 'rel_l2_err', 'NPW', 'high_omega', 'test_num');
 
 figure(62);
 show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');

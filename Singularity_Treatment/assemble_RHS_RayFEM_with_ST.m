@@ -51,6 +51,7 @@ xmax = max(node(:,1));
 xmin = min(node(:,1));
 ymax = max(node(:,2));
 ymin = min(node(:,2));
+h = (xmax - xmin)/(round(sqrt(N)) - 1);
 
 
 %% PML set up
@@ -81,26 +82,42 @@ b = zeros(Ndof,1);
 if  iscell(option) && strcmp(option{1}, 'Babich')
     
     if strcmp(option{2}, 'CGV')
-        load('Babich_CGV.mat');
+        switch round(omega/(pi))
+            case 120
+                load('Babich_CGV_30.mat');
+            case 160
+                load('Babich_CGV_40.mat');
+            case 240
+                load('Babich_CGV_60.mat');
+            case 320
+                load('Babich_CGV_80.mat');
+            case 400
+                load('Babich_CGV_100.mat');
+            case 500
+                load('Babich_CGV_125.mat');
+            case 600
+                load('Babich_CGV_150.mat');
+        end
     end
     
     if strcmp(option{2}, 'Homo')
         switch round(omega/(pi))
-        case 100
-            load('Babich_Homo_25.mat');
-        case 160
-            load('Babich_Homo_40.mat');
-        case 240
-            load('Babich_Homo_60.mat');
-        case 400
-            load('Babich_Homo_100.mat');
-        case 600
-            load('Babich_Homo_150.mat');
-    end
+            case 100
+                load('Babich_Homo_25.mat');
+            case 160
+                load('Babich_Homo_40.mat');
+            case 240
+                load('Babich_Homo_60.mat');
+            case 400
+                load('Babich_Homo_100.mat');
+            case 600
+                load('Babich_Homo_150.mat');
+        end
     end
     
     a = 1/2;
-    Bh = 1/round( 1/(Bh0/10) );
+    CompressRatio = round(Bh0/(h/2));
+    Bh = 1/round( 1/(Bh0/CompressRatio) );
     Bx = -a: Bh : a;  By = -a: Bh : a;
     [BX0, BY0] = meshgrid(Bx0, By0);
     [BX, BY] = meshgrid(Bx, By);
