@@ -1,5 +1,5 @@
 function uint = interpolation(node,elem,xy,u)
-%% interpolate u at xy nodes
+%% interpolate u at xy nodes: valid for square mesh
 % complexity O(ru x cu), where ru and cu are row and column numbers of u
 
 xmin = node(1,1);    xmax = node(end,1);

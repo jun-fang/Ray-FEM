@@ -1,5 +1,5 @@
 function uint = interpolation2(x, y, u, xy)
-%% interpolate u at xy nodes
+%% interpolate u at xy nodes: valid for retangular mesh
 % complexity O(ru x cu), where ru and cu are row and column numbers of u
 
 xmin = min(x);    xmax = max(x);
@@ -15,13 +15,13 @@ cu = size(u,2);              % column number of u
 rxy = size(xy,1);            % row number of xy
 uint = zeros(rxy,cu);        % output
 
-n = length(x);
-h = (xmax - xmin) / (n - 1);
+m = length(x);  n = length(y);
+h = (xmax - xmin) / (m - 1);
 
 ix = 1 + floor((xy(:,1)-xmin)/h + eps);     % find the location in x coordinate
 iy = 1 + floor((xy(:,2)-ymin)/h + eps);     % find the location in y coordinate
 
-ix = min(ix, n-1);  ix = max(ix, 1);
+ix = min(ix, m-1);  ix = max(ix, 1);
 iy = min(iy, n-1);  iy = max(iy, 1);
 
 % 4--3

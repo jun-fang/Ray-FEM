@@ -81,6 +81,7 @@ Y = y0 + r*sin(ang) ;
 if (strcmp(data,'num'))      %% use numerically computed data 
     xmin = node(1,1);    xmax = node(end,1);
     ymin = node(1,2);    ymax = node(end,2);
+    
     dx = min(x0-xmin, xmax-x0);
     dy = min(y0-ymin, ymax-y0);
     if dx < r || dy < r
@@ -89,10 +90,16 @@ if (strcmp(data,'num'))      %% use numerically computed data
         angs = angl(1:7);
         return;
     end
-      
-    Field = interpolation(node,elem,[X',Y'],u);
-    DUx = interpolation(node,elem,[X',Y'],ux);
-    DUy = interpolation(node,elem,[X',Y'],uy);
+    
+    h = node(2,2) - node(1,2);
+    x = xmin:h:xmax; y = ymin:h:ymax; 
+    Field = interpolation2(x, y, u, [X',Y']);
+    DUx = interpolation2(x, y, ux, [X',Y']);
+    DUy = interpolation2(x, y, uy, [X',Y']);
+
+%     Field = interpolation(node,elem,[X',Y'],u);
+%     DUx = interpolation(node,elem,[X',Y'],ux);
+%     DUy = interpolation(node,elem,[X',Y'],uy);
 end
 
 if (strcmp(data,'ex'))        %% use the exact data
@@ -136,6 +143,7 @@ if Nray == 1                 %% given one ray direction
     Bs = mm;
 elseif Nray > 1                 %% given multiple ray directions
     [~, high_idx] = sort(-pks);
+    Nray = min(Nray, length(high_idx));
     idx = high_idx(1:Nray);
     locs = locs(idx);
     Bs = pks(idx);
