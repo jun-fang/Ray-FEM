@@ -1,5 +1,5 @@
 function uint = interpolation(node,elem,xy,u)
-%% interpolate u at xy nodes: valid for square/retangular mesh
+%% interpolate u at xy nodes: valid for square mesh
 % complexity O(ru x cu), where ru and cu are row and column numbers of u
 
 xmin = node(1,1);    xmax = node(end,1);
@@ -13,25 +13,20 @@ end
 cu = size(u,2);              % column number of u
 rxy = size(xy,1);            % row number of xy
 uint = zeros(rxy,cu);        % output
+N = size(node,1);            % number of nodes
 NT = size(elem,1);           % number of elements
+n = round(sqrt(N));          % number of grid points in each dimension
 h = 1/round(1/(node(2,2) - node(1,2)));   % grid width 
 each_area = h^2/2;           % area of each triangle
-
-
-m = round((xmax-xmin)/h) + 1;
-n = round((ymax-ymin)/h) + 1;
 
 xyn = xy;                    % record the index of x,y coordinates
 xyn(:,1) = floor((xy(:,1)-xmin)/h + eps);     % find the location in x coordinate
 xyn(:,2) = floor((xy(:,2)-ymin)/h + eps);     % find the location in y coordinate
 
-xyn(:,1) = min(xyn(:,1), m-2);
-xyn(:,2) = min(xyn(:,2), n-2);
-
+xyn = min(xyn,n-2);        
 ind = xyn(:,1)*(n - 1) + xyn(:,2) + 1;        % find the element index where xy locates
-temp1 = xy(:,1) - (xyn(:,1)*h + xmin);
-temp2 = xy(:,2) - (xyn(:,2)*h + ymin);
-ind = ind + (temp1 < temp2-eps)*NT/2;         % modify the index
+temp = xy - xyn*h;
+ind = ind + (temp(:,1)<temp(:,2)-eps)*NT/2;   % modify the index
 
 % compute the component of each little triangle
 a1 = tri_area(node(elem(ind,2),:),node(elem(ind,3),:),xy)/each_area;
