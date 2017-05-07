@@ -6,42 +6,56 @@ addpath('../Methods/');
 addpath('../Functions/')
 addpath('../Plots_Prints/');
 
-load('Marmousi_Gaussian_filtering_100.mat');
-speed = @(p) Marmousi_speed( Marmousi_index(p) )/1500;    % wave speed
-
 
 %% Set up
-xs = 0; ys = 0.35;                     % source location
-epsilon = 1/(5*pi);                 % cut-off parameter
-
 plt = 0;                   % show solution or not
 fquadorder = 3;            % numerical quadrature order
 Nray = 4;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
+pct = 0.25;
 
-% high_k = 250*pi;
-% low_k = 2*sqrt(high_k);
-% high_omega = high_k*speed_min;
-% low_omega = low_k*speed_min;
-% wl = 2*pi/high_k;
-high_omega = 250*pi;
+xs = 0; ys = 0.3;          % source location
+epsilon = 1/(4*pi);        % cut-off parameter
+
+% frequency
+high_omega = 200*pi;
 low_omega = 2*sqrt(high_omega);
 wl = 2*pi/high_omega;
 
-high_wpml = 0.02;
-low_wpml = 0.08;
+% width of PML
+high_wpml = 0.1;
+low_wpml = 0.25;
 
+% mesh size
+h = 1/400;  h_c = 1/80;
 
-h = 1/500;  h_c = 1/20;
+% load Marmousi data
+load('Marmousi_smoother.mat');  
+hr = 1/4000; mr = 8001; nr = 16001; xr = 2; yr = 1;
 
-large_domain = [-1.75, 1.75, -0.75, 0.75];
-middle_domain = [-1.55, 1.55, -0.55, 0.55];
-middle_domain_up = [-1.55, 1.55, 0.2, 0.55];
-middle_domain_down = [-1.55, 1.55, -0.55, 0.2];
+% compress Marmousi data
+nh = round(h/hr);
+ix = 1:nh:mr;  iy = 1:nh:nr;
+Marmousi_compressed = Marmousi_smoother(ix,iy);
+Marmousi_speed = Marmousi_compressed(:);
+clear ix iy Marmousi_smoother Marmousi_compressed;
 
-small_domain = [-1.5, 1.5, -0.5, 0.5];
-small_domain_up = [-1.5, 1.5, 0.2, 0.5];
-small_domain_down = [-1.5, 1.5, -0.5, 0.2];
+% construct Marmousi speed
+speed = @(p) Marmousi_speed( Marmousi_index(p, xr, yr, h) )/1500;    % wave speed
+
+% domains
+sdx = 1.5; sdy = 0.5;
+mdx = 1.65; mdy = 0.65;
+ldx = 2; ldy = 1;
+
+large_domain = [-ldx, ldx, -ldy, ldy];
+middle_domain = [-mdx, mdx, -mdy, mdy];
+middle_domain_up = [-mdx, mdx, 0.2, mdy];
+middle_domain_down = [-mdx, mdx, -mdy, 0.2];
+
+small_domain = [-sdx, sdx, -sdy, sdy];
+small_domain_up = [-sdx, sdx, 0.2, sdy];
+small_domain_down = [-sdx, sdx, -sdy, 0.2];
 
 
 fprintf(['-'*ones(1,80) '\n']);
@@ -99,7 +113,7 @@ m_up = round( (middle_domain_up(2) - middle_domain_up(1)) /h ) + 1;
 n_up = round( (middle_domain_up(4) - middle_domain_up(3)) /h ) + 1;
 
 % lower part: inhomogeneous
-[cnode,~] = squaremesh(middle_domain_down,h_c);
+[cnode,celem] = squaremesh(middle_domain_down,h_c);
 cx = middle_domain_down(1):h_c:middle_domain_down(2);
 cy = middle_domain_down(3):h_c:middle_domain_down(4);
 cm = length(cx);  %round( (middle_domain_down(2) - middle_domain_down(1)) /h_c ) + 1;
@@ -114,18 +128,22 @@ for ci = 1:cN
     c0 = speed(cnode(ci,:));
     Rest = min(1, r0);
     angles = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_low,ux,uy,[],1/4,Nray,'num',sec_opt,plt);
-    idx = post_helper(angles);
-    if (ci>1) && (mode(ci, cn) == 1)
-        angles_prev = cray_down(ci-cn,:);
+    if length(angles) == 4
+        angles_prev = angles;
+    else
+        idx = post_helper(angles);
+        if (ci>1) && (mode(ci, cn) == 1)
+            angles_prev = cray_down(ci-cn,:);
+        end
+        angles_prev(idx) = angles;
     end
-    angles_prev(idx) = angles;
     cray_down(ci,:) = angles_prev;
 end
 toc;
 
 cray_down = exp(1i*cray_down);
 [node_down,~] = squaremesh(middle_domain_down,h);
-ray_down = interpolation2(cx, cy, cray_down, node_down);
+ray_down = interpolation(cnode, celem, node_down, cray_down);
 ray_down = ray_down./abs(ray_down);
 
 m_down = round( (middle_domain_down(2) - middle_domain_down(1)) /h ) + 1;
@@ -134,7 +152,7 @@ n_down = round( (middle_domain_down(4) - middle_domain_down(3)) /h ) + 1;
 
 % all middle domain: homogeneous + inhomogeneous
 [mnode,melem] = squaremesh(middle_domain,h);
-mN = size(mnode,1);  mNdof = 0;
+mN = size(mnode,1);  mNdof = 0;  mcompressed = 0;
 mray = cell(mN,1);
 
 tic;
@@ -146,11 +164,14 @@ for mi = 1:mN
         idx = ix*n_up + iy + 1;
         mray{mi} = ray_up(idx,:);
         mNdof = mNdof + 1;
-    else
+    else  % lower part: inhomogeneous
         iy = round( (my - middle_domain_down(3)) /h );
         idx = ix*n_down + iy + 1;
-        mray{mi} = ray_down(idx,:);
-        mNdof = mNdof + 4;
+        rays_comp = post_compressor(ray_down(idx,:), pct);
+        mray{mi} = rays_comp;
+        ncomp = length(rays_comp);
+        mNdof = mNdof + ncomp;  
+        mcompressed = mcompressed + (4 - ncomp);
     end
 end
 toc;
@@ -158,11 +179,10 @@ toc;
 % figure(72); ray_field(mray,mnode,20,1/10);
         
 
-
 %% Step 3: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_c
 fprintf(['-'*ones(1,80) '\n']);
 fprintf('Step3: Ray-FEM, high frequency \n');
-tic;
+
 omega = high_omega;
 wpml = high_wpml;                % width of PML
 sigmaMax = 25/wpml;                 % Maximun absorbtion
@@ -170,9 +190,15 @@ ray = mray;
 
 % smooth part
 option ='homogeneous'; 
+tic;
 A = assemble_Helmholtz_matrix_RayFEM(mnode,melem,omega,wpml,sigmaMax,speed,ray,fquadorder);
+toc;
+tic;
 b = assemble_RHS_RayFEM_with_ST(mnode,melem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
+toc;
+tic;
 uh = RayFEM_direct_solver(mnode,melem,A,b,omega,ray,speed);
+toc;
 
 % singularity part
 x = mnode(:,1); y = mnode(:,2);
@@ -182,7 +208,6 @@ cf = cutoff(epsilon,2*epsilon,mnode,xs,ys);
 
 % smooth + singularity
 uh1 = uh + ub.*cf;
-toc;
 
 % figure(73); showsolution(mnode,melem,real(uh1),2); colorbar; axis equal; axis tight;
 
@@ -205,7 +230,7 @@ m_up = round( (small_domain_up(2) - small_domain_up(1)) /h ) + 1;
 n_up = round( (small_domain_up(4) - small_domain_up(3)) /h ) + 1;
 
 % lower part: inhomogeneous
-[cnode,~] = squaremesh(small_domain_down,h_c);
+[cnode,celem] = squaremesh(small_domain_down,h_c);
 cx = small_domain_down(1):h_c:small_domain_down(2);
 cy = small_domain_down(3):h_c:small_domain_down(4);
 cm = length(cx);  %round( (small_domain_down(2) - small_domain_down(1)) /h_c ) + 1;
@@ -220,18 +245,22 @@ for ci = 1:cN
     c0 = speed(cnode(ci,:));
     Rest = min(1, r0);
     angles = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/4,Nray,'num',sec_opt,plt);
-    idx = post_helper(angles);
-    if (ci>1) && (mode(ci, cn) == 1)
-        angles_prev = cray_down(ci-cn,:);
+    if length(angles) == 4
+        angles_prev = angles;
+    else
+        idx = post_helper(angles);
+        if (ci>1) && (mode(ci, cn) == 1)
+            angles_prev = cray_down(ci-cn,:);
+        end
+        angles_prev(idx) = angles;
     end
-    angles_prev(idx) = angles;
     cray_down(ci,:) = angles_prev;
 end
 toc;
 
 cray_down = exp(1i*cray_down);
 [node_down,~] = squaremesh(small_domain_down,h);
-ray_down = interpolation2(cx, cy, cray_down, node_down);
+ray_down = interpolation(cnode, celem, node_down, cray_down);
 ray_down = ray_down./abs(ray_down);
 
 m_down = round( (small_domain_down(2) - small_domain_down(1)) /h ) + 1;
@@ -240,7 +269,7 @@ n_down = round( (small_domain_down(4) - small_domain_down(3)) /h ) + 1;
 
 % all small domain: homogeneous + inhomogeneous
 [node,elem] = squaremesh(small_domain,h);
-N = size(node,1);  Ndof = 0;
+N = size(node,1);  Ndof = 0;  compressed = 0;
 ray = cell(N,1);
 
 tic;
@@ -255,40 +284,45 @@ for i = 1:N
     else
         iy = round( (y - small_domain_down(3)) /h );
         idx = ix*n_down + iy + 1;
-        ray{i} = ray_down(idx,:);
-        Ndof = Ndof + 4;
+        rays_comp = post_compressor(ray_down(idx,:), pct);
+        ray{i} = rays_comp;
+        ncomp = length(rays_comp);
+        Ndof = Ndof + ncomp;  
+        compressed = compressed + (4 - ncomp);
     end
 end
 toc;
 
-
+% figure(74); ray_field(ray,node,20,1/10); axis equal; axis tight;
 
 
 %% Step 5: Solve the original Helmholtz equation by Ray-based FEM with ray directions d_o
 fprintf([ '-'*ones(1,80) '\n']);
 fprintf('Step5: Ray-FEM, high frequency \n');
-tic;
 
 omega = high_omega;
-wpml = 0.05;                % width of PML
+wpml = 0.1;                % width of PML
 sigmaMax = 25/wpml;                 % Maximun absorbtion
 
 % Assembling
+tic;
 A = assemble_Helmholtz_matrix_RayFEM(node,elem,omega,wpml,sigmaMax,speed,ray,fquadorder);
+toc; 
+tic;
 b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigmaMax,ray,speed,fquadorder,option);
+toc;
+tic;
 uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
 toc;
 
-
 % singularity part
-x = mnode(:,1); y = mnode(:,2);
+x = node(:,1); y = node(:,2);
 rr = sqrt((x-xs).^2 + (y-ys).^2);
 ub = 1i/4*besselh(0,1,omega*rr);
-cf = cutoff(epsilon,2*epsilon,mnode,xs,ys);
+cf = cutoff(epsilon,2*epsilon,node,xs,ys);
 
 % smooth + singularity
 uh2 = uh + ub.*cf;
-toc;
 
 % figure(75); showsolution(node,elem,real(uh2),2); colorbar; axis equal; axis tight;
 
@@ -297,11 +331,12 @@ totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 nameFile = strcat('resutls_7_Marmousi.mat');
-save(nameFile, 'uh2', 'NPW', 'high_omega');
+save(nameFile, 'uh2', 'h', 'high_omega');
 
 figure(70);
 m = round( (small_domain(2) - small_domain(1)) /h ) + 1;
 n = round( (small_domain(4) - small_domain(3)) /h ) + 1;
-imagesc(reshape(real(uh2), n, m)); axis equal; axis tight; colorbar;
+uh22 = reshape(real(uh2), n, m);
+imagesc(uh22(end:-1:1, :)); axis equal; axis tight; colorbar;
 
 

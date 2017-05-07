@@ -1,6 +1,6 @@
 %% h convergence test for homogenenous case with exact ray information
-
-clear;
+function [] = test6_cons_grad_velo(NPW, test_num)
+% clear;
 addpath(genpath('../../ifem/'));
 addpath('../Methods/');
 addpath('../Functions/')
@@ -23,8 +23,8 @@ sec_opt = 0;               % NMLA second order correction or not
 high_omega = [120 160 240 320 400 500 600]*pi;
 low_omega = 2*sqrt(high_omega);
 
-NPW = 8;
-test_num = 3;
+% NPW = 4;
+% test_num = 3;
 
 % error
 max_err = 0*zeros(1,test_num);      % L_inf error of the numerical solution
