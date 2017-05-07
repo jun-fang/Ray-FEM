@@ -139,7 +139,8 @@ ex_beta = [beta,beta(1:2)];
 
 %% Find dominant peaks and ray direction angles
 [mm,ii] = max(abs(ex_beta));    %% find max and significant angle
-[~,locs] = findpeaks(abs(ex_beta),'MinPeakDistance',M/32,'MinPeakHeight',pct*mm);
+% [~,locs] = findpeaks(abs(ex_beta),'MinPeakDistance',M/32,'MinPeakHeight',pct*mm);
+[~,locs] = findpeaks(abs(ex_beta),'MinPeakDistance',M/24,'MinPeakHeight',pct*mm);
 locs = (locs>M).*(locs-M) + (locs<M+1).*locs;
 
 pks = beta(locs);
