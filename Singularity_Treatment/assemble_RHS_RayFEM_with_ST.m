@@ -56,7 +56,9 @@ sigmaPML_x = @(x)sigmaMax*( (x-xmin-wpml).^2.*(x < xmin + wpml) + ...
     (x-(xmax-wpml)).^2.*(x > xmax - wpml))/wpml^2;
 sigmaPML_y = @(y) sigmaMax*( (y-ymin-wpml).^2.*(y < ymin + wpml) ...
     + (y-(ymax-wpml)).^2.*(y > ymax - wpml))/wpml^2;
-s_xy = @(x,y) ((1+1i*sigmaPML_x(x)/omega).*(1+1i*sigmaPML_y(y)/omega));    %% 1/(s1*s2)
+% s_xy = @(x,y) ((1+1i*sigmaPML_x(x)/omega).*(1+1i*sigmaPML_y(y)/omega));    %% 1/(s1*s2)
+s_xy = @(p) ((1+1i*sigmaPML_x(p(:,1))/omega).*(1+1i*sigmaPML_y(p(:,2))/omega));    %% 1/(s1*s2)
+
 
 
 %% Numerical Quadrature
@@ -161,7 +163,7 @@ if ~iscell(ray)
             + lambda(p,2)*node(elem(:,2),:) ...
             + lambda(p,3)*node(elem(:,3),:);
         reppxy = repmat(pxy,Nray,1);
-        sxy = s_xy(reppxy(:,1),reppxy(:,2));
+        sxy = s_xy(reppxy);
         
         [ub, ub_g1, ub_g2] = Babich_expansion(xs,ys,pxy,omega,option,Bx,By,phase,amplitude);
         fpxy = singularity_RHS(epsilon,xs,ys,pxy,ub,ub_g1,ub_g2);
@@ -212,7 +214,7 @@ else
             pxy = lambda(p,1)*node(elem(nt,1),:) ...
                 + lambda(p,2)*node(elem(nt,2),:) ...
                 + lambda(p,3)*node(elem(nt,3),:);
-            sxy = s_xy(pxy(:,1),pxy(:,2));
+            sxy = s_xy(pxy);
             [ub, ub_g1, ub_g2] = Babich_expansion(xs,ys,pxy,omega,option,Bx,By,phase,amplitude);
             fpxy = singularity_RHS(epsilon,xs,ys,pxy,ub,ub_g1,ub_g2);
             fp = fpxy.*sxy;
