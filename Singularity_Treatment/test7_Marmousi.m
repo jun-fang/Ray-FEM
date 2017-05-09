@@ -18,7 +18,7 @@ xs = 0; ys = 0.3;          % source location
 epsilon = 1/(4*pi);        % cut-off parameter
 
 % frequency
-high_omega = 200*pi;
+high_omega = 400*pi;
 low_omega = 2*sqrt(high_omega);
 wl = 2*pi/high_omega;
 
@@ -27,7 +27,7 @@ high_wpml = 0.1;
 low_wpml = 0.25;
 
 % mesh size
-h = 1/400;  h_c = 1/100;
+h = 1/800;  
 
 % load Marmousi data
 load('Marmousi_smoother.mat');  
@@ -58,7 +58,7 @@ fprintf('Marmousi wave speed case: \n');
 fprintf(['-'*ones(1,80) '\n']);
 fprintf('Computational domain = \n  [%.2f, %.2f, %.2f, %.2f] \n', large_domain);
 fprintf(['-'*ones(1,80) '\n']);
-fprintf('  Wavelength = %.2d    NPW = %d    \n  1/h = %d    1/h_c = %d \n', wl, round(wl/h), round(1/h), round(1/h_c) );
+fprintf('  Wavelength = %.2d    NPW = %d    1/h = %d  \n', wl, round(wl/h), round(1/h) );
 
 
 tstart = tic;

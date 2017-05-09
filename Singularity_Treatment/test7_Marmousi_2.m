@@ -1,4 +1,4 @@
-%% Marmousi wave speed case
+%% Marmousi wave speed case: assuming ray directions are radical rays in homogeneous medium
 
 clear;
 addpath(genpath('../../ifem/'));
@@ -128,77 +128,6 @@ for mi = 1:mN
 end
 toc;
 
-% % upper part: homogeneous
-% [node_up,~] = squaremesh(middle_domain_up,h);
-% ray_up = ex_ray(node_up,xs,ys,1);
-% 
-% m_up = round( (middle_domain_up(2) - middle_domain_up(1)) /h ) + 1;
-% n_up = round( (middle_domain_up(4) - middle_domain_up(3)) /h ) + 1;
-% 
-% % lower part: inhomogeneous
-% [cnode,celem] = squaremesh(middle_domain_down,h_c);
-% cx = middle_domain_down(1):h_c:middle_domain_down(2);
-% cy = middle_domain_down(3):h_c:middle_domain_down(4);
-% cm = length(cx);  %round( (middle_domain_down(2) - middle_domain_down(1)) /h_c ) + 1;
-% cn = length(cy);  %round( (middle_domain_down(4) - middle_domain_down(3)) /h_c ) + 1;
-% cN = size(cnode,1);  cray_down = zeros(cN, Nray);
-% angles_prev = [pi/4, 3*pi/4, 5*pi/4, 7*pi/4];
-% 
-% tic;
-% for ci = 1:cN
-%     x0 = cnode(ci,1);  y0 = cnode(ci,2);
-%     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
-%     c0 = speed(cnode(ci,:));
-%     Rest = min(1, r0);
-%     angles = NMLA(x0,y0,c0,omega,Rest,lnode,lelem,u_low,ux,uy,[],1/4,Nray,'num',sec_opt,plt);
-%     if length(angles) == 4
-%         angles_prev = angles;
-%     else
-%         idx = post_helper(angles);
-%         if (ci>1) && (mode(ci, cn) == 1)
-%             angles_prev = cray_down(ci-cn,:);
-%         end
-%         angles_prev(idx) = angles;
-%     end
-%     cray_down(ci,:) = angles_prev;
-% end
-% toc;
-% 
-% cray_down = exp(1i*cray_down);
-% [node_down,~] = squaremesh(middle_domain_down,h);
-% ray_down = interpolation(cnode, celem, node_down, cray_down);
-% ray_down = ray_down./abs(ray_down);
-% 
-% m_down = round( (middle_domain_down(2) - middle_domain_down(1)) /h ) + 1;
-% n_down = round( (middle_domain_down(4) - middle_domain_down(3)) /h ) + 1;
-%     
-% 
-% % all middle domain: homogeneous + inhomogeneous
-% [mnode,melem] = squaremesh(middle_domain,h);
-% mN = size(mnode,1);  mNdof = 0;  mcompressed = 0;
-% mray = cell(mN,1);
-% 
-% tic;
-% for mi = 1:mN
-%     mx = mnode(mi,1);  my = mnode(mi,2);
-%     ix = round( (mx - middle_domain(1)) /h );
-%     if my >= middle_domain_up(3)  % upper part: homogeneous
-%         iy = round( (my - middle_domain_up(3)) /h );
-%         idx = ix*n_up + iy + 1;
-%         mray{mi} = ray_up(idx,:);
-%         mNdof = mNdof + 1;
-%     else  % lower part: inhomogeneous
-%         iy = round( (my - middle_domain_down(3)) /h );
-%         idx = ix*n_down + iy + 1;
-%         rays_comp = post_compressor(ray_down(idx,:), pct);
-%         mray{mi} = rays_comp;
-%         ncomp = length(rays_comp);
-%         mNdof = mNdof + ncomp;  
-%         mcompressed = mcompressed + (4 - ncomp);
-%     end
-% end
-% toc;
-
 % figure(72); ray_field(mray,mnode,20,1/10);
         
 
@@ -267,84 +196,6 @@ for i = 1:N
     end
 end
 toc;
-
-
-
-
-
-
-
-% 
-% % upper part: homogeneous
-% [node_up,~] = squaremesh(small_domain_up,h);
-% ray_up = ex_ray(node_up,xs,ys,1);
-% 
-% m_up = round( (small_domain_up(2) - small_domain_up(1)) /h ) + 1;
-% n_up = round( (small_domain_up(4) - small_domain_up(3)) /h ) + 1;
-% 
-% % lower part: inhomogeneous
-% [cnode,celem] = squaremesh(small_domain_down,h_c);
-% cx = small_domain_down(1):h_c:small_domain_down(2);
-% cy = small_domain_down(3):h_c:small_domain_down(4);
-% cm = length(cx);  %round( (small_domain_down(2) - small_domain_down(1)) /h_c ) + 1;
-% cn = length(cy);  %round( (small_domain_down(4) - small_domain_down(3)) /h_c ) + 1;
-% cN = size(cnode,1);  cray_down = zeros(cN, Nray);
-% angles_prev = [pi/4, 3*pi/4, 5*pi/4, 7*pi/4];
-% 
-% tic;
-% for ci = 1:cN
-%     x0 = cnode(ci,1);  y0 = cnode(ci,2);
-%     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
-%     c0 = speed(cnode(ci,:));
-%     Rest = min(1, r0);
-%     angles = NMLA(x0,y0,c0,omega,Rest,mnode,melem,uh1,ux,uy,[],1/4,Nray,'num',sec_opt,plt);
-%     if length(angles) == 4
-%         angles_prev = angles;
-%     else
-%         idx = post_helper(angles);
-%         if (ci>1) && (mode(ci, cn) == 1)
-%             angles_prev = cray_down(ci-cn,:);
-%         end
-%         angles_prev(idx) = angles;
-%     end
-%     cray_down(ci,:) = angles_prev;
-% end
-% toc;
-% 
-% cray_down = exp(1i*cray_down);
-% [node_down,~] = squaremesh(small_domain_down,h);
-% ray_down = interpolation(cnode, celem, node_down, cray_down);
-% ray_down = ray_down./abs(ray_down);
-% 
-% m_down = round( (small_domain_down(2) - small_domain_down(1)) /h ) + 1;
-% n_down = round( (small_domain_down(4) - small_domain_down(3)) /h ) + 1;
-%     
-% 
-% % all small domain: homogeneous + inhomogeneous
-% [node,elem] = squaremesh(small_domain,h);
-% N = size(node,1);  Ndof = 0;  compressed = 0;
-% ray = cell(N,1);
-% 
-% tic;
-% for i = 1:N
-%     x = node(i,1);  y = node(i,2);
-%     ix = round( (x - small_domain(1)) /h );
-%     if y >= small_domain_up(3)  % upper part: homogeneous
-%         iy = round( (y - small_domain_up(3)) /h );
-%         idx = ix*n_up + iy + 1;
-%         ray{i} = ray_up(idx,:);
-%         Ndof = Ndof + 1;
-%     else
-%         iy = round( (y - small_domain_down(3)) /h );
-%         idx = ix*n_down + iy + 1;
-%         rays_comp = post_compressor(ray_down(idx,:), pct);
-%         ray{i} = rays_comp;
-%         ncomp = length(rays_comp);
-%         Ndof = Ndof + ncomp;  
-%         compressed = compressed + (4 - ncomp);
-%     end
-% end
-% toc;
 
 % figure(74); ray_field(ray,node,20,1/10); axis equal; axis tight;
 

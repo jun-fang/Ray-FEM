@@ -1,4 +1,4 @@
-%% Marmousi wave speed case
+%% Marmousi wave speed case: interpolate coarse mesh ray directions to fine mesh 
 
 clear;
 addpath(genpath('../../ifem/'));
