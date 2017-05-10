@@ -1,4 +1,4 @@
-function [] = test1_hom_exact_ray(NPW, test_num)
+function [] = test1_hom_Exact_ray(NPW, test_num)
 %% Convergence test for homogenenous case with exact ray information
 
 %% Set path
@@ -72,7 +72,7 @@ save(nameFile, 'rel_l2_err', 'NPW', 'omegas', 'test_num');
 
 
 % %% plot
-% figure(22);
+% figure(11);
 % show_convergence_rate(omegas(1:test_num), rel_l2_err,'omega','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
 
 
