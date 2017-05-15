@@ -1,13 +1,20 @@
-%% set up
+%% Test omega convergence rate for homogeneous medium with exact/numerical ray
+
+%% Set up
 clear;
-NPW = 4;                   % number of points per wavelength
+addpath(genpath('../../../ifem/'));
+addpath('../../Functions/')
+addpath('../../Methods/');
+addpath('../../NMLA/');
+addpath('../../Plots_Prints/');
+
 test_num = 7;              % we test test_num examples
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% test 1: homogeneous with exact ray
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-NPW = 4;                   
+NPW = 4;                   % number of points per wavelength                
 test1_hom_Exact_ray(NPW, test_num);
 
 NPW = 6;                   

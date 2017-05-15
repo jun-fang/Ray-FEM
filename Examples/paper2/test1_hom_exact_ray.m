@@ -1,14 +1,6 @@
 function [] = test1_hom_Exact_ray(NPW, test_num)
 %% Convergence test for homogenenous case with exact ray information
 
-%% Set path
-addpath(genpath('../../../ifem/'));
-addpath('../../Methods/');
-addpath('../../Functions/')
-addpath('../../Plots_Prints/');
-addpath('../../Singularity_Treatment/');
-
-
 %% Set up
 xs = 0; ys = 0;                     % source location 
 epsilon = 1/(2*pi);                 % cut-off parameter   
