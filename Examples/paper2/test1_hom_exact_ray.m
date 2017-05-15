@@ -59,7 +59,7 @@ for ni = 1:test_num
 end
 
 %% save output 
-nameFile = strcat('resutls_1_HomExRay_NPW_', num2str(NPW), '.mat');
+nameFile = strcat('results_1_HomExRay_NPW_', num2str(NPW), '.mat');
 save(nameFile, 'rel_l2_err', 'NPW', 'omegas', 'test_num');
 
 

@@ -49,7 +49,6 @@ low_wpml = 0.19*ones(size(high_omega));
 %% Generate the domain sizes
 sd = 1/2;
 Rest = 0.4; 
-% Rest = 0.4654; 
 
 high_r = NMLA_radius(high_omega(1),Rest);
 md = sd + high_r + high_wpml;

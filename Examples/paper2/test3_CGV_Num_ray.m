@@ -1,11 +1,5 @@
-%% h convergence test for homogenenous case with exact ray information
-function [] = test3_cons_grad_velo(NPW, test_num)
-% clear;
-addpath(genpath('../../ifem/'));
-addpath('../Methods/');
-addpath('../Functions/')
-addpath('../Plots_Prints/');
-
+function [] = test3_CGV_Num_ray(NPW, test_num)
+%% Convergence test for constant gradient of velocity with numerical ray
 
 %% Set up
 xs = 0; ys = 0;                     % source location
@@ -20,7 +14,7 @@ fquadorder = 3;            % numerical quadrature order
 Nray = 1;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 
-high_omega = [120 160 240 320 400 500 600]*pi;
+high_omega = [100 150 200 300 500 750 1000]*pi;
 low_omega = 2*sqrt(high_omega);
 
 % NPW = 4;
@@ -33,17 +27,13 @@ l2_err = 0*zeros(1,test_num);       % L_2 error of the numerical solution
 rel_l2_err = 0*zeros(1,test_num);   % relative L_2 error of the numerical solution
 ref_l2 = 0*zeros(1,test_num);       % reference l2 norm
 
-% wavelength
-high_wl = 2*pi*speed_min./high_omega;
-low_wl = 2*pi*speed_min./low_omega;
-
 % mesh size
 fh = 1./(10*round(NPW*high_omega/(2*pi*speed_min)/10));      % fine mesh size
 ch = 1./(10*round(sqrt(4./fh)/10));                    % coarse mesh size
 
 % width of PML
-high_wpml = 0.07*ones(size(high_omega));
-low_wpml = 0.19*ones(size(high_omega));
+high_wpml = 0.065*ones(size(high_omega));
+low_wpml = 0.185*ones(size(high_omega));
 
 
 %% Generate the domain sizes
@@ -70,23 +60,8 @@ for ti = 1: test_num
         ti, round(omega/(2*pi)), 1/h, 1/h_c, NPW);
     
     
-    %% load Babich expansion
-    switch round(omega/(pi))
-        case 120
-            load('Babich_CGV_30.mat');
-        case 160
-            load('Babich_CGV_40.mat');
-        case 240
-            load('Babich_CGV_60.mat');
-        case 320
-            load('Babich_CGV_80.mat');
-        case 400
-            load('Babich_CGV_100.mat');
-        case 500
-            load('Babich_CGV_125.mat');
-        case 600
-            load('Babich_CGV_150.mat');
-    end
+    %% load Babich data
+    [~,Bx0,By0,D1,D2,tao,tao2x,tao2y] = load_Babich_data(omega, 'CGV');
     
     a = sd;  Bx = -a: h : a;  By = -a: h : a;
     [BX0, BY0] = meshgrid(Bx0, By0);
@@ -307,11 +282,11 @@ end
 totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
-nameFile = strcat('resutls_6_CGV_NPW_', num2str(NPW), '.mat');
+nameFile = strcat('results_3_CGV_NumRay_NPW_', num2str(NPW), '.mat');
 save(nameFile, 'rel_l2_err', 'NPW', 'high_omega', 'test_num');
 
-figure(62);
-show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'h','Rel L2 err');
+% figure(62);
+% show_convergence_rate(high_omega(1:test_num),rel_l2_err(1:test_num),'omega','Rel L2 err');
 
 
 
