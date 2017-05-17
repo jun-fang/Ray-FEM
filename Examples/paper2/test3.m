@@ -15,16 +15,16 @@ test_num = 7;              % we test test_num examples
 %% test 1: constant gradient of velocity with exact ray
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-NPW = 4;                   % number of points per wavelength
-test3_CGV_Exact_ray(NPW, test_num);
-
-
-NPW = 6;                   
-test3_CGV_Exact_ray(NPW, test_num);
-
-
-NPW = 8;                   
-test3_CGV_Exact_ray(NPW, test_num);
+% NPW = 4;                   % number of points per wavelength
+% test3_CGV_Exact_ray(NPW, test_num);
+% 
+% 
+% NPW = 6;                   
+% test3_CGV_Exact_ray(NPW, test_num);
+% 
+% 
+% NPW = 8;                   
+% test3_CGV_Exact_ray(NPW, test_num);
 
 
 
@@ -32,16 +32,16 @@ test3_CGV_Exact_ray(NPW, test_num);
 %% test 2: constant gradient of velocity with numerical ray
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-NPW = 4;                   
-test3_CGV_Num_ray(NPW, test_num);
-
-
-NPW = 6;                   
-test3_CGV_Num_ray(NPW, test_num);
-
-
-NPW = 8;                   
-test3_CGV_Num_ray(NPW, test_num);
+% NPW = 4;                   
+% test3_CGV_Num_ray(NPW, test_num);
+% 
+% 
+% NPW = 6;                   
+% test3_CGV_Num_ray(NPW, test_num);
+% 
+% 
+% NPW = 8;                   
+% test3_CGV_Num_ray(NPW, test_num);
 
 
 
@@ -59,7 +59,7 @@ test3_CGV_Num_ray(NPW, test_num);
 % 
 % load('results_3_CGV_ExRay_NPW_8.mat')
 % show_convergence_rate(high_omega(1:test_num), rel_l2_err(1:test_num),'omega','||u - u_h||_{L^2(\Omega)}/||u||_{L^2(\Omega)}');
-% 
+
 
 
 
