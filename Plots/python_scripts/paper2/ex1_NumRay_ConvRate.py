@@ -59,8 +59,8 @@ p2, = plt.loglog(omega[:len(err_NPW_6)], err_NPW_6, label=r'NPW = 6',
 p3, = plt.loglog(omega[:len(err_NPW_8)], err_NPW_8, label=r'NPW = 8', 
 			color='k', linewidth=2, linestyle= '--', marker='o', markersize=8.0, zorder=2)
 
-p4, = plt.loglog(omega[:len(err_NPW_4)], 0.7*err_NPW_4[0]/((omega[:len(err_NPW_4)]/(omega[0]))**0.6), label=r'$\mathcal{O}(\omega^{-0.6})$', 
-			color='r', linewidth=2, linestyle= 'solid', markersize=8.0, zorder=2)
+p4, = plt.loglog(omega[:len(err_NPW_4)], 0.75*err_NPW_4[0]/((omega[:len(err_NPW_4)]/(omega[0]))**0.65), 
+	label=r'$\mathcal{O}(\omega^{-0.65})$', color='r', linewidth=2, linestyle= 'solid', markersize=8.0, zorder=2)
 
 # p1, = plt.loglog(omega, err_NPW_4, label=r'$\Vert u_{\mathbf{d}_{ex}} - u_{ex}\Vert_{L^2(\Omega)}$',
 #            color='g', linewidth=2, linestyle='--', marker='o', markersize=8.0, zorder=2)
@@ -85,7 +85,7 @@ plt.gca().tick_params(labelsize=14)
 plt.autoscale(True, 'both', True)
 # plt.xlim(0.9*omega[0], 1.1*omega[len(err_NPW_4)-1])
 plt.xlim(100, 1100)
-plt.ylim(0.8*err_NPW_8[-1], 1.2*err_NPW_4[0])
+plt.ylim(0.8*err_NPW_8[-1], 1.4*err_NPW_4[0])
 plt.tight_layout(pad=0.5)
 
 fig.savefig('ex1_NumRay_ConvRate.pdf')
