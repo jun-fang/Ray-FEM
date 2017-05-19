@@ -2,7 +2,7 @@ function b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigm
 %% Function to assemble the right hand side with singularity treatment (ST):
 %         -\Delta u - (omega/c)^2 u = 2 \nabla u_b \cdot \nabla \chi + u_b \Delta \chi,     in D
 %                                                u = 0               on \partial D
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % INPUT:
 %
@@ -25,17 +25,13 @@ function b = assemble_RHS_RayFEM_with_ST(node,elem,xs,ys,omega,epsilon,wpml,sigm
 %
 %   option: different types -- homogenenous, gravity
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % OUTPUT:
 %
 %   b: Ndof x 1 Galerkin projection of the source
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% fprintf('Assembling the right-hand side \n');
-
-% source = @(x) -1i*10*pi*exp(1i*10*pi*sqrt(x(:,1).^2+x(:,2).^2))./sqrt(x(:,1).^2+x(:,2).^2);
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %% FEM set up
@@ -56,9 +52,7 @@ sigmaPML_x = @(x)sigmaMax*( (x-xmin-wpml).^2.*(x < xmin + wpml) + ...
     (x-(xmax-wpml)).^2.*(x > xmax - wpml))/wpml^2;
 sigmaPML_y = @(y) sigmaMax*( (y-ymin-wpml).^2.*(y < ymin + wpml) ...
     + (y-(ymax-wpml)).^2.*(y > ymax - wpml))/wpml^2;
-% s_xy = @(x,y) ((1+1i*sigmaPML_x(x)/omega).*(1+1i*sigmaPML_y(y)/omega));    %% 1/(s1*s2)
 s_xy = @(p) ((1+1i*sigmaPML_x(p(:,1))/omega).*(1+1i*sigmaPML_y(p(:,2))/omega));    %% 1/(s1*s2)
-
 
 
 %% Numerical Quadrature
@@ -114,109 +108,78 @@ end
 
 
 %% Assembling the RHS: ray could be a N x Nray matrix or N x 1 cell
+RayIsCell = 0;
+% if ray is a cell
+if iscell(ray)
+    RayIsCell = 1;
 
-%% ray is N x Nray matrix: each grid point has the same number of rays
-if ~iscell(ray)
-    
-    Nray = size(ray,2);
-    Ndof = N*Nray;          % degree of freedom
-    kk = repmat(k,1,Nray);
-    reparea = repmat(area,Nray,1);
-    
-    % Assemble right-hand side
-    bt = zeros(NT*Nray,3);       % the right hand side
-    b = zeros(Ndof,1);
-    
-    for p = 1:nQuad
-        % quadrature points in the x-y coordinate
-        pxy = lambda(p,1)*node(elem(:,1),:) ...
-            + lambda(p,2)*node(elem(:,2),:) ...
-            + lambda(p,3)*node(elem(:,3),:);
-        reppxy = repmat(pxy,Nray,1);
-        sxy = s_xy(reppxy);
-        
-        [ub, ub_g1, ub_g2] = Babich_expansion(xs,ys,pxy,omega,option,Bx,By,phase,amplitude);
-        fpxy = singularity_RHS(epsilon,xs,ys,pxy,ub,ub_g1,ub_g2);
-        fp = repmat(fpxy,Nray,1).*sxy;
-        
-        for i = 1:3
-            gradtempi = - ray(elem(:,i),:);
-            gradtempi = gradtempi(:);
-            gradtempi = [real(gradtempi), imag(gradtempi)];
-            fphasei = gradtempi(:,1).*reppxy(:,1) + gradtempi(:,2).*reppxy(:,2);
-            kki = kk(elem(:,i),:);
-            kki = kki(:);
-            phasei = exp(1i*kki.*fphasei);
-            bt(:,i) = bt(:,i) + weight(p)*phi(p,i)*phasei.*fp;
-        end
-    end
-    
-    bt = bt.*repmat(reparea,1,3);
-    for ni = 1:Nray
-        ii = (ni-1)*NT+1:1:ni*NT;
-        jj = (ni-1)*N+1:1:ni*N;
-        btii = bt(ii,:);
-        b(jj) = accumarray(elem(:),btii(:),[N 1]);
-    end
-    
-    
-else
-    %% ray is N x 1 cell: each grid point may have different number of rays
-    
+    % ray information
     ray_num = zeros(N,1);     % number of rays at each grid point
     ray_dof = zeros(N,1);     % ray_dof(n) = sum(ray_num(1:n))
-    
+    Nray = 0;                 % maximum number of rays at grid points
     temp = 0;
     for n = 1:N
-        ray_num(n) = size(ray{n},2);
+        ray_num(n) = length(ray{n});
+        Nray = max(Nray, ray_num(n));
         ray_dof(n) = temp + ray_num(n);
         temp = ray_dof(n);
     end
     
-    Ndof = temp;              % total degree of freedom
-    
-    % Assemble right-hand side
-    b = zeros(Ndof,1);
-    
-    for nt = 1:NT
-        for p = 1:nQuad
-            % quadrature points in the x-y coordinate
-            pxy = lambda(p,1)*node(elem(nt,1),:) ...
-                + lambda(p,2)*node(elem(nt,2),:) ...
-                + lambda(p,3)*node(elem(nt,3),:);
-            sxy = s_xy(pxy);
-            [ub, ub_g1, ub_g2] = Babich_expansion(xs,ys,pxy,omega,option,Bx,By,phase,amplitude);
-            fpxy = singularity_RHS(epsilon,xs,ys,pxy,ub,ub_g1,ub_g2);
-            fp = fpxy.*sxy;
-            
-            if norm(fp)
-                for i = 1:3
-                    ei = elem(nt,i);    % the ei'th grid point corresponding to the i'th vertix of element nt
-                    ni = ray_num(ei);   % number of rays crossing at grid point ei
-                    for nii = 1: ni
-                        gradtempi = - ray{ei}(nii);
-                        gradtempi = [real(gradtempi), imag(gradtempi)];
-                        fphasei = gradtempi(1)*pxy(1) + gradtempi(2)*pxy(2);
-                        ki = k(ei);
-                        phasei = exp(1i*ki*fphasei);
-                        ii = ray_dof(ei) - ni + nii;
-                        b(ii) = b(ii) + weight(p)*phi(p,i)*phasei*fp*area(nt);   % right hand side
-                    end
-                end
-            end
-        end
+    ori_ray = ray;
+    ray = zeros(N,Nray);
+    ray_idx = zeros(1,temp);
+    for n = 1:N
+        rn = ray_num(n);
+        ray(n,1:rn) = ori_ray{n};
+        ni = ray_dof(n)-rn+1:ray_dof(n);
+        temp = n:N:((rn-1)*N+n);
+        ray_idx(ni) = temp;
     end
-    
-    
 end
 
 
+Nray = size(ray,2);
+Ndof = N*Nray;          % degree of freedom
+kk = repmat(k,1,Nray);
+reparea = repmat(area,Nray,1);
 
+% Assemble right-hand side
+bt = zeros(NT*Nray,3);       % the right hand side
+b = zeros(Ndof,1);
 
+for p = 1:nQuad
+    % quadrature points in the x-y coordinate
+    pxy = lambda(p,1)*node(elem(:,1),:) ...
+        + lambda(p,2)*node(elem(:,2),:) ...
+        + lambda(p,3)*node(elem(:,3),:);
+    reppxy = repmat(pxy,Nray,1);
+    sxy = s_xy(reppxy);
+    
+    [ub, ub_g1, ub_g2] = Babich_expansion(xs,ys,pxy,omega,option,Bx,By,phase,amplitude);
+    fpxy = singularity_RHS(epsilon,xs,ys,pxy,ub,ub_g1,ub_g2);
+    fp = repmat(fpxy,Nray,1).*sxy;
+    
+    for i = 1:3
+        gradtempi = - ray(elem(:,i),:);
+        gradtempi = gradtempi(:);
+        gradtempi = [real(gradtempi), imag(gradtempi)];
+        fphasei = gradtempi(:,1).*reppxy(:,1) + gradtempi(:,2).*reppxy(:,2);
+        kki = kk(elem(:,i),:);
+        kki = kki(:);
+        phasei = exp(1i*kki.*fphasei);
+        bt(:,i) = bt(:,i) + weight(p)*phi(p,i)*phasei.*fp;
+    end
+end
 
+bt = bt.*repmat(reparea,1,3);
+for ni = 1:Nray
+    ii = (ni-1)*NT+1:1:ni*NT;
+    jj = (ni-1)*N+1:1:ni*N;
+    btii = bt(ii,:);
+    b(jj) = accumarray(elem(:),btii(:),[N 1]);
+end
 
-
-% clear area bt btii elem fp fphasei gradtempi ii jj k kk kki;
-% clear node phasei pcy pxy ray reparea reppxy;
-
-
+% if ray is a cell
+if RayIsCell
+    b = b(ray_idx);
+end
