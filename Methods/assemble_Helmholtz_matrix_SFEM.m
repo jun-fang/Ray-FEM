@@ -66,26 +66,26 @@ end
 %% PML set up
 
 % usual quadratic profile 
-% sigmaPML_x = @(x) sigmaMax*( ( (x-xmin-wpml(1)) / wpml(1) ).^2.*(x < xmin + wpml(1)) + ...
-%                 ( (x-(xmax-wpml(2))) / wpml(2) ).^2.*(x > xmax - wpml(2)) );         
-% sigmaPML_y = @(y) sigmaMax*( ( (y-ymin-wpml(3)) / wpml(3) ).^2.*(y < ymin + wpml(3)) + ...
-%                 ( (y-(ymax-wpml(4))) / wpml(4) ).^2.*(y > ymax - wpml(4) ) );
-% 
-% s_x = @(p) (1+1i*sigmaPML_y(p(:,2))/omega)./(1+1i*sigmaPML_x(p(:,1))/omega);       %% s1/s2
-% s_y = @(p) (1+1i*sigmaPML_x(p(:,1))/omega)./(1+1i*sigmaPML_y(p(:,2))/omega);       %% s2/s1
-% s_xy = @(p) ((1+1i*sigmaPML_x(p(:,1))/omega).*(1+1i*sigmaPML_y(p(:,2))/omega));    %% 1/(s1*s2)
+sigmaPML_x = @(x) sigmaMax*( ( (x-xmin-wpml(1)) / wpml(1) ).^2.*(x < xmin + wpml(1)) + ...
+                ( (x-(xmax-wpml(2))) / wpml(2) ).^2.*(x > xmax - wpml(2)) );         
+sigmaPML_y = @(y) sigmaMax*( ( (y-ymin-wpml(3)) / wpml(3) ).^2.*(y < ymin + wpml(3)) + ...
+                ( (y-(ymax-wpml(4))) / wpml(4) ).^2.*(y > ymax - wpml(4) ) );
+
+s_x = @(p) (1+1i*sigmaPML_y(p(:,2))/omega)./(1+1i*sigmaPML_x(p(:,1))/omega);       %% s1/s2
+s_y = @(p) (1+1i*sigmaPML_x(p(:,1))/omega)./(1+1i*sigmaPML_y(p(:,2))/omega);       %% s2/s1
+s_xy = @(p) ((1+1i*sigmaPML_x(p(:,1))/omega).*(1+1i*sigmaPML_y(p(:,2))/omega));    %% 1/(s1*s2)
 
             
             
-sigmaPML_x = @(p) speed(p).*(1./(p(:,1)-xmin + sigmaMax ).*(p(:,1) < xmin + wpml(1)) + ...
-                1./(xmax-p(:,1)  + sigmaMax ).*(p(:,1) > xmax - wpml(2))) ;         
-sigmaPML_y = @(p) speed(p).*( 1./(p(:,2)-ymin  + sigmaMax).*(p(:,2) < ymin + wpml(3)) ...
-                + 1./(ymax-p(:,2) + sigmaMax).*(p(:,2) > ymax - wpml(4)));
-             
-            
-s_x = @(p) (1+1i*sigmaPML_y(p)/omega)./(1+1i*sigmaPML_x(p)/omega);       %% s1/s2
-s_y = @(p) (1+1i*sigmaPML_x(p)/omega)./(1+1i*sigmaPML_y(p)/omega);       %% s2/s1
-s_xy = @(p) ((1+1i*sigmaPML_x(p)/omega).*(1+1i*sigmaPML_y(p)/omega));    %% 1/(s1*s2)
+% sigmaPML_x = @(p) speed(p).*(1./(p(:,1)-xmin + sigmaMax ).*(p(:,1) < xmin + wpml(1)) + ...
+%                 1./(xmax-p(:,1)  + sigmaMax ).*(p(:,1) > xmax - wpml(2))) ;         
+% sigmaPML_y = @(p) speed(p).*( 1./(p(:,2)-ymin  + sigmaMax).*(p(:,2) < ymin + wpml(3)) ...
+%                 + 1./(ymax-p(:,2) + sigmaMax).*(p(:,2) > ymax - wpml(4)));
+%              
+%             
+% s_x = @(p) (1+1i*sigmaPML_y(p)/omega)./(1+1i*sigmaPML_x(p)/omega);       %% s1/s2
+% s_y = @(p) (1+1i*sigmaPML_x(p)/omega)./(1+1i*sigmaPML_y(p)/omega);       %% s2/s1
+% s_xy = @(p) ((1+1i*sigmaPML_x(p)/omega).*(1+1i*sigmaPML_y(p)/omega));    %% 1/(s1*s2)
 
 
 

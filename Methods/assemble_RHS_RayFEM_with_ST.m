@@ -74,47 +74,16 @@ nQuad = size(lambda,1);
 %% Babich pre-processing
 Bx = []; By = []; phase = [];  amplitude = [];
 if  iscell(option) && strcmp(option{1}, 'Babich')
-    
-    if strcmp(option{2}, 'CGV')
-        switch round(omega/(pi))
-            case 120
-                load('Babich_CGV_30.mat');
-            case 160
-                load('Babich_CGV_40.mat');
-            case 240
-                load('Babich_CGV_60.mat');
-            case 320
-                load('Babich_CGV_80.mat');
-            case 400
-                load('Babich_CGV_100.mat');
-            case 500
-                load('Babich_CGV_125.mat');
-            case 600
-                load('Babich_CGV_150.mat');
-        end
-    end
-    
-    if strcmp(option{2}, 'Homo')
-        switch round(omega/(pi))
-            case 100
-                load('Babich_Homo_25.mat');
-            case 160
-                load('Babich_Homo_40.mat');
-            case 240
-                load('Babich_Homo_60.mat');
-            case 400
-                load('Babich_Homo_100.mat');
-            case 600
-                load('Babich_Homo_150.mat');
-        end
-    end
+    %% load Babich data
+    [Bh0,Bx0,By0,D1,D2,tao,tao2x,tao2y] = load_Babich_data(omega, option{2});
     
     a = 1/2;
-    CompressRatio = round(Bh0/(h/2));
+    CompressRatio = round(Bh0/(h/4));
     Bh = 1/round( 1/(Bh0/CompressRatio) );
     Bx = -a: Bh : a;  By = -a: Bh : a;
     [BX0, BY0] = meshgrid(Bx0, By0);
     [BX, BY] = meshgrid(Bx, By);
+    
     
     %% refined amplitude
     DD1 = interp2(BX0,BY0,D1,BX,BY,'spline');
@@ -128,6 +97,7 @@ if  iscell(option) && strcmp(option{1}, 'Babich')
     DD2x = interp2(BX0,BY0,D2x,BX,BY,'spline');
     DD2y = interp2(BX0,BY0,D2y,BX,BY,'spline');
     amplitude = [DD1(:), DD1x(:), DD1y(:), DD2(:), DD2x(:), DD2y(:)];
+    
     
     %% refined phase
     if strcmp(option{3}, 'numerical_phase')
