@@ -17,21 +17,29 @@ Nray = 4;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 pct = 0.25;
 
-xs = 0; ys = 0.3;          % source location
-epsilon = 1/(4*pi);        % cut-off parameter
+xs = 0; ys = 0.35;          % source location
+epsilon = 1/(2.2*pi);        % cut-off parameter
 
 % frequency
 high_omega = 100*pi;
-low_omega = 2*sqrt(high_omega);
-wl = 2*pi/high_omega;
-
+low_omega = 4*sqrt(high_omega);
+high_wl = 2*pi/high_omega;
+low_wl = 2*pi/low_omega;
+wl = high_wl;
 
 % width of PML
-high_wpml = 0.1;
-low_wpml = 0.25;
+high_wpml = 0.05;
+low_wpml = 0.1;
+
+Rest = 1;
+high_r = NMLA_radius(high_omega,Rest);
+low_r = NMLA_radius(low_omega,Rest);
+
+low_d = round((low_r + low_wpml)/0.1)*0.1;
+high_d = round((high_r + high_wpml)/0.1)*0.1;
 
 % mesh size
-h = 1/50;    
+h = 1/4000;    
 
 % if h = 1/2000, then the largest linear system is around 4656x4656
 
@@ -49,15 +57,20 @@ clear ix iy Marmousi_smoother Marmousi_compressed;
 % construct Marmousi speed
 speed = @(p) Marmousi_speed( Marmousi_index(p, xr, yr, h) )/1500;    % wave speed
 
+% % domain
+% sdx = 1.5; sdy = 0.5;
+% mdx = 1.65; mdy = 0.65;
+% ldx = 2; ldy = 1;
+
 % domain
 sdx = 1.5; sdy = 0.5;
-mdx = 1.65; mdy = 0.65;
-ldx = 2; ldy = 1;
+mdx = sdx + high_d; mdy = sdy + high_d;
+ldx = mdx + low_d; ldy = mdy + low_d;
+
 
 large_domain = [-ldx, ldx, -ldy, ldy];
 middle_domain = [-mdx, mdx, -mdy, mdy];
 small_domain = [-sdx, sdx, -sdy, sdy];
-
 
 % real frequency in Hertz
 real_omega = high_omega*1500/4000;
@@ -69,7 +82,7 @@ fprintf('Marmousi wave speed case at %.2f Hz: \n', hz);
 fprintf(['-'*ones(1,80) '\n']);
 fprintf('Computational domain = \n  [%.2f, %.2f, %.2f, %.2f] \n', large_domain);
 fprintf(['-'*ones(1,80) '\n']);
-fprintf('  Wavelength = %.2d    NPW = %d    1/h = %d  \n', wl, round(wl/h), round(1/h) );
+fprintf('  Wavelength = %.2d    NPW = %d    1/h = %d  \n', high_wl, round(high_wl/h), round(1/h) );
 
 
 tstart = tic;
@@ -123,8 +136,8 @@ for mi = 1:mN
     x0 = mnode(mi,1);  y0 = mnode(mi,2);
     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
     c0 = speed(mnode(mi,:));
-    Rest = min(1.45, r0);
-    if r0 < 0.1  % near source 
+    Rest = min(1/c0, r0);
+    if r0 < epsilon  % near source 
         mray{mi} = ex_ray([x0,y0],xs,ys,1);
         mNdof = mNdof + 1;
     else  % far field
@@ -193,8 +206,8 @@ for i = 1:N
     x0 = node(i,1);  y0 = node(i,2);
     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
     c0 = speed(node(i,:));
-    Rest = min(1.5, r0);
-    if r0 < 0.1  % near source 
+    Rest = min(1/c0, r0);
+    if r0 < epsilon  % near source 
         ray{i} = ex_ray([x0,y0],xs,ys,1);
         Ndof = Ndof + 1;
     else  % far field
@@ -214,7 +227,7 @@ fprintf([ '-'*ones(1,80) '\n']);
 fprintf('Step5: Ray-FEM, high frequency \n');
 
 omega = high_omega;
-wpml = 0.1;                % width of PML
+wpml = high_wpml;                % width of PML
 sigmaMax = 25/wpml;                 % Maximun absorbtion
 
 % Assembling
@@ -243,8 +256,12 @@ uh2 = uh + ub.*cf;
 totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
-nameFile = strcat('results_4_Marmousi_',num2str(round(omega/pi)), 'pi_NPW_',num2str(round(wl/h)),'.mat');
+
+nameFile = strcat('results_4_Marmousi_',num2str(round(omega/pi)), 'pi_NPW_',num2str(round(high_wl/h)),'.mat');
 save(nameFile, 'uh2', 'h', 'high_omega','ray','mNdof', 'Ndof');
+
+% nameFile = strcat('results_4_Marmousi_',num2str(round(omega/pi)), 'pi_NPW_',num2str(round(wl/h)),'small.mat');
+% save(nameFile, 'uh2', 'h', 'high_omega','ray','mNdof', 'Ndof');
 
 % figure(70);
 % m = round( (small_domain(2) - small_domain(1)) /h ) + 1;

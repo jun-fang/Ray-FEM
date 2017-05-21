@@ -17,17 +17,19 @@ Nray = 4;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 pct = 0.25;
 
-xs = 0; ys = 0.3;          % source location
-epsilon = 1/(4*pi);        % cut-off parameter
+xs = 0; ys = 0.35;          % source location
+epsilon = 1/(2.2*pi);        % cut-off parameter
 
 % frequency
 high_omega = 100*pi;
-low_omega = 2*sqrt(high_omega);
-wl = 2*pi/high_omega;
+low_omega = 4*sqrt(high_omega);
+high_wl = 2*pi/high_omega;
+low_wl = 2*pi/low_omega;
+wl = high_wl;
 
 % width of PML
-high_wpml = 0.1;
-low_wpml = 0.25;
+high_wpml = 0.05;
+low_wpml = 0.1;
 
 % domain
 sdx = 1.5; sdy = 0.5;
@@ -45,8 +47,12 @@ fprintf('Computational domain = \n  [%.2f, %.2f, %.2f, %.2f] \n', small_domain);
 
 
 %% load reference data
-load('results_4_Marmousi_100pi_NPW_16.mat');
-ray_ref = ray;  uh_ref = uh2;  h_ref = 1/800;
+% load('results_4_Marmousi_100pi_NPW_16.mat');
+% ray_ref = ray;  uh_ref = uh2;  h_ref = 1/800;
+
+load('results_4_Marmousi_100pi_NPW_80.mat');
+ray_ref = ray;  uh_ref = uh2;  h_ref = 1/4000;
+
 [rnode, relem] = squaremesh(small_domain, h_ref);
 rx = rnode(:,1); ry = rnode(:,2);
 rr = sqrt((rx-xs).^2 + (ry-ys).^2);
@@ -54,9 +60,9 @@ ruu = uh_ref;  ruu(rr <= 2*wl) = 0;
 rnorm = norm(ruu)*h_ref;
 
 % mesh size
-h = 1/25;
+h = 1/50;
 
-test_num = 3;
+test_num = 4;
 err = zeros(test_num,1);
 hs = err;
 
@@ -128,7 +134,7 @@ for j = 1:test_num
     fprintf('Step5: Ray-FEM, high frequency \n');
     
     omega = high_omega;
-    wpml = 0.1;                % width of PML
+    wpml = high_wpml;                % width of PML
     sigmaMax = 25/wpml;                 % Maximun absorbtion
     option ='homogeneous';
     
@@ -151,6 +157,7 @@ for j = 1:test_num
     
     % smooth + singularity
     uh2 = uh + ub.*cf;
+    max(real(uh2))
     
     % figure(75); showsolution(node,elem,real(uh2),2); colorbar; axis equal; axis tight;
     
@@ -165,9 +172,11 @@ end
 totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
+nameFile = strcat('results_4_Marmousi_',num2str(round(omega/pi)), 'pi_h_conv_rate.mat');
+save(nameFile, 'uh2', 'h', 'high_omega','ray');
 
 
-showrate(hs,err);
+% showrate(hs,err);
 
 
 

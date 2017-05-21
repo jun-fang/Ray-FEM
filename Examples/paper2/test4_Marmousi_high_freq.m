@@ -21,9 +21,14 @@ xs = 0; ys = 0.3;          % source location
 epsilon = 1/(4*pi);        % cut-off parameter
 
 % frequency
-high_omega = 100*pi;
+high_omega = 2000*pi;
 low_omega = 2*sqrt(high_omega);
-wl = 2*pi/high_omega;
+high_wl = 2*pi/high_omega;
+low_wl = 2*pi/low_omega;
+
+Rest = 1.5;
+high_r = NMLA_radius(high_omega*1500/4500,Rest);
+low_r = NMLA_radius(low_omega*1500/4500,Rest);
 
 
 % width of PML
@@ -31,9 +36,32 @@ high_wpml = 0.1;
 low_wpml = 0.25;
 
 % mesh size
-h = 1/50;    
+h = 1/4000;    
 
 % if h = 1/2000, then the largest linear system is around 4656x4656
+
+
+% domain
+sdx = 1.5; sdy = 0.5;
+mdx = 1.55; mdy = 0.55;
+ldx = 1.6; ldy = 0.6;
+
+large_domain = [-ldx, ldx, -ldy, ldy];
+middle_domain = [-mdx, mdx, -mdy, mdy];
+small_domain = [-sdx, sdx, -sdy, sdy];
+
+% real frequency in Hertz
+real_omega = high_omega*1500/4000;
+hz = real_omega/(2*pi);
+
+% print 
+fprintf(['-'*ones(1,80) '\n']);
+fprintf('Marmousi wave speed case at %.2f Hz: \n', hz);
+fprintf(['-'*ones(1,80) '\n']);
+fprintf('Computational domain = \n  [%.2f, %.2f, %.2f, %.2f] \n', large_domain);
+fprintf(['-'*ones(1,80) '\n']);
+fprintf('  Wavelength = %.2d    NPW = %d    1/h = %d  \n', wl, round(wl/h), round(1/h) );
+
 
 % load Marmousi data
 load('Marmousi_smoother.mat');  
@@ -48,28 +76,6 @@ clear ix iy Marmousi_smoother Marmousi_compressed;
 
 % construct Marmousi speed
 speed = @(p) Marmousi_speed( Marmousi_index(p, xr, yr, h) )/1500;    % wave speed
-
-% domain
-sdx = 1.5; sdy = 0.5;
-mdx = 1.65; mdy = 0.65;
-ldx = 2; ldy = 1;
-
-large_domain = [-ldx, ldx, -ldy, ldy];
-middle_domain = [-mdx, mdx, -mdy, mdy];
-small_domain = [-sdx, sdx, -sdy, sdy];
-
-
-% real frequency in Hertz
-real_omega = high_omega*1500/4000;
-hz = real_omega/(2*pi);
-
-% print 
-fprintf(['-'*ones(1,80) '\n']);
-fprintf('Marmousi wave speed case at %.2f Hz: \n', hz);
-fprintf(['-'*ones(1,80) '\n']);
-fprintf('Computational domain = \n  [%.2f, %.2f, %.2f, %.2f] \n', large_domain);
-fprintf(['-'*ones(1,80) '\n']);
-fprintf('  Wavelength = %.2d    NPW = %d    1/h = %d  \n', wl, round(wl/h), round(1/h) );
 
 
 tstart = tic;
