@@ -7,7 +7,7 @@ addpath('../../Methods/');
 addpath('../../NMLA/');
 addpath('../../Plots/');
 addpath('../../Helmholtz_data/');
-addpath('C:\Users\Jun Fang\Documents\MATLAB\Marmousi\');
+% addpath('C:\Users\Jun Fang\Documents\MATLAB\Marmousi\');
 
 
 %% Set up
@@ -50,8 +50,11 @@ fprintf('Computational domain = \n  [%.2f, %.2f, %.2f, %.2f] \n', small_domain);
 % load('results_4_Marmousi_100pi_NPW_16.mat');
 % ray_ref = ray;  uh_ref = uh2;  h_ref = 1/800;
 
-load('results_4_Marmousi_100pi_NPW_80.mat');
-ray_ref = ray;  uh_ref = uh2;  h_ref = 1/4000;
+load('results_4_Marmousi_100pi_NPW_40.mat');
+ray_ref = ray;  uh_ref = uh2;  h_ref = 1/2000;
+
+% load('results_4_Marmousi_100pi_NPW_80.mat');
+% ray_ref = ray;  uh_ref = uh2;  h_ref = 1/4000;
 
 [rnode, relem] = squaremesh(small_domain, h_ref);
 rx = rnode(:,1); ry = rnode(:,2);
@@ -61,15 +64,15 @@ rnorm = norm(ruu)*h_ref;
 
 % mesh size
 h = 1/50;
+NPWs = [1 2 4 5 8 10 20];
+hs = h./NPWs;
 
-test_num = 4;
+test_num = 7;
 err = zeros(test_num,1);
-hs = err;
 
 for j = 1:test_num
     
-    h = h/2;
-    hs(j) = h;
+    h = hs(j);
     tic;
     % load Marmousi data
     load('Marmousi_smoother.mat');
@@ -110,7 +113,7 @@ for j = 1:test_num
         ni = i - (mi-1)*n;
         mi_ref = (mi-1)*nh + 1;
         ni_ref = (ni-1)*nh + 1;
-        i_ref = (mi_ref-1)*n_ref + ni_ref;
+        i_ref = (mi_ref-1)*n_ref + ni_ref;   
         ray{i} = ray_ref{i_ref};
         Ndof = Ndof + length(ray{i});
         ur(i) = uh_ref(i_ref);
@@ -173,12 +176,10 @@ totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
 nameFile = strcat('results_4_Marmousi_',num2str(round(omega/pi)), 'pi_h_conv_rate.mat');
-save(nameFile, 'uh2', 'h', 'high_omega','ray');
+save(nameFile, 'hs', 'err','NPWs');
 
 
 % showrate(hs,err);
-
-
 
 % nameFile = strcat('results_4_Marmousi_',num2str(round(omega/pi)), 'pi_NPW_',num2str(round(wl/h)),'.mat');
 % save(nameFile, 'uh2', 'h', 'high_omega','ray');

@@ -7,7 +7,7 @@ addpath('../../Methods/');
 addpath('../../NMLA/');
 addpath('../../Plots/');
 addpath('../../Helmholtz_data/');
-addpath('C:\Users\Jun Fang\Documents\MATLAB\Marmousi\');
+% addpath('C:\Users\Jun Fang\Documents\MATLAB\Marmousi\');
 
 
 %% Set up
@@ -31,17 +31,18 @@ wl = high_wl;
 high_wpml = 0.05;
 low_wpml = 0.1;
 
-Rest = 1;
-high_r = NMLA_radius(high_omega,Rest);
-low_r = NMLA_radius(low_omega,Rest);
+Rest = 1.5;
+high_r = NMLA_radius(high_omega/3,Rest);
+low_r = NMLA_radius(low_omega/3,Rest);
 
-low_d = round((low_r + low_wpml)/0.1)*0.1;
-high_d = round((high_r + high_wpml)/0.1)*0.1;
+low_d = round((low_r + low_wpml)/0.05)*0.05;
+high_d = round((high_r + high_wpml)/0.05)*0.05;
+
 
 % mesh size
-h = 1/4000;    
+h = 1/2000;    
 
-% if h = 1/2000, then the largest linear system is around 4656x4656
+% if h = 1/2000, then the largest linear system is around 4800x4800
 
 % load Marmousi data
 load('Marmousi_smoother.mat');  
@@ -57,6 +58,7 @@ clear ix iy Marmousi_smoother Marmousi_compressed;
 % construct Marmousi speed
 speed = @(p) Marmousi_speed( Marmousi_index(p, xr, yr, h) )/1500;    % wave speed
 
+
 % % domain
 % sdx = 1.5; sdy = 0.5;
 % mdx = 1.65; mdy = 0.65;
@@ -66,7 +68,6 @@ speed = @(p) Marmousi_speed( Marmousi_index(p, xr, yr, h) )/1500;    % wave spee
 sdx = 1.5; sdy = 0.5;
 mdx = sdx + high_d; mdy = sdy + high_d;
 ldx = mdx + low_d; ldy = mdy + low_d;
-
 
 large_domain = [-ldx, ldx, -ldy, ldy];
 middle_domain = [-mdx, mdx, -mdy, mdy];
@@ -136,7 +137,7 @@ for mi = 1:mN
     x0 = mnode(mi,1);  y0 = mnode(mi,2);
     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
     c0 = speed(mnode(mi,:));
-    Rest = min(1/c0, r0);
+    Rest = min(1.5, r0);
     if r0 < epsilon  % near source 
         mray{mi} = ex_ray([x0,y0],xs,ys,1);
         mNdof = mNdof + 1;
@@ -206,7 +207,7 @@ for i = 1:N
     x0 = node(i,1);  y0 = node(i,2);
     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
     c0 = speed(node(i,:));
-    Rest = min(1/c0, r0);
+    Rest = min(1.5, r0);
     if r0 < epsilon  % near source 
         ray{i} = ex_ray([x0,y0],xs,ys,1);
         Ndof = Ndof + 1;

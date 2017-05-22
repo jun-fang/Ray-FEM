@@ -7,7 +7,7 @@ addpath('../../Methods/');
 addpath('../../NMLA/');
 addpath('../../Plots/');
 addpath('../../Helmholtz_data/');
-addpath('C:\Users\Jun Fang\Documents\MATLAB\Marmousi\');
+% addpath('C:\Users\Jun Fang\Documents\MATLAB\Marmousi\');
 
 
 %% Set up
@@ -17,38 +17,49 @@ Nray = 4;                  % one ray direction
 sec_opt = 0;               % NMLA second order correction or not
 pct = 0.25;
 
-xs = 0; ys = 0.3;          % source location
+xs = 0; ys = 0.35;          % source location
 epsilon = 1/(4*pi);        % cut-off parameter
 
 % frequency
-high_omega = 2000*pi;
-low_omega = 2*sqrt(high_omega);
+high_omega = 1000*pi;
+low_omega = 4*sqrt(high_omega);
 high_wl = 2*pi/high_omega;
 low_wl = 2*pi/low_omega;
+wl = high_wl;
+
+% width of PML
+high_wpml = 0.025;
+low_wpml = 0.05;
 
 Rest = 1.5;
 high_r = NMLA_radius(high_omega*1500/4500,Rest);
 low_r = NMLA_radius(low_omega*1500/4500,Rest);
 
+low_d = round((low_r + low_wpml)/0.05)*0.05;
+high_d = round((high_r + high_wpml)/0.05)*0.05;
 
-% width of PML
-high_wpml = 0.1;
-low_wpml = 0.25;
+
 
 % mesh size
-h = 1/4000;    
+h = 1/2000;    
 
 % if h = 1/2000, then the largest linear system is around 4656x4656
 
 
+% % domain
+% sdx = 1.5; sdy = 0.5;
+% mdx = 1.55; mdy = 0.55;
+% ldx = 1.6; ldy = 0.6;
+
 % domain
 sdx = 1.5; sdy = 0.5;
-mdx = 1.55; mdy = 0.55;
-ldx = 1.6; ldy = 0.6;
+mdx = sdx + high_d; mdy = sdy + high_d;
+ldx = mdx + low_d; ldy = mdy + low_d;
 
 large_domain = [-ldx, ldx, -ldy, ldy];
 middle_domain = [-mdx, mdx, -mdy, mdy];
 small_domain = [-sdx, sdx, -sdy, sdy];
+
 
 % real frequency in Hertz
 real_omega = high_omega*1500/4000;
@@ -129,7 +140,7 @@ for mi = 1:mN
     x0 = mnode(mi,1);  y0 = mnode(mi,2);
     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
     c0 = speed(mnode(mi,:));
-    Rest = min(1.45, r0);
+    Rest = min(1.5, r0);
     if r0 < 0.1  % near source 
         mray{mi} = ex_ray([x0,y0],xs,ys,1);
         mNdof = mNdof + 1;
