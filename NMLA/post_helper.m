@@ -12,8 +12,13 @@ idx = 1*b1 + 2*b2 + 3*b3 + 4*b4;
 n = length(idx);
 if n > 1
     for i = 1:n-1
-        if idx(i) == idx(i+1)
-            idx(i+1) = idx(i+1) + 1;
+        if idx(i) == idx(i+1) 
+            if idx(i) < 4
+                idx(i+1) = idx(i+1) + 1;
+            else
+                idx(i) = idx(i) - (n-i);
+                idx(i+1) = idx(i+1) - (n-i-1);
+            end
         end
     end
 end

@@ -1,4 +1,4 @@
-function [angs, r, Bs] = NMLA(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,data,opt,plt,interp)
+function [angs, r, Bs] = NMLA(x0,y0,c0,omega,Rest,node,elem,u,ux,uy,pde,pct,Nray,data,opt,plt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NMLA 2nd order correction: finding ray directions at observation point (x0,y0) in 2D case
 %  See details in 'Numerical MicroLocal Analysis Revisited' by Jean-David
@@ -61,13 +61,11 @@ gau = 3.5 ;                %% Parameter in Gaussian function
 
 
 %% Truncation level and number of samples
-r = NMLA_radius(omega,Rest);
-
+r = NMLA_radius(omega/c0,Rest);
 kr = r*omega/c0;                      %% k*r
 L = round(kr + (kr)^(1/3) -2.5);      %% truncation level to obtain needed precision
 L = max(1,L) ;
 M = 2*(8*L)+1;                        %% number of samples on the observation circle
-% M = 2*round(kr + 9.4*(kr)^(1/3)) + 6;
 
 
 %% Angle discretizaion on the circle
@@ -75,11 +73,6 @@ angl = linspace(0,2*pi,M+1) ;
 ang=angl(1:M) ;
 X = x0+ r*cos(ang) ;
 Y = y0 + r*sin(ang) ;
-
-
-if nargin < 17
-    interp = 1;
-end
 
 
 %% Data on the circle
@@ -96,17 +89,10 @@ if (strcmp(data,'num'))      %% use numerically computed data
         return;
     end
     
-    if interp == 1
-        Field = interpolation(node,elem,[X',Y'],u);
-        DUx = interpolation(node,elem,[X',Y'],ux);
-        DUy = interpolation(node,elem,[X',Y'],uy);
-    else
-        h = node(2,2) - node(1,2);
-        x = xmin:h:xmax; y = ymin:h:ymax;
-        Field = interpolation2(x, y, u, [X',Y']);
-        DUx = interpolation2(x, y, ux, [X',Y']);
-        DUy = interpolation2(x, y, uy, [X',Y']);
-    end
+    Field = interpolation(node,elem,[X',Y'],u);
+    DUx = interpolation(node,elem,[X',Y'],ux);
+    DUy = interpolation(node,elem,[X',Y'],uy);
+    
 end
 
 if (strcmp(data,'ex'))        %% use the exact data
