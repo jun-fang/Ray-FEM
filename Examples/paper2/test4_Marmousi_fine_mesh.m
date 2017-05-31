@@ -40,7 +40,7 @@ high_d = round((high_r + high_wpml)/0.05)*0.05;
 
 
 % mesh size
-h = 1/2000;    
+h = 1/800;    
 
 % if h = 1/2000, then the largest linear system is around 4800x4800
 
@@ -65,7 +65,7 @@ speed = @(p) Marmousi_speed( Marmousi_index(p, xr, yr, h) )/1500;    % wave spee
 % ldx = 2; ldy = 1;
 
 % domain
-sdx = 1.5; sdy = 0.5;
+sdx = 0.5; sdy = 0.5;
 mdx = sdx + high_d; mdy = sdy + high_d;
 ldx = mdx + low_d; ldy = mdy + low_d;
 
@@ -137,8 +137,8 @@ for mi = 1:mN
     x0 = mnode(mi,1);  y0 = mnode(mi,2);
     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
     c0 = speed(mnode(mi,:));
-    Rest = min(1.5, r0);
-    if r0 < epsilon  % near source 
+%     Rest = min(1.5, r0);
+    if r0 < epsilon  % near source  y0 > 0.26 %
         mray{mi} = ex_ray([x0,y0],xs,ys,1);
         mNdof = mNdof + 1;
     else  % far field
@@ -207,8 +207,8 @@ for i = 1:N
     x0 = node(i,1);  y0 = node(i,2);
     r0 = sqrt((x0-xs)^2 + (y0-ys)^2);
     c0 = speed(node(i,:));
-    Rest = min(1.5, r0);
-    if r0 < epsilon  % near source 
+%     Rest = min(1.5, r0);
+    if  r0 < epsilon  % near source y0 > 0.26 %
         ray{i} = ex_ray([x0,y0],xs,ys,1);
         Ndof = Ndof + 1;
     else  % far field

@@ -32,7 +32,7 @@ high_wpml = 0.05;
 low_wpml = 0.1;
 
 % domain
-sdx = 1.5; sdy = 0.5;
+sdx = 0.5; sdy = 0.5;
 small_domain = [-sdx, sdx, -sdy, sdy];
 
 % real frequency in Hertz
@@ -47,11 +47,11 @@ fprintf('Computational domain = \n  [%.2f, %.2f, %.2f, %.2f] \n', small_domain);
 
 
 %% load reference data
-% load('results_4_Marmousi_100pi_NPW_16.mat');
-% ray_ref = ray;  uh_ref = uh2;  h_ref = 1/800;
+load('results_4_Marmousi_100pi_NPW_16.mat');
+ray_ref = ray;  uh_ref = uh2;  h_ref = 1/800;
 
-load('results_4_Marmousi_100pi_NPW_40.mat');
-ray_ref = ray;  uh_ref = uh2;  h_ref = 1/2000;
+% load('results_4_Marmousi_100pi_NPW_40.mat');
+% ray_ref = ray;  uh_ref = uh2;  h_ref = 1/2000;
 
 % load('results_4_Marmousi_100pi_NPW_80.mat');
 % ray_ref = ray;  uh_ref = uh2;  h_ref = 1/4000;
@@ -64,10 +64,10 @@ rnorm = norm(ruu)*h_ref;
 
 % mesh size
 h = 1/50;
-NPWs = [1 2 4 5 8 10 20];
+NPWs = [1 2 4 8]; %5 8 10 20];
 hs = h./NPWs;
 
-test_num = 7;
+test_num = 4;
 err = zeros(test_num,1);
 
 for j = 1:test_num
@@ -150,24 +150,28 @@ for j = 1:test_num
     toc;
     tic;
     uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
+%     [~, v] = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
     toc;
     
+%     uh = RayFEM_solution(node,elem,omega,speed,v,ray,rnode);
+    
     % singularity part
-    x = node(:,1); y = node(:,2);
-    rr = sqrt((x-xs).^2 + (y-ys).^2);
+    rx = node(:,1); ry = node(:,2);
+    rr = sqrt((rx-xs).^2 + (ry-ys).^2);
     ub = 1i/4*besselh(0,1,omega*rr);
     cf = cutoff(epsilon,2*epsilon,node,xs,ys);
     
     % smooth + singularity
     uh2 = uh + ub.*cf;
-    max(real(uh2))
+%     max(real(uh2))
     
     % figure(75); showsolution(node,elem,real(uh2),2); colorbar; axis equal; axis tight;
     
     du = ur - uh2;
     du(rr <= 2*wl) = 0;
-    
     err(j) = norm(du)*h/rnorm
+    
+%     err(j) = norm(du)*h_ref/rnorm
     
 end
 
@@ -175,8 +179,8 @@ end
 totaltime = toc(tstart);
 fprintf('\n\nTotal running time: % d minutes \n', totaltime/60);
 
-nameFile = strcat('results_4_Marmousi_',num2str(round(omega/pi)), 'pi_h_conv_rate.mat');
-save(nameFile, 'hs', 'err','NPWs');
+% nameFile = strcat('results_4_Marmousi_',num2str(round(omega/pi)), 'pi_h_conv_rate.mat');
+% save(nameFile, 'hs', 'err','NPWs');
 
 
 % showrate(hs,err);

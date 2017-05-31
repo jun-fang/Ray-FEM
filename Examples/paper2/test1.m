@@ -6,7 +6,7 @@ addpath(genpath('../../../ifem/'));
 addpath('../../Functions/')
 addpath('../../Methods/');
 addpath('../../NMLA/');
-addpath('../../Plots_Prints/');
+addpath('../../Plots/');
 
 test_num = 7;              % we test test_num examples
 
