@@ -21,7 +21,7 @@ xs = 0; ys = 0.35;          % source location
 epsilon = 1/(4*pi);        % cut-off parameter
 
 % frequency
-high_omega = 1000*pi;
+high_omega = 400*pi;
 low_omega = 4*sqrt(high_omega);
 high_wl = 2*pi/high_omega;
 low_wl = 2*pi/low_omega;
@@ -41,7 +41,7 @@ high_d = round((high_r + high_wpml)/0.05)*0.05;
 
 
 % mesh size
-h = 1/2000;    
+h = 1/800;    
 
 % if h = 1/2000, then the largest linear system is around 4656x4656
 
@@ -244,6 +244,10 @@ toc;
 tic;
 uh = RayFEM_direct_solver(node,elem,A,b,omega,ray,speed);
 toc;
+
+% save('test4_data','A','b','ray');
+
+
 
 % singularity part
 x = node(:,1); y = node(:,2);

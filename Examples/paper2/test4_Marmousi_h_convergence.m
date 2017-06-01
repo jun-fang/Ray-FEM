@@ -32,7 +32,7 @@ high_wpml = 0.05;
 low_wpml = 0.1;
 
 % domain
-sdx = 0.5; sdy = 0.5;
+sdx = 1.5; sdy = 0.5;
 small_domain = [-sdx, sdx, -sdy, sdy];
 
 % real frequency in Hertz

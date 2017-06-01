@@ -20,5 +20,5 @@ test4_Marmousi_h_convergence;
 %% compute the a very high frequency case 375 Hz
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% test4_Marmousi_high_freq;
+test4_Marmousi_high_freq;
 % The output shold be 'results_4_Marmousi_1000pi_NPW_4.mat'

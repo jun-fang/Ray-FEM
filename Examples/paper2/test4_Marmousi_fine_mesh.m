@@ -40,7 +40,7 @@ high_d = round((high_r + high_wpml)/0.05)*0.05;
 
 
 % mesh size
-h = 1/800;    
+h = 1/200;    
 
 % if h = 1/2000, then the largest linear system is around 4800x4800
 
@@ -65,7 +65,7 @@ speed = @(p) Marmousi_speed( Marmousi_index(p, xr, yr, h) )/1500;    % wave spee
 % ldx = 2; ldy = 1;
 
 % domain
-sdx = 0.5; sdy = 0.5;
+sdx = 1.5; sdy = 0.5;
 mdx = sdx + high_d; mdy = sdy + high_d;
 ldx = mdx + low_d; ldy = mdy + low_d;
 
@@ -161,6 +161,7 @@ omega = high_omega;
 wpml = high_wpml;                % width of PML
 sigmaMax = 25/wpml;                 % Maximun absorbtion
 ray = mray;
+fquadorder = 6; 
 
 % smooth part
 option ='homogeneous'; 
