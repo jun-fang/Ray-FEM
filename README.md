@@ -1,4 +1,4 @@
-# Adaptive ray-FEM for solving high-frequency Helmholtz equation
+# Adaptive ray-FEM for high-frequency Helmholtz equation
 
 
 We present a ray-based finite element method (ray-FEM) for the high-frequency Helmholtz equation in smooth media, whose basis are learned adaptively from the medium and source. 
